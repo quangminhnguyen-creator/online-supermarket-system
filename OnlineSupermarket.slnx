@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/backend/" />
+  <Folder Name="/backend/src/">
+    <Project Path="backend/src/OnlineSupermarket.Api/OnlineSupermarket.Api.csproj" />
+    <Project Path="backend/src/OnlineSupermarket.Domain/OnlineSupermarket.Domain.csproj" />
+    <Project Path="backend/src/OnlineSupermarket.Infrastructure/OnlineSupermarket.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/backend/tests/">
+    <Project Path="backend/tests/OnlineSupermarket.Api.Tests/OnlineSupermarket.Api.Tests.csproj" />
+    <Project Path="backend/tests/OnlineSupermarket.Domain.Tests/OnlineSupermarket.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
