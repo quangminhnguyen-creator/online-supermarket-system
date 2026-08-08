@@ -102,7 +102,7 @@ docker compose down
 - Do not hand-edit generated EF migration designer files or `AppDbContextModelSnapshot.cs`; generate migrations with the pinned local tool.
 - Do not edit checked-in `docs/api/openapi.json` independently of the implemented API and export script.
 - Do not read or commit `.env`; `.env.example` must contain local placeholders only.
-- Do not modify application source from Plan, Review, or Docs.
+- Do not modify application source from Workflow, Review, or Docs.
 
 ## Migration rules
 
@@ -113,7 +113,7 @@ docker compose down
 
 ## AI workflow rules
 
-- Plan: primary orchestrator; writes task/status artifacts, waits for approval, and invokes only Action, Review, and Docs.
+- Workflow: primary orchestrator; writes task/status artifacts, waits for approval, and invokes only Action, Review, and Docs.
 - Action: implements one approved task or fixes explicit blocking review findings, runs required checks, and records exact evidence.
 - Review: independently reviews the task, diff, relevant source, and test evidence; application code is read-only.
 - Docs: runs only after `APPROVED` and edits maintained documentation only.

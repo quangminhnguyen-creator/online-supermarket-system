@@ -1,6 +1,6 @@
 ---
 description: Plan an approved feature and orchestrate implementation, review, fixes, and docs
-agent: plan
+agent: workflow
 subtask: false
 ---
 

@@ -1,6 +1,6 @@
 ---
 description: Show the current AI workflow status
-agent: plan
+agent: workflow
 subtask: false
 ---
 
