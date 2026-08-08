@@ -23,15 +23,20 @@ docs/api                                     OpenAPI contract
 
 ## Chạy backend native
 
-Yêu cầu .NET SDK 10.0.103.
+Yêu cầu .NET SDK 10.0.103 và một MySQL 8.4 có thể truy cập từ máy host. ASP.NET Core không tự đọc file `.env`; trong PowerShell sạch, đặt connection string cho session trước khi chạy API hoặc migration:
 
 ```powershell
+$env:ConnectionStrings__DefaultConnection = "Server=localhost;Port=3306;Database=online_supermarket;User=supermarket_app;Password=change_me"
 dotnet restore OnlineSupermarket.slnx
 dotnet test OnlineSupermarket.slnx --no-restore
 dotnet run --project backend/src/OnlineSupermarket.Api
 ```
 
-Health endpoint: `http://localhost:5000/api/health` hoặc cổng hiển thị trong terminal.
+Giá trị trên chỉ là placeholder local; thay bằng credential của máy và không ghi credential thật vào repository. Với profile mặc định, health endpoint là `http://localhost:5072/api/health`:
+
+```powershell
+Invoke-RestMethod http://localhost:5072/api/health
+```
 
 Tạo/cập nhật migration bằng local tool đã khóa phiên bản:
 
@@ -39,6 +44,8 @@ Tạo/cập nhật migration bằng local tool đã khóa phiên bản:
 dotnet tool restore
 dotnet dotnet-ef database update --project backend/src/OnlineSupermarket.Infrastructure --startup-project backend/src/OnlineSupermarket.Api
 ```
+
+Khi hoàn tất session, có thể xóa biến bằng `Remove-Item Env:ConnectionStrings__DefaultConnection`.
 
 ## Chạy frontend native
 
