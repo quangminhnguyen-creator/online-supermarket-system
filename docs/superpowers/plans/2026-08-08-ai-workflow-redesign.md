@@ -253,9 +253,9 @@ Also retain the restrictive global `read`, `edit`, `bash`, `external_directory`,
 Use `apply_patch` to remove all old definitions and create:
 
 - `workflow.md`: `mode: primary`, `model: 9router/plan`, may edit only `.ai/STATUS.md` and `.ai/tasks/**`, and may invoke only `action`, `review`, and `docs`.
-- `action.md`: `mode: subagent`, `model: 9router/action`, may edit task-approved implementation files and `.ai/results/**`; may run approved .NET, npm, Docker config, search, and read-only Git commands; must deny push and broad deletion.
+- `action.md`: `mode: subagent`, `model: 9router/action`, asks before task-approved implementation edits and may write only `.ai/results/*-ACTION.md`; it auto-allows only the repository's exact build/test/config commands, while other Bash commands require approval, and it must deny push and broad deletion.
 - `review.md`: `mode: subagent`, `model: 9router/review`, application edits denied; may write only `.ai/reviews/**`; may run focused build/test commands; cannot invoke agents.
-- `docs.md`: `mode: subagent`, `model: 9router/docs`, may edit only README, changelog, `docs/**`, and requested final result artifacts; cannot invoke agents.
+- `docs.md`: `mode: subagent`, `model: 9router/docs`, may edit only README, changelog, and `docs/**`; it cannot edit result artifacts or invoke agents.
 
 The `workflow` prompt must contain this explicit orchestration rule:
 
@@ -379,10 +379,10 @@ Preserve every technical section through `Migration rules`. Replace only `## Rol
 ```markdown
 ## AI workflow rules
 
-- Plan: primary orchestrator; writes task/status artifacts, waits for approval, and invokes only Action, Review, and Docs.
+- Workflow: primary orchestrator; writes task/status artifacts, waits for approval, and invokes only Action, Review, and Docs.
 - Action: implements one approved task or fixes explicit blocking review findings, runs required checks, and records exact evidence.
 - Review: independently reviews task, diff, relevant source, and test evidence; application code is read-only.
-- Docs: runs only after `APPROVED` and edits maintained documentation only.
+- Docs: runs after `APPROVED` when public behavior, setup, API, or maintained documentation changed; it edits maintained documentation only.
 - Follow `.ai/WORKFLOW.md`; use `.ai/tasks/TASK-TEMPLATE.md`, `.ai/reviews/REVIEW-TEMPLATE.md`, and `.ai/results/RESULT-TEMPLATE.md`.
 - Never bypass the approval gate or the mandatory second review after fixes.
 ```

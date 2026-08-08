@@ -9,6 +9,7 @@ permission:
     "*": ask
     ".env": deny
     ".env.*": deny
+    ".env.example": ask
     "README.md": deny
     "README.*": deny
     "CHANGELOG": deny
@@ -21,10 +22,12 @@ permission:
     ".ai/results/*-ACTION.md": allow
   bash:
     "*": ask
-    "dotnet *": allow
-    "npm *": allow
-    "npm.cmd *": allow
-    "docker compose config*": allow
+    "dotnet restore OnlineSupermarket.slnx": allow
+    "dotnet build OnlineSupermarket.slnx --no-restore": allow
+    "dotnet test OnlineSupermarket.slnx --no-restore": allow
+    "npm.cmd test -- --run": allow
+    "npm.cmd run build": allow
+    "docker compose config --quiet": allow
     "git status*": allow
     "git diff*": allow
     "git show*": allow

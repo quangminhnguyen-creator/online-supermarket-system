@@ -182,7 +182,7 @@ On later rounds, the reviewer marks prior finding IDs `RESOLVED` or `UNRESOLVED`
 
 ## Permissions
 
-### Plan
+### Workflow
 
 - May edit `.ai/STATUS.md` and `.ai/tasks/**`.
 - May read source and use read-only Git inspection commands.
@@ -192,7 +192,7 @@ On later rounds, the reviewer marks prior finding IDs `RESOLVED` or `UNRESOLVED`
 ### Action
 
 - May edit only task-approved application, test, migration, and configuration files.
-- May write its own evidence under `.ai/results/**`.
+- May write only its own evidence matching `.ai/results/*-ACTION.md`.
 - May run task-approved build, test, formatting, migration, and read-only Git commands.
 - Must not edit tasks, review reports, agent configuration, unrelated documentation, or secrets.
 - Must not push, perform broad deletion, or expand task scope.
@@ -207,7 +207,7 @@ On later rounds, the reviewer marks prior finding IDs `RESOLVED` or `UNRESOLVED`
 ### Docs
 
 - Runs only after `APPROVED`.
-- May edit `README*`, `docs/**`, changelogs, and the requested final result artifact.
+- May edit only `README*`, `docs/**`, and changelogs.
 - Must not edit application source, tests, migrations, build configuration, tasks, decisions, or review reports.
 
 ## Secrets and provider routing

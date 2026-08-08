@@ -1,2 +1,5 @@
 .worktrees/
 .codegraph/
+.env
+.env.*
+!.env.example
