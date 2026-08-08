@@ -11,12 +11,12 @@ permission:
     ".ai/tasks/**": allow
   bash:
     "*": deny
-    "git status*": allow
-    "git diff*": allow
-    "git log*": allow
-    "git show*": allow
-    "git ls-files*": allow
-    "rg *": allow
+    "git status --short": allow
+    "git status --short --branch": allow
+    "git diff --no-ext-diff --no-textconv": allow
+    "git log --oneline": allow
+    "git show --no-ext-diff --no-textconv": allow
+    "git ls-files": allow
   task:
     "*": deny
     action: allow

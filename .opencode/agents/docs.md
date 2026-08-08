@@ -14,8 +14,8 @@ permission:
     "docs/**": allow
   bash:
     "*": deny
-    "git status*": allow
-    "git diff*": allow
+    "git status --short": allow
+    "git diff --no-ext-diff --no-textconv": allow
   task: deny
   external_directory: deny
 ---

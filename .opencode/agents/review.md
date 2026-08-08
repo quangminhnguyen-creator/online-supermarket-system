@@ -10,17 +10,17 @@ permission:
     ".ai/reviews/**": allow
   bash:
     "*": deny
-    "git status*": allow
-    "git diff*": allow
-    "git show*": allow
-    "git log*": allow
-    "dotnet build*": allow
-    "dotnet test*": allow
-    "npm test*": allow
-    "npm.cmd test*": allow
-    "npm run build*": allow
-    "npm.cmd run build*": allow
-    "docker compose config*": allow
+    "git status --short": allow
+    "git status --short --branch": allow
+    "git diff --no-ext-diff --no-textconv": allow
+    "git diff --check": allow
+    "git show --no-ext-diff --no-textconv": allow
+    "git log --oneline": allow
+    "dotnet build OnlineSupermarket.slnx --no-restore": allow
+    "dotnet test OnlineSupermarket.slnx --no-restore": allow
+    "npm.cmd test -- --run": allow
+    "npm.cmd run build": allow
+    "docker compose config --quiet": allow
   task: deny
   external_directory: deny
 ---

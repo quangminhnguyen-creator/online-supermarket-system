@@ -28,11 +28,12 @@ permission:
     "npm.cmd test -- --run": allow
     "npm.cmd run build": allow
     "docker compose config --quiet": allow
-    "git status*": allow
-    "git diff*": allow
-    "git show*": allow
-    "git ls-files*": allow
-    "rg *": allow
+    "git status --short": allow
+    "git status --short --branch": allow
+    "git diff --no-ext-diff --no-textconv": allow
+    "git diff --check": allow
+    "git show --no-ext-diff --no-textconv": allow
+    "git ls-files": allow
     "git commit*": deny
     "git push*": deny
     "rm *": deny
