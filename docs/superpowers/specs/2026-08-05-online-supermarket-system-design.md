@@ -116,6 +116,15 @@ Khách chọn chi nhánh trước hoặc được gợi ý theo địa chỉ. Gi
 
 Mỗi cart gắn với một chi nhánh. Khi đổi chi nhánh, backend kiểm tra lại giá và tồn kho; item không khả dụng được trả về để khách quyết định. Checkout luôn tính lại giá, khuyến mãi và tồn kho ở backend. Order được tạo ở `Pending` và số lượng được chuyển sang `ReservedQuantity` trong cùng transaction MySQL.
 
+Việc giữ hàng khi checkout tuân theo hợp đồng atomic sau:
+
+1. Bắt đầu một InnoDB transaction.
+2. Khóa tất cả row `BranchInventories` cần dùng bằng `SELECT ... FOR UPDATE`, theo thứ tự tăng dần (ascending) của khóa `(BranchId, ProductId)` để mọi checkout có cùng lock order.
+3. Sau khi có lock, tính lại tồn khả dụng bằng `QuantityOnHand - ReservedQuantity` cho từng item.
+4. Nếu bất kỳ item nào không đủ, rollback toàn bộ transaction và trả HTTP `409` với code `INSUFFICIENT_STOCK`.
+5. Nếu tất cả item đều đủ, tăng `ReservedQuantity` và insert order `Pending` trong chính transaction đó, rồi commit.
+6. Với MySQL deadlock hoặc lock timeout, retry tối đa ba lần (at most three times) với jitter giới hạn (bounded jitter). Khi hết số lần retry, rollback và trả một retryable HTTP `409` conflict; không được để lại order hoặc phần tồn kho đã giữ dở dang.
+
 ### Payment
 
 - COD tạo đơn với `PaymentStatus = PendingCollection`.
@@ -177,7 +186,7 @@ Không dùng LLM trả phí cho hai tính năng AI này.
 - Integration test: API với MySQL test database.
 - Payment test: chữ ký sai/đúng, callback lặp, sai amount, order không tồn tại.
 - Authorization test: Customer không gọi được API Admin.
-- Concurrency test: hai checkout tranh sản phẩm cuối cùng.
+- Concurrency test: hai request checkout đồng thời tranh một sản phẩm chỉ còn đúng một đơn vị phải cho kết quả exactly one success và exactly one `409 INSUFFICIENT_STOCK`; tồn khả dụng cuối cùng bằng 0 và không bao giờ âm; losing transaction creates no order or reservation.
 - AI test: cold-start fallback, loại sản phẩm hết hàng và kết quả forecast có dữ liệu.
 - React test cho cart, checkout và màn hình Admin trọng yếu.
 - Một E2E demo: duyệt hàng → cart → checkout → payment sandbox/COD → hoàn thành → review.
