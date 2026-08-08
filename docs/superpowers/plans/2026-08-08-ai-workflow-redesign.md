@@ -4,7 +4,7 @@
 
 **Goal:** Replace the repository's old seven-agent OpenCode setup with a secure four-agent hybrid workflow that plans, implements, reviews, fixes, and documents tasks through four existing 9Router semantic profiles.
 
-**Architecture:** A primary `plan` agent owns task approval and orchestration. Read/write boundaries isolate the `action`, `review`, and `docs` subagents; durable task, result, review, and status artifacts provide explicit handoffs. Five project-local commands expose the full workflow and manual escape hatches.
+**Architecture:** A primary `workflow` agent owns task approval and orchestration. Read/write boundaries isolate the `action`, `review`, and `docs` subagents; durable task, result, review, and status artifacts provide explicit handoffs. Five project-local commands expose the full workflow and manual escape hatches.
 
 **Tech Stack:** OpenCode 1.2.25 Markdown agents and commands, `opencode.json`, 9Router's OpenAI-compatible endpoint, Markdown workflow artifacts, PowerShell validation.
 
@@ -12,7 +12,7 @@
 
 - Preserve application source, Git history, `docs/superpowers/`, `.worktrees/`, and `.codegraph/`.
 - Keep the project-specific architecture, conventions, verified commands, and safety rules in `AGENTS.md`.
-- Configure exactly four agents: `plan`, `action`, `review`, and `docs`.
+- Configure exactly four agents: `workflow`, `action`, `review`, and `docs`.
 - Map agents only to `workflow-plan`, `workflow-action`, `workflow-review`, and `workflow-docs`; concrete vendor fallback remains inside 9Router.
 - Never store a literal API key; use `{env:NINE_ROUTER_API_KEY}`.
 - Require user approval before `action` changes application files.
@@ -58,7 +58,7 @@
 
 **Create agents:**
 
-- `.opencode/agents/plan.md` — primary orchestrator.
+- `.opencode/agents/workflow.md` — primary orchestrator.
 - `.opencode/agents/action.md` — implementation and review-fix worker.
 - `.opencode/agents/review.md` — independent quality gate.
 - `.opencode/agents/docs.md` — post-approval documentation worker.
@@ -115,9 +115,9 @@ Use `apply_patch` to delete the old files and replace the template. Create `.ai/
 ```markdown
 # AI Workflow
 
-`plan -> user approval -> action -> review -> action fixes -> review -> docs -> done`
+`workflow -> user approval -> action -> review -> action fixes -> review -> docs -> done`
 
-- `plan` must stop at `WAITING_FOR_APPROVAL` before application edits.
+- `workflow` must stop at `WAITING_FOR_APPROVAL` before application edits.
 - `action` implements one approved task and records exact command outcomes.
 - `review` never edits implementation files and returns `APPROVED` or `CHANGES_REQUIRED`.
 - Blocking findings use the required structured schema and return to `action`.
@@ -135,7 +135,7 @@ Create `.ai/STATUS.md` with the neutral initial state:
 - Review round: `0/3`
 - Last verdict: `NONE`
 - Blocking findings: `NONE`
-- Next agent: `plan`
+- Next agent: `workflow`
 ```
 
 The three templates must reproduce every required field from the spec. In particular, `REVIEW-TEMPLATE.md` must include this blocking-finding block verbatim:
@@ -192,7 +192,7 @@ Expected: one commit containing only the `.ai/` replacement.
 
 - Modify: `opencode.json`
 - Delete: the seven old `.opencode/agents/*.md` files listed in the file map.
-- Create: `.opencode/agents/plan.md`
+- Create: `.opencode/agents/workflow.md`
 - Create: `.opencode/agents/action.md`
 - Create: `.opencode/agents/review.md`
 - Create: `.opencode/agents/docs.md`
@@ -200,7 +200,7 @@ Expected: one commit containing only the `.ai/` replacement.
 **Interfaces:**
 
 - Consumes: `.ai/WORKFLOW.md`, task/result/review templates, `AGENTS.md`, and 9Router at `http://localhost:20128/v1`.
-- Produces: agent IDs `plan`, `action`, `review`, and `docs`; model aliases `9router/plan`, `9router/action`, `9router/review`, and `9router/docs`.
+- Produces: agent IDs `workflow`, `action`, `review`, and `docs`; model aliases `9router/plan`, `9router/action`, `9router/review`, and `9router/docs`.
 
 - [ ] **Step 1: Write a pre-change assertion that identifies the insecure old configuration**
 
@@ -223,7 +223,7 @@ Use this provider/model shape and preserve the existing watcher ignores:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "plan",
+  "default_agent": "workflow",
   "share": "disabled",
   "instructions": ["AGENTS.md", ".ai/WORKFLOW.md"],
   "enabled_providers": ["9router"],
@@ -252,12 +252,12 @@ Also retain the restrictive global `read`, `edit`, `bash`, `external_directory`,
 
 Use `apply_patch` to remove all old definitions and create:
 
-- `plan.md`: `mode: primary`, `model: 9router/plan`, may edit only `.ai/STATUS.md` and `.ai/tasks/**`, and may invoke only `action`, `review`, and `docs`.
+- `workflow.md`: `mode: primary`, `model: 9router/plan`, may edit only `.ai/STATUS.md` and `.ai/tasks/**`, and may invoke only `action`, `review`, and `docs`.
 - `action.md`: `mode: subagent`, `model: 9router/action`, may edit task-approved implementation files and `.ai/results/**`; may run approved .NET, npm, Docker config, search, and read-only Git commands; must deny push and broad deletion.
 - `review.md`: `mode: subagent`, `model: 9router/review`, application edits denied; may write only `.ai/reviews/**`; may run focused build/test commands; cannot invoke agents.
 - `docs.md`: `mode: subagent`, `model: 9router/docs`, may edit only README, changelog, `docs/**`, and requested final result artifacts; cannot invoke agents.
 
-The `plan` prompt must contain this explicit orchestration rule:
+The `workflow` prompt must contain this explicit orchestration rule:
 
 ```text
 After user approval, invoke action. Then invoke review with the task, actual diff, relevant source, and exact test evidence. For CHANGES_REQUIRED, pass only structured P0-P2 findings back to action and invoke review again. Stop after three review rounds. Invoke docs only after APPROVED.
@@ -283,9 +283,9 @@ $env:NINE_ROUTER_API_KEY = 'validation-placeholder'
 $resolved = opencode.cmd debug config | Out-String
 if ($LASTEXITCODE -ne 0) { throw 'OpenCode rejected the configuration' }
 $parsed = $resolved | ConvertFrom-Json
-if ($parsed.default_agent -ne 'plan') { throw 'Default agent is not plan' }
+if ($parsed.default_agent -ne 'workflow') { throw 'Default agent is not workflow' }
 $agentNames = @($parsed.agent.PSObject.Properties.Name | Sort-Object)
-$expected = @('action','docs','plan','review')
+$expected = @('action','docs','review','workflow')
 if (Compare-Object $agentNames $expected) { throw "Unexpected agents: $($agentNames -join ', ')" }
 ```
 
@@ -338,7 +338,7 @@ Create project-local Markdown commands with these frontmatter bindings:
 ```yaml
 # feature.md
 description: Plan an approved feature and orchestrate implementation, review, fixes, and docs
-agent: plan
+agent: workflow
 subtask: false
 ```
 
@@ -366,11 +366,11 @@ subtask: true
 ```yaml
 # status.md
 description: Show the current AI workflow status
-agent: plan
+agent: workflow
 subtask: false
 ```
 
-The command bodies must use `$ARGUMENTS`. `/feature` instructs `plan` to write a task and stop for approval. `/action`, `/review`, and `/docs` require a task ID or path. `/status` reads `.ai/STATUS.md` and makes no edits.
+The command bodies must use `$ARGUMENTS`. `/feature` instructs `workflow` to write a task and stop for approval. `/action`, `/review`, and `/docs` require a task ID or path. `/status` reads `.ai/STATUS.md` and makes no edits.
 
 - [ ] **Step 3: Replace obsolete role instructions in `AGENTS.md`**
 
@@ -437,7 +437,7 @@ Run:
 ```powershell
 $agents = @(Get-ChildItem '.opencode/agents' -File | Select-Object -ExpandProperty BaseName | Sort-Object)
 $commands = @(Get-ChildItem '.opencode/commands' -File | Select-Object -ExpandProperty BaseName | Sort-Object)
-if (Compare-Object $agents @('action','docs','plan','review')) { throw "Agent inventory failed: $($agents -join ', ')" }
+if (Compare-Object $agents @('action','docs','review','workflow')) { throw "Agent inventory failed: $($agents -join ', ')" }
 if (Compare-Object $commands @('action','docs','feature','review','status')) { throw "Command inventory failed: $($commands -join ', ')" }
 ```
 

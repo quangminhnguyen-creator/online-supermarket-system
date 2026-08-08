@@ -1,7 +1,7 @@
 # Đặc tả thiết kế hệ thống siêu thị trực tuyến
 
-Ngày: 2026-08-05  
-Thời gian thực hiện: 30 ngày  
+Ngày: 2026-08-05
+Thời gian thực hiện: 30 ngày
 Nhân sự: 3 thành viên
 
 ## 1. Mục tiêu

@@ -23,31 +23,31 @@ The workflow uses four agents mapped to the four existing semantic model routes:
 
 | Agent | Route | Responsibility |
 |---|---|---|
-| `plan` | `9router/plan` -> `workflow-plan` | Analyze requirements, write tasks, request approval, orchestrate the workflow, and maintain status. |
+| `workflow` | `9router/plan` -> `workflow-plan` | Analyze requirements, write tasks, request approval, orchestrate the workflow, and maintain status. |
 | `action` | `9router/action` -> `workflow-action` | Implement one approved task, run verification, and fix explicit review findings. |
 | `review` | `9router/review` -> `workflow-review` | Perform independent, evidence-based review without editing application files. |
 | `docs` | `9router/docs` -> `workflow-docs` | Update user or developer documentation only after approval. |
 
-`plan` is the default primary agent. The other three are subagents. The primary agent invokes subagents through OpenCode's task permission; users can also invoke them manually with `@action`, `@review`, or `@docs`.
+`workflow` is the default primary agent. The other three are subagents. The primary agent invokes subagents through OpenCode's task permission; users can also invoke them manually with `@action`, `@review`, or `@docs`.
 
 9Router owns concrete model selection and fallback inside each semantic route. Agent definitions never name vendor-specific fallback models.
 
 ## Default workflow
 
-1. The user gives a requirement to `plan`, normally through `/feature <requirement>`.
-2. `plan` inspects only relevant repository context and writes an atomic task.
-3. `plan` sets the task to `WAITING_FOR_APPROVAL` and presents the plan.
+1. The user gives a requirement to `workflow`, normally through `/feature <requirement>`.
+2. `workflow` inspects only relevant repository context and writes an atomic task.
+3. `workflow` sets the task to `WAITING_FOR_APPROVAL` and presents the plan.
 4. No application code is modified until the user approves the plan.
-5. After approval, `plan` invokes `action` with the task and relevant context.
+5. After approval, `workflow` invokes `action` with the task and relevant context.
 6. `action` implements the smallest conforming change, runs required checks, and records exact evidence.
-7. `plan` invokes `review` with the task, diff, relevant decisions, source context, and test evidence.
-8. If review returns `CHANGES_REQUIRED`, `plan` gives the structured blocking findings to `action`.
+7. `workflow` invokes `review` with the task, diff, relevant decisions, source context, and test evidence.
+8. If review returns `CHANGES_REQUIRED`, `workflow` gives the structured blocking findings to `action`.
 9. `action` fixes only those findings, reruns relevant checks, and sends evidence back for another review.
 10. The fix-review loop runs at most three review rounds.
-11. After `APPROVED`, `plan` invokes `docs` only when public behavior, setup, API, or maintained documentation changed.
-12. `plan` reports final verification and sets the task to `DONE` or `BLOCKED`.
+11. After `APPROVED`, `workflow` invokes `docs` only when public behavior, setup, API, or maintained documentation changed.
+12. `workflow` reports final verification and sets the task to `DONE` or `BLOCKED`.
 
-Small, already-specified tasks may be sent directly to `action`. Architecture, database, security, public-contract, cross-module, and ambiguous changes must start with `plan`.
+Small, already-specified tasks may be sent directly to `action`. Architecture, database, security, public-contract, cross-module, and ambiguous changes must start with `workflow`.
 
 ## Repository layout
 
@@ -55,7 +55,7 @@ Small, already-specified tasks may be sent directly to `action`. Architecture, d
 opencode.json
 .opencode/
   agents/
-    plan.md
+    workflow.md
     action.md
     review.md
     docs.md
@@ -91,7 +91,7 @@ The setup provides these project-local OpenCode commands:
 
 | Command | Behavior |
 |---|---|
-| `/feature <requirement>` | Starts the full workflow with `plan`. |
+| `/feature <requirement>` | Starts the full workflow with `workflow`. |
 | `/action TASK-001` | Runs the implementation agent manually for an approved task. |
 | `/review TASK-001` | Runs an independent review manually. |
 | `/docs TASK-001` | Updates documentation for an approved task. |
@@ -103,13 +103,13 @@ A normal session is:
 /feature Add JWT login and enforce cart ownership
 ```
 
-`plan` writes and presents the task. The user then responds:
+`workflow` writes and presents the task. The user then responds:
 
 ```text
 Approve the plan and implement it.
 ```
 
-From that point, `plan` invokes `action`, `review`, any required fix rounds, and `docs` without requiring the user to copy prompts or switch models.
+From that point, `workflow` invokes `action`, `review`, any required fix rounds, and `docs` without requiring the user to copy prompts or switch models.
 
 ## State model
 
@@ -178,7 +178,7 @@ Each blocking finding must contain:
 
 The reviewer ends with exactly `APPROVED` or `CHANGES_REQUIRED`. Vague style preferences and findings without evidence are invalid. `APPROVED` requires all acceptance criteria, no remaining P0-P2 findings, required tests passing, and every known blocker disclosed.
 
-On later rounds, the reviewer marks prior finding IDs `RESOLVED` or `UNRESOLVED`, checks regressions caused by fixes, and introduces new blocking findings only for concrete defects. After three unsuccessful rounds, `plan` sets the workflow to `BLOCKED` and reports unresolved findings, failing checks, and the decision needed from the user.
+On later rounds, the reviewer marks prior finding IDs `RESOLVED` or `UNRESOLVED`, checks regressions caused by fixes, and introduces new blocking findings only for concrete defects. After three unsuccessful rounds, `workflow` sets the workflow to `BLOCKED` and reports unresolved findings, failing checks, and the decision needed from the user.
 
 ## Permissions
 
@@ -222,9 +222,9 @@ Only the `9router` provider is enabled in project configuration. The four projec
 
 - Missing task context: `action` stops without editing and returns the missing contract.
 - Missing manifest or unavailable test service: the executing agent records the exact blocker and command output; it never invents a successful result.
-- Invalid review format: `plan` requests a corrected review before sending findings to `action`.
-- Conflicting review finding: `action` returns evidence and asks `plan` to resolve the conflict rather than changing code blindly.
-- Model/provider failure: 9Router applies configured fallback. If all route fallbacks fail, `plan` records `BLOCKED` and reports the failing route.
+- Invalid review format: `workflow` requests a corrected review before sending findings to `action`.
+- Conflicting review finding: `action` returns evidence and asks `workflow` to resolve the conflict rather than changing code blindly.
+- Model/provider failure: 9Router applies configured fallback. If all route fallbacks fail, `workflow` records `BLOCKED` and reports the failing route.
 - Review loop limit: the third unsuccessful review ends automatic execution.
 
 ## Verification of the setup
@@ -237,7 +237,7 @@ Implementation is complete only when:
 4. No literal key or known key prefix is present in tracked or newly generated workflow files.
 5. Agent permissions match this design.
 6. A dry-run planning prompt can create a task without application edits.
-7. Agent/command discovery shows `plan`, `action`, `review`, `docs`, `/feature`, `/action`, `/review`, `/docs`, and `/status`.
+7. Agent/command discovery shows `workflow`, `action`, `review`, `docs`, `/feature`, `/action`, `/review`, `/docs`, and `/status`.
 8. Repository-specific architecture and verified command guidance remains in `AGENTS.md`.
 
 The dry run must stop before calling an external paid model workflow if local validation cannot do so safely or if it would incur unexpected cost.
