@@ -5,9 +5,9 @@ Phạm vi: đồ án 30 ngày, 3 thành viên, 22 bảng
 
 ## 1. Phạm vi mô hình
 
-ERD này bao phủ toàn bộ chức năng đã duyệt: tài khoản, địa chỉ, đa chi nhánh, catalog, giá và tồn kho theo chi nhánh, giỏ hàng, khuyến mãi toàn đơn, đặt hàng, COD/VNPay/MoMo sandbox, đánh giá, recommendation, dự báo nhu cầu và cảnh báo tồn kho.
+ERD này bao phủ toàn bộ chức năng đã duyệt: tài khoản, địa chỉ, đa chi nhánh, catalog, so sánh sản phẩm, giá và tồn kho theo chi nhánh, giỏ hàng, coupon/khuyến mãi toàn đơn, đặt hàng, COD/VNPay/MoMo sandbox, đánh giá, recommendation, dự báo nhu cầu và cảnh báo tồn kho.
 
-Các phần chủ động loại khỏi mô hình: so sánh sản phẩm, nhiều ảnh cho một sản phẩm, bảng đặt lại mật khẩu, coupon riêng, khuyến mãi theo sản phẩm/danh mục, nhà cung cấp, phiếu nhập, chuyển kho, đổi trả và giao vận thực tế.
+So sánh sản phẩm là chức năng phía client, lưu tối đa 3–4 sản phẩm cùng danh mục trong `localStorage`, nên không cần bảng database. Coupon được biểu diễn bằng `promotions.code`, không tách bảng `coupons`. Các phần chủ động loại khỏi mô hình: nhiều ảnh cho một sản phẩm, bảng đặt lại mật khẩu, khuyến mãi theo sản phẩm/danh mục, Buy 1 Get 1, nhà cung cấp, phiếu nhập, chuyển kho, đổi trả và giao vận thực tế.
 
 ## 2. ERD
 
@@ -366,14 +366,21 @@ erDiagram
 - `(cart_id, product_id)` là duy nhất trong `cart_items`.
 - Cart không lưu giá. Khi hiển thị và checkout, backend đọc lại `branch_inventories` để tránh dùng giá hoặc tồn kho cũ.
 
-### 4.5. Khuyến mãi
+### 4.5. So sánh sản phẩm (không có bảng)
 
-- Chỉ có `promotions`; không có phạm vi theo sản phẩm hoặc danh mục.
+- Guest và Customer có thể chọn tối đa 3–4 sản phẩm cùng danh mục để so sánh.
+- Danh sách ID sản phẩm được lưu trong `localStorage`; backend chỉ cung cấp lại thông tin sản phẩm, giá và tồn kho theo chi nhánh hiện tại.
+- Khi đổi chi nhánh, frontend phải tải lại giá và tồn kho. Không lưu comparison vào database trong phạm vi đồ án.
+
+### 4.6. Khuyến mãi và coupon
+
+- Chỉ có `promotions`; không có bảng `coupons` riêng và không có phạm vi theo sản phẩm hoặc danh mục.
 - `code = NULL`: khuyến mãi tự động toàn đơn. `code` có giá trị: coupon khách phải nhập.
 - `discount_type`: `Percentage` hoặc `FixedAmount`.
 - Mỗi order dùng tối đa một promotion. Số lượt dùng toàn hệ thống và theo user được đếm từ các order hợp lệ, không cần bảng usage riêng.
+- Không hỗ trợ Buy 1 Get 1 trong phạm vi 30 ngày.
 
-### 4.6. Đơn hàng
+### 4.7. Đơn hàng
 
 - `orders` lưu snapshot người nhận/địa chỉ để lịch sử không thay đổi khi user sửa address.
 - `order_items` lưu snapshot SKU, tên, đơn vị và giá. Xóa mềm/ngừng bán product không làm sai đơn cũ.
@@ -382,7 +389,7 @@ erDiagram
 - `order_status_histories` ghi mọi lần chuyển trạng thái; bản ghi đầu có thể có `from_status = NULL`.
 - Luồng chính: `Pending -> Confirmed -> Preparing -> ReadyForPickup/Shipping -> Completed`; hủy chỉ từ trạng thái được cho phép.
 
-### 4.7. Thanh toán
+### 4.8. Thanh toán
 
 - Một order có thể có nhiều payment vì người dùng có thể thử lại thanh toán; chỉ một payment được thành công.
 - `method`: `COD`, `VNPay`, `MoMo`. `provider` có thể là `Internal`, `VNPay`, `MoMo`.
@@ -390,13 +397,13 @@ erDiagram
 - Return URL chỉ hiển thị kết quả; callback/IPN hợp lệ mới được cập nhật payment và order.
 - Không lưu số thẻ, CVV hoặc ngày hết hạn.
 
-### 4.8. Đánh giá
+### 4.9. Đánh giá
 
 - `order_item_id` duy nhất bảo đảm mỗi dòng hàng chỉ được review một lần.
 - Chỉ user sở hữu order đã `Completed` mới được tạo review.
 - `rating` nằm trong khoảng 1–5; `status`: `Pending`, `Published`, `Hidden`.
 
-### 4.9. AI
+### 4.10. AI
 
 - `product_view_events` ghi hành vi xem. Guest dùng `anonymous_session_id`; customer dùng `user_id`; ít nhất một trong hai phải có giá trị.
 - `recommendation_results` lưu kết quả đã tính cho customer theo branch. Guest/cold-start dùng danh sách fallback và không cần lưu bảng.
