@@ -119,3 +119,4 @@ docker compose down
 - Docs: runs only after `APPROVED` and edits maintained documentation only.
 - Follow `.ai/WORKFLOW.md`; use `.ai/tasks/TASK-TEMPLATE.md`, `.ai/reviews/REVIEW-TEMPLATE.md`, and `.ai/results/RESULT-TEMPLATE.md`.
 - Never bypass the approval gate or the mandatory second review after fixes.
+- After successful completion, Workflow resets `.ai/STATUS.md` to the documented neutral state only after durable evidence is recorded; `BLOCKED` state is never auto-reset.

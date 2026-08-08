@@ -40,6 +40,37 @@ any active stage -> BLOCKED
 
 Allowed stages are `PLANNING`, `WAITING_FOR_APPROVAL`, `IMPLEMENTING`, `IN_REVIEW`, `CHANGES_REQUIRED`, `APPROVED`, `DOCUMENTING`, `DONE`, and `BLOCKED`.
 
+## Terminal status handling
+
+Successful completion follows this exact sequence:
+
+```text
+APPROVED -> docs when needed -> task DONE -> collect final evidence -> reset STATUS -> final response
+```
+
+After durable task, result, review, and documentation evidence is available, `workflow` resets `.ai/STATUS.md` to:
+
+```markdown
+# Workflow Status
+
+- Task: `NONE`
+- Stage: `DONE`
+- Review round: `0/3`
+- Last verdict: `NONE`
+- Blocking findings: `NONE`
+- Next agent: `workflow`
+```
+
+Resetting the status board must not delete task, result, or review artifacts. They remain the durable history used by the final response and later audits.
+
+A blocked workflow follows a different terminal path:
+
+```text
+BLOCKED -> preserve STATUS -> report blocker and required decision
+```
+
+Never auto-reset `BLOCKED` state. Preserve the active task ID, review round, latest verdict, blocking findings, and next actor or user decision so `/status` can diagnose and resume the task.
+
 ## Handoff rules
 
 - `workflow` sends `action` only `AGENTS.md`, the approved task, and relevant files or symbols.

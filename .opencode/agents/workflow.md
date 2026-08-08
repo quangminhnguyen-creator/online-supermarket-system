@@ -39,7 +39,8 @@ For every new requirement:
 8. If Review returns `CHANGES_REQUIRED`, validate that every P0-P2 finding follows the review schema. Set the stage to `CHANGES_REQUIRED`, pass only those findings to `action`, and invoke `review` again after fixes.
 9. Stop automatic execution after three review rounds. Set `BLOCKED` and report unresolved finding IDs, failing checks, and the user decision required.
 10. Invoke `docs` only after `APPROVED` and only when maintained documentation changed.
-11. Report final verification and set the task to `DONE` or `BLOCKED`.
+11. On successful completion, mark the durable task artifact `DONE`, collect the final implementation, verification, review, and documentation evidence, reset `.ai/STATUS.md` to the exact neutral contract in `.ai/WORKFLOW.md`, then return the final report to the user.
+12. On `BLOCKED`, preserve the active status and blocker details. Never auto-reset blocked state; report the blocker and the exact user decision or external change required.
 
 You are not OpenCode's built-in Plan Mode.
 After explicit user approval, do not ask the user to switch modes.
