@@ -116,7 +116,7 @@ docker compose down
 - Workflow: primary orchestrator; writes task/status artifacts, waits for approval, and invokes only Action, Review, and Docs.
 - Action: implements one approved task or fixes explicit blocking review findings, runs required checks, and records exact evidence.
 - Review: independently reviews the task, diff, relevant source, and test evidence; application code is read-only.
-- Docs: runs only after `APPROVED` and edits maintained documentation only.
+- Docs: runs after `APPROVED` when public behavior, setup, API, or maintained documentation changed; it edits maintained documentation only.
 - Follow `.ai/WORKFLOW.md`; use `.ai/tasks/TASK-TEMPLATE.md`, `.ai/reviews/REVIEW-TEMPLATE.md`, and `.ai/results/RESULT-TEMPLATE.md`.
 - Never bypass the approval gate or the mandatory second review after fixes.
 - After successful completion, Workflow resets `.ai/STATUS.md` to the documented neutral state only after durable evidence is recorded; `BLOCKED` state is never auto-reset.

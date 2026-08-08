@@ -25,7 +25,7 @@ workflow -> user approval -> action -> review
 6. `review` returns exactly `APPROVED` or `CHANGES_REQUIRED` and writes one report under `.ai/reviews/`.
 7. Blocking P0-P2 findings return to `action`; `action` fixes only those findings and reruns relevant checks.
 8. Every fix requires another independent review. Automatic execution stops after three review rounds.
-9. `docs` runs only after `APPROVED` and only when maintained documentation changed.
+9. `docs` runs after `APPROVED` when public behavior, setup, API, or maintained documentation changed.
 10. `workflow` reports final evidence and sets the task to `DONE` or `BLOCKED`.
 
 ## State transitions

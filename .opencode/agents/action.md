@@ -6,15 +6,19 @@ temperature: 0.2
 steps: 30
 permission:
   edit:
-    "*": allow
-    ".ai/WORKFLOW.md": deny
-    ".ai/STATUS.md": deny
-    ".ai/tasks/**": deny
-    ".ai/reviews/**": deny
-    ".ai/results/**": allow
+    "*": ask
+    ".env": deny
+    ".env.*": deny
+    "README.md": deny
+    "README.*": deny
+    "CHANGELOG": deny
+    "CHANGELOG.*": deny
+    "docs/**": deny
+    ".ai/**": deny
     ".opencode/**": deny
     "opencode.json": deny
     "AGENTS.md": deny
+    ".ai/results/*-ACTION.md": allow
   bash:
     "*": ask
     "dotnet *": allow

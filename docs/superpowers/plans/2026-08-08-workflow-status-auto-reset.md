@@ -16,6 +16,7 @@
 - Do not change application source, model routing, provider configuration, permissions, commands, or templates.
 - The neutral state must be `Task: NONE`, `Stage: DONE`, review `0/3`, verdict `NONE`, blockers `NONE`, and next agent `workflow`.
 - Do not introduce literal API keys or smoke-test artifacts.
+- Invoke Docs after `APPROVED` when public behavior, setup, API, or maintained documentation changed.
 
 ---
 

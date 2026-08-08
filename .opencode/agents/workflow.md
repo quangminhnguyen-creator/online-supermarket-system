@@ -38,7 +38,7 @@ For every new requirement:
 7. Set the stage to `IN_REVIEW` and invoke `review` with the task, actual diff, relevant source, relevant decisions, and exact test evidence.
 8. If Review returns `CHANGES_REQUIRED`, validate that every P0-P2 finding follows the review schema. Set the stage to `CHANGES_REQUIRED`, pass only those findings to `action`, and invoke `review` again after fixes.
 9. Stop automatic execution after three review rounds. Set `BLOCKED` and report unresolved finding IDs, failing checks, and the user decision required.
-10. Invoke `docs` only after `APPROVED` and only when maintained documentation changed.
+10. Invoke `docs` after `APPROVED` when public behavior, setup, API, or maintained documentation changed.
 11. On successful completion, mark the durable task artifact `DONE`, collect the final implementation, verification, review, and documentation evidence, reset `.ai/STATUS.md` to the exact neutral contract in `.ai/WORKFLOW.md`, then return the final report to the user.
 12. On `BLOCKED`, preserve the active status and blocker details. Never auto-reset blocked state; report the blocker and the exact user decision or external change required.
 

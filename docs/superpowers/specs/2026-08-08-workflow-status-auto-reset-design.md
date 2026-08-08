@@ -8,7 +8,7 @@ Automatically return `.ai/STATUS.md` to its neutral state after a workflow finis
 
 After Review returns `APPROVED`, the Workflow agent must:
 
-1. invoke Docs when maintained documentation changed;
+1. invoke Docs after `APPROVED` when public behavior, setup, API, or maintained documentation changed;
 2. update the durable task artifact to `DONE`;
 3. collect the final implementation, verification, review, and documentation evidence for its response;
 4. reset `.ai/STATUS.md` to the neutral state below;
