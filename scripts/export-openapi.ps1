@@ -6,10 +6,12 @@ $outputDirectory = Join-Path $projectRoot "docs\api"
 $outputPath = Join-Path $outputDirectory "openapi.json"
 $endpoint = "http://127.0.0.1:5077/openapi/v1.json"
 $previousEnvironment = $env:ASPNETCORE_ENVIRONMENT
+$previousConnectionString = $env:ConnectionStrings__DefaultConnection
 $apiProcess = $null
 
 try {
     $env:ASPNETCORE_ENVIRONMENT = "Development"
+    $env:ConnectionStrings__DefaultConnection = "Server=localhost;Port=3306;Database=openapi_export;User=export;Password=export"
     New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
     $apiProcess = Start-Process -FilePath "dotnet" `
         -ArgumentList "run", "--no-launch-profile", "--project", $apiProject, "--urls", "http://127.0.0.1:5077" `
@@ -41,4 +43,5 @@ finally {
     }
 
     $env:ASPNETCORE_ENVIRONMENT = $previousEnvironment
+    $env:ConnectionStrings__DefaultConnection = $previousConnectionString
 }

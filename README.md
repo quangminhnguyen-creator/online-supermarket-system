@@ -68,6 +68,8 @@ docker compose down
 
 Không commit `.env`. Các giá trị trong `.env.example` chỉ dành cho local demo.
 
+Compose hiện không tự động apply migration; smoke test trên chỉ xác nhận container và HTTP endpoint. Trước khi chạy demo có dữ liệu, cần apply migration có chủ đích trên MySQL 8.4 và xác minh năm bảng foundation cùng các unique index bắt buộc.
+
 ## Xuất OpenAPI
 
 OpenAPI chỉ được bật trong môi trường Development:
@@ -82,10 +84,11 @@ Contract được ghi vào `docs/api/openapi.json`.
 
 - [Đặc tả hệ thống](docs/superpowers/specs/2026-08-05-online-supermarket-system-design.md)
 - [Kế hoạch Sprint 1](docs/superpowers/plans/2026-08-07-sprint-1-foundation.md)
-- [ERD Sprint 1](docs/architecture/erd.md)
+- [ERD mục tiêu toàn hệ thống](docs/architecture/erd.md) — Sprint 1 mới hiện thực năm bảng foundation; các bảng còn lại là kế hoạch.
 
 ## Trạng thái Sprint 1
 
-- Backend, frontend, test, migration, Docker config, ERD và OpenAPI: đã tạo.
+- Backend, frontend, test, migration năm bảng foundation, Docker config và OpenAPI: đã tạo.
+- ERD mô tả mục tiêu toàn hệ thống; không đồng nghĩa toàn bộ 22 bảng đã được hiện thực trong Sprint 1.
 - Docker smoke test: cần Docker Desktop; máy phát triển hiện tại chưa có `docker` trong PATH.
 - Auth, catalog CRUD, cart, order, payment sandbox và AI: thuộc các sprint/kế hoạch tiếp theo.

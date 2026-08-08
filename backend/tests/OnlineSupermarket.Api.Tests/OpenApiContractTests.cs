@@ -1,11 +1,11 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Hosting;
 
 namespace OnlineSupermarket.Api.Tests;
 
-public sealed class OpenApiContractTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+[Collection(ApiConfigurationCollection.Name)]
+public sealed class OpenApiContractTests(TestApiFactory factory)
+    : IClassFixture<TestApiFactory>
 {
     [Fact]
     public async Task GetOpenApi_ContainsHealthOperation()

@@ -1,11 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace OnlineSupermarket.Api.Tests;
 
-public sealed class HealthEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+[Collection(ApiConfigurationCollection.Name)]
+public sealed class HealthEndpointTests(TestApiFactory factory)
+    : IClassFixture<TestApiFactory>
 {
     [Fact]
     public async Task GetHealth_ReturnsOkPayload()

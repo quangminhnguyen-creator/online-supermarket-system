@@ -4,4 +4,5 @@
 **/dist
 .git
 .worktrees
-.env
+.env*
+**/.env*
