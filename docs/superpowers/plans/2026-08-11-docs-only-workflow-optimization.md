@@ -348,7 +348,7 @@ Keep context-inspection steps 1-2 and replace the remaining numbered flow with t
 12. On any `BLOCKED` outcome, preserve the active status and exact blocker. Never auto-reset blocked state.
 ```
 
-After the numbered list, explicitly state that a resumed approved docs-only task such as TASK-002 skips the blocked Action result, preserves it as history, and resumes at step 5.
+After the numbered list, explicitly state that a resumed approved legacy docs-only task such as TASK-002 is reclassified from its allowlist regardless of stale status routing; stale Action results and full code-review reports/findings are preserved as history, do not count as docs-review rounds, and do not return to `action`. Resume at step 5 from the approved acceptance criteria.
 
 - [ ] **Step 5: Update the durable `.ai/WORKFLOW.md` contract**
 
@@ -365,7 +365,7 @@ Add these exact durable rules:
 - Docs-only implementation evidence lives at `.ai/results/TASK-NNN-DOCS.md`.
 - Docs findings return to `docs`, not `action`.
 - Docs review stops after two rounds; code review stops after three rounds.
-- A resumed approved docs-only task may bypass a stale blocked Action result but must preserve it as audit history.
+- A resumed approved legacy docs-only task bypasses stale Action results and full code-review routing, preserves them as audit history, and starts docs-review at round 1.
 - Both successful branches reset `.ai/STATUS.md` using the existing neutral contract.
 
 Keep existing code finding schema, model-routing ownership, and blocked-state preservation unchanged. Add `docs-review | workflow-docs` to the model-routing table.
@@ -486,4 +486,4 @@ Restart OpenCode so it reloads the new agents and tool policies, then send:
 Tiếp tục TASK-002 đã duyệt theo luồng DOCS_ONLY.
 ```
 
-Expected on resume: Workflow preserves the blocked `TASK-002-ACTION.md`, invokes `docs` in `DOCS_ONLY_IMPLEMENTATION`, requires `TASK-002-DOCS.md`, then invokes `docs-review` round 1.
+Expected on resume: Workflow reclassifies TASK-002 from its allowlist, preserves `TASK-002-ACTION.md` and stale full-review reports/findings as audit history, ignores their code-path routing, invokes `docs` in `DOCS_ONLY_IMPLEMENTATION`, requires `TASK-002-DOCS.md`, then invokes `docs-review` round 1.

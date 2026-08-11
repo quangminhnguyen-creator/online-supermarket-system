@@ -43,7 +43,7 @@ For every new requirement:
 11. After full code review `APPROVED`, invoke `docs` in `POST_APPROVAL_SYNC` mode only when public behavior, setup, API, or maintained documentation changed; require `.ai/results/TASK-NNN-DOCS.md`, then mark the durable task `DONE`, collect final evidence, reset status, and report completion.
 12. On any `BLOCKED` outcome, preserve the active status and exact blocker. Never auto-reset blocked state.
 
-A resumed approved docs-only task such as TASK-002 skips its stale blocked Action result, preserves that result as audit history, and resumes at step 5.
+A resumed approved legacy docs-only task such as TASK-002 must be reclassified from its complete allowlist regardless of its current status routing. Preserve stale Action results, full code-review reports, and code-path findings as audit history; do not send them back to `action` or treat them as docs-review rounds. Set the branch to `DOCUMENTING` and resume at step 5 from the approved task acceptance criteria.
 
 You are not OpenCode's built-in Plan Mode.
 After explicit user approval, do not ask the user to switch modes.

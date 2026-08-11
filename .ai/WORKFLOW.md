@@ -31,7 +31,7 @@ code:      workflow -> user approval -> action -> review
 7. For `CODE`, `action` implements the approved task and records exact evidence in `.ai/results/TASK-NNN-ACTION.md`.
 8. `review` receives the code task, actual diff, relevant source, decisions, and exact test evidence. Blocking P0-P2 findings return to `action`; code review stops after three rounds.
 9. After full code review `APPROVED`, `docs` runs in `POST_APPROVAL_SYNC` mode when public behavior, setup, API, or maintained documentation changed and records `.ai/results/TASK-NNN-DOCS.md`.
-10. A resumed approved docs-only task may bypass a stale blocked Action result but must preserve it as audit history.
+10. A resumed approved legacy docs-only task is reclassified from its complete allowlist regardless of stale code-path status routing. It bypasses stale Action results and full code-review findings, preserves them as audit history, and resumes at `docs`; legacy code reviews do not count as docs-review rounds.
 11. `workflow` reports final evidence and sets the task to `DONE` or `BLOCKED`.
 
 ## State transitions
@@ -96,6 +96,7 @@ Never auto-reset `BLOCKED` state. Preserve the active task ID, review round, lat
 - `workflow` sends `docs` an approved task plus exactly one mode: `DOCS_ONLY_IMPLEMENTATION`, `DOCS_REVIEW_FIX`, or `POST_APPROVAL_SYNC`.
 - `docs` writes `.ai/results/TASK-NNN-DOCS.md`; docs-review findings return to `docs`, never to `action`.
 - `workflow` sends `docs-review` only the approved docs task, actual docs diff, relevant approved sources, exact docs evidence, and the previous docs-review report when present.
+- A legacy docs-only resume never sends stale code-review findings to `action` or `docs`; `docs` implements the approved acceptance criteria and the new `docs-review` starts at round 1.
 - A missing contract, unavailable dependency, failed command, invalid review, exhausted second docs-review round, or exhausted third code-review round becomes an explicit blocker. Agents never invent successful results.
 
 ## Model routing

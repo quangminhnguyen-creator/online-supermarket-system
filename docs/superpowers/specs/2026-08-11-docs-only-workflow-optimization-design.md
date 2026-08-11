@@ -124,7 +124,7 @@ Artifact của lần chạy bị chặn trước đó được giữ lại làm 
 - Permission hoặc dependency thiếu: chuyển `BLOCKED` và ghi nguyên nhân cụ thể.
 - Finding tài liệu: chuyển `CHANGES_REQUIRED`, giao lại đúng finding cho `docs`.
 - Evidence thiếu hoặc không khớp diff: không được approve.
-- Khi workflow mới được nạp, TASK-002 giữ nguyên approval hiện tại, bỏ qua action result bị chặn và resume từ `docs`.
+- Khi workflow mới được nạp, TASK-002 giữ nguyên approval hiện tại và được phân loại lại từ allowlist dù status cũ đang trỏ tới `action` hoặc full code review. Action result, code-review report và finding cũ được giữ làm lịch sử nhưng không được giao lại cho `action` hay tính vào vòng docs-review; task resume từ `docs` theo acceptance criteria đã duyệt.
 
 ## 9. Xác minh triển khai
 
