@@ -4,8 +4,8 @@ agent: docs
 subtask: true
 ---
 
-Update maintained documentation for this approved task:
+Process documentation for the approved task and mode identified by:
 
 `$ARGUMENTS`
 
-First verify that the latest review report ends with `APPROVED`. Use only the approved task, implementation diff, and verified evidence. If approval or evidence is missing, stop without editing and report the exact prerequisite.
+Allowed modes are `DOCS_ONLY_IMPLEMENTATION`, `DOCS_REVIEW_FIX`, and `POST_APPROVAL_SYNC`. Follow the mode prerequisites in the Docs agent contract and write `.ai/results/TASK-NNN-DOCS.md` with exact evidence for every mode.
