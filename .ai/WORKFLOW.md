@@ -1,32 +1,38 @@
 # AI Workflow
 
-This repository uses one primary agent and three specialist subagents:
+This repository uses one primary agent and four specialist subagents:
 
 ```text
-workflow -> user approval -> action -> review
-                            ^          |
-                            | findings |
-                            +----------+
-                                  |
-                             approved
-                                  |
-                                 docs
-                                  |
-                                 done
+docs-only: workflow -> user approval -> docs -> docs-review -> done
+                                         ^          |
+                                         | findings |
+                                         +----------+
+
+code:      workflow -> user approval -> action -> review
+                                        ^          |
+                                        | findings |
+                                        +----------+
+                                              |
+                                         approved
+                                              |
+                                     docs when needed
+                                              |
+                                             done
 ```
 
 ## Required flow
 
-1. `workflow` converts a requirement into one self-contained task under `.ai/tasks/`.
-2. `workflow` sets `.ai/STATUS.md` to `WAITING_FOR_APPROVAL` and stops.
-3. No application file may change until the user explicitly approves the task.
-4. `action` implements one approved task, runs the task's checks, and records exact evidence under `.ai/results/`.
-5. `review` receives the task, actual diff, relevant source, and exact test evidence.
-6. `review` returns exactly `APPROVED` or `CHANGES_REQUIRED` and writes one report under `.ai/reviews/`.
-7. Blocking P0-P2 findings return to `action`; `action` fixes only those findings and reruns relevant checks.
-8. Every fix requires another independent review. Automatic execution stops after three review rounds.
-9. `docs` runs after `APPROVED` when public behavior, setup, API, or maintained documentation changed.
-10. `workflow` reports final evidence and sets the task to `DONE` or `BLOCKED`.
+1. `workflow` converts a requirement into one self-contained task under `.ai/tasks/` and classifies it from the complete approved modification allowlist.
+2. A task is `DOCS_ONLY` only when every allowed path is `README.md`, `README.*`, `CHANGELOG`, `CHANGELOG.*`, or `docs/**`; every other task is `CODE`.
+3. `workflow` sets `.ai/STATUS.md` to `WAITING_FOR_APPROVAL` and stops. No maintained or application file may change before explicit user approval.
+4. For `DOCS_ONLY`, `docs` implements the approved task and records exact evidence in `.ai/results/TASK-NNN-DOCS.md`.
+5. `docs-review` checks only the approved documentation scope, acceptance criteria, document integrity, actual diff, and exact docs evidence. It returns exactly `APPROVED` or `CHANGES_REQUIRED` and writes `.ai/reviews/TASK-NNN-DRN.md`.
+6. Blocking P1-P2 docs findings return to `docs` in `DOCS_REVIEW_FIX` mode. Docs review stops after two rounds.
+7. For `CODE`, `action` implements the approved task and records exact evidence in `.ai/results/TASK-NNN-ACTION.md`.
+8. `review` receives the code task, actual diff, relevant source, decisions, and exact test evidence. Blocking P0-P2 findings return to `action`; code review stops after three rounds.
+9. After full code review `APPROVED`, `docs` runs in `POST_APPROVAL_SYNC` mode when public behavior, setup, API, or maintained documentation changed and records `.ai/results/TASK-NNN-DOCS.md`.
+10. A resumed approved docs-only task may bypass a stale blocked Action result but must preserve it as audit history.
+11. `workflow` reports final evidence and sets the task to `DONE` or `BLOCKED`.
 
 ## State transitions
 
@@ -35,6 +41,10 @@ PLANNING -> WAITING_FOR_APPROVAL -> IMPLEMENTING -> IN_REVIEW
 IN_REVIEW -> CHANGES_REQUIRED -> IMPLEMENTING
 IN_REVIEW -> APPROVED -> DOCUMENTING -> DONE
 IN_REVIEW -> APPROVED -> DONE
+
+DOCS_ONLY: PLANNING -> WAITING_FOR_APPROVAL -> DOCUMENTING -> IN_REVIEW
+DOCS_ONLY: IN_REVIEW -> CHANGES_REQUIRED -> DOCUMENTING
+DOCS_ONLY: IN_REVIEW -> APPROVED -> DONE
 any active stage -> BLOCKED
 ```
 
@@ -42,10 +52,16 @@ Allowed stages are `PLANNING`, `WAITING_FOR_APPROVAL`, `IMPLEMENTING`, `IN_REVIE
 
 ## Terminal status handling
 
-Successful completion follows this exact sequence:
+Successful code completion follows this exact sequence:
 
 ```text
 APPROVED -> docs when needed -> task DONE -> collect final evidence -> reset STATUS -> final response
+```
+
+Successful docs-only completion follows this exact sequence:
+
+```text
+docs -> docs-review APPROVED -> task DONE -> collect docs evidence -> reset STATUS -> final response
 ```
 
 After durable task, result, review, and documentation evidence is available, `workflow` resets `.ai/STATUS.md` to:
@@ -77,7 +93,10 @@ Never auto-reset `BLOCKED` state. Preserve the active task ID, review round, lat
 - `action` returns changed files, behavior, exact commands and outcomes, risks, and a compact diff summary.
 - `workflow` sends `review` the task, relevant decisions, actual diff, relevant source, and test evidence.
 - `workflow` sends `action` only structured blocking findings from the latest review round.
-- A missing contract, unavailable dependency, failed command, invalid review, or exhausted third review becomes an explicit blocker. Agents never invent successful results.
+- `workflow` sends `docs` an approved task plus exactly one mode: `DOCS_ONLY_IMPLEMENTATION`, `DOCS_REVIEW_FIX`, or `POST_APPROVAL_SYNC`.
+- `docs` writes `.ai/results/TASK-NNN-DOCS.md`; docs-review findings return to `docs`, never to `action`.
+- `workflow` sends `docs-review` only the approved docs task, actual docs diff, relevant approved sources, exact docs evidence, and the previous docs-review report when present.
+- A missing contract, unavailable dependency, failed command, invalid review, exhausted second docs-review round, or exhausted third code-review round becomes an explicit blocker. Agents never invent successful results.
 
 ## Model routing
 
@@ -87,5 +106,6 @@ Never auto-reset `BLOCKED` state. Preserve the active task ID, review round, lat
 | `action` | `workflow-action` |
 | `review` | `workflow-review` |
 | `docs` | `workflow-docs` |
+| `docs-review` | `workflow-docs` |
 
 9Router owns concrete model selection and fallback. Repository agent files must not name vendor-specific fallback models.

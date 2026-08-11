@@ -4,6 +4,7 @@
 
 - Stage: `PLANNING`
 - Approved by user: `NO`
+- Task type: `DOCS_ONLY | CODE`
 
 ## Goal
 
