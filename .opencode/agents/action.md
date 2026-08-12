@@ -3,7 +3,7 @@ description: Implement one approved task or fix explicit blocking review finding
 mode: subagent
 model: 9router/action
 temperature: 0.2
-steps: 30
+steps: 10
 permission:
   edit:
     "*": ask

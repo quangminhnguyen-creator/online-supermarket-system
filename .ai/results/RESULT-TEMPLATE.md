@@ -1,4 +1,6 @@
-# TASK-NNN Action Result
+# TASK-NNN Result
+
+Target size: 1-3 KB. Reference paths and concise signals; never paste source passages, full diffs, or routine command output.
 
 ## Task and mode
 

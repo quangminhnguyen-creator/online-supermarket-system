@@ -1,5 +1,7 @@
 # TASK-NNN Review R1
 
+Target size: 1-3 KB. Use one concise row per criterion. Do not repeat the task, source inventory, full diff, result content, or routine command output.
+
 ## Inputs reviewed
 
 - Task: `.ai/tasks/TASK-NNN.md`
@@ -28,7 +30,7 @@ Use one section per P0-P2 finding. Remove this instruction and write `None` when
 
 ## Previous finding status
 
-For review round 2 or 3, mark every prior finding ID as `RESOLVED` or `UNRESOLVED` and provide evidence. For round 1, write `Not applicable`.
+For R2, mark every R1 finding ID as `RESOLVED` or `UNRESOLVED` and provide evidence. For R1, write `Not applicable`. R3 requires explicit user approval.
 
 ## Non-blocking suggestions
 

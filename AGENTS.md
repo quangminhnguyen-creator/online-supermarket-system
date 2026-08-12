@@ -94,7 +94,7 @@ docker compose down
 - C#: PascalCase for public types/members, camelCase for parameters/locals, one responsibility per file, namespaces aligned with project folders.
 - TypeScript/React: PascalCase for components and component files, camelCase for functions and variables, `*.test.tsx` for component tests.
 - Database: snake_case table/column names as defined by EF Core configurations; migration names use PascalCase intent such as `InitialFoundation`.
-- AI artifacts: `TASK-NNN.md`, `TASK-NNN-ACTION.md`, and `TASK-NNN-RN.md`.
+- AI artifacts: `TASK-NNN.md`, `TASK-NNN-ACTION.md`, numeric code reviews such as `TASK-NNN-R1.md` and `TASK-NNN-R2.md`, docs results `TASK-NNN-DOCS.md`, and numeric docs reviews such as `TASK-NNN-DR1.md` and `TASK-NNN-DR2.md`.
 
 ## Files and directories to avoid
 
@@ -118,5 +118,5 @@ docker compose down
 - Review: independently reviews the task, diff, relevant source, and test evidence; application code is read-only.
 - Docs: runs after `APPROVED` when public behavior, setup, API, or maintained documentation changed; it edits maintained documentation only.
 - Follow `.ai/WORKFLOW.md`; use `.ai/tasks/TASK-TEMPLATE.md`, `.ai/reviews/REVIEW-TEMPLATE.md`, and `.ai/results/RESULT-TEMPLATE.md`.
-- Never bypass the approval gate or the mandatory second review after fixes.
+- Never bypass the approval gate or the mandatory R2 after fixes. CODE and DOCS_ONLY stop after two automatic review rounds; R3 requires explicit user approval.
 - After successful completion, Workflow resets `.ai/STATUS.md` to the documented neutral state only after durable evidence is recorded; `BLOCKED` state is never auto-reset.
