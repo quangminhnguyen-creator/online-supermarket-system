@@ -9,3 +9,11 @@
 !.env.example
 *.user
 TestResults/
+
+# Local AI agent workflow (never publish)
+.ai/
+.opencode/
+opencode.json
+AGENTS.md
+scripts/workflow-config.test.mjs
+docs/superpowers/
