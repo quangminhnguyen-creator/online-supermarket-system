@@ -244,8 +244,8 @@
         <header>
             <h1>Đặc tả Dự án Siêu thị Điện tử Trực tuyến</h1>
             <div class="doc-meta">
-                <strong>Ngày:</strong> 12 tháng 8 năm 2026<br>
-                <strong>Trạng thái:</strong> Đã phê duyệt; triển khai Sprint 1 đang tiến hành
+                <strong>Ngày:</strong> 13 tháng 8 năm 2026<br>
+                 <strong>Trạng thái:</strong> Đặc tả trạng thái đích — 22 bảng, Bốn Thành viên, 30 ngày
             </div>
         </header>
 
@@ -257,27 +257,31 @@
                 <li><a href="#section-3">Nhóm Sản phẩm Điện tử và Luồng Chức năng</a></li>
                 <li><a href="#section-4">Kiến trúc và Công nghệ</a></li>
                 <li><a href="#section-5">Mô hình Dữ liệu và Miền Kinh doanh</a></li>
+                <li><a href="#section-5-5">Danh mục Yêu cầu Chức năng và Phi chức năng</a></li>
                 <li><a href="#section-6">API, Bảo mật, và Thanh toán</a></li>
                 <li><a href="#section-7">Chiến lược Kiểm thử và Tiêu chí Chấp nhận</a></li>
                 <li><a href="#section-8">Phương thức Giao hàng và Lộ trình Dự án</a></li>
-                <li><a href="#section-9">Ma trận Trách nhiệm Bốn Thành viên</a></li>
-                <li><a href="#section-10">Phụ thuộc, Rủi ro, và Định nghĩa Hoàn thành</a></li>
+                 <li><a href="#section-9">Ma trận Trách nhiệm Bốn Thành viên</a></li>
+                 <li><a href="#section-10">Phụ thuộc, Rủi ro, và Định nghĩa Hoàn thành</a></li>
+                 <li><a href="#section-11">Hướng dẫn Triển khai cho Agent</a></li>
             </ol>
         </nav>
 
         <section id="section-1">
             <h2>1. Mục tiêu và Tổng quan Dự án</h2>
             <p>
-                Xây dựng một <strong>siêu thị điện tử trực tuyến</strong> đa chi nhánh cho phép khách hàng tìm kiếm, so sánh,
-                mua hàng điện tử, chọn giao hàng tận nơi hoặc nhận tại chi nhánh, thanh toán an toàn và đánh giá sản phẩm.
-                Admin quản lý kho, giá, khuyến mãi, đơn hàng và báo cáo. Kiến trúc là một monolith phân lớp được thiết kế để
-                minh họa quy trình phát triển an toàn, kế toán tồn kho đồng thời chính xác, thanh toán cơ sở không lưu dữ liệu thẻ,
-                và tính năng AI khuyến nghị đơn giản.
+                Hệ thống phải xây dựng một <strong>siêu thị điện tử trực tuyến</strong> đa chi nhánh hoàn chỉnh cho phép khách hàng
+                tìm kiếm, so sánh, mua sản phẩm điện tử, chọn giao hàng tận nơi hoặc nhận tại chi nhánh, thanh toán an toàn
+                (COD, VNPay sandbox, MoMo sandbox) và đánh giá sản phẩm. Admin quản lý kho, giá, khuyến mãi, đơn hàng, báo cáo
+                và xem gợi ý sản phẩm, dự báo nhu cầu cùng cảnh báo nhập hàng. Kiến trúc là một monolith phân lớp minh họa
+                quy trình phát triển an toàn, kế toán tồn kho đa chi nhánh chính xác, thanh toán cơ sở không lưu dữ liệu thẻ,
+                và tính năng AI dựa trên nội dung và hành vi.
             </p>
             <p>
-                Dự án hoàn tất trong 30 ngày với bốn thành viên tham gia. Mục tiêu không phải production: các tính năng AI,
-                dự báo nhu cầu, và tích hợp hãng vận chuyển thực là kế hoạch tương lai. Sprint 1 cung cấp nền tảng kỹ thuật
-                đầy đủ và quy trình mô phỏng thanh toán sandbox để xác thực các luồng yêu cầu.
+                Khi hoàn thành, hệ thống sẽ bao phủ toàn bộ 22 bảng dữ liệu trên 9 miền kinh doanh, triển khai trong 30 ngày
+                bởi Bốn Thành viên với ownership dọc rõ ràng, phụ thuộc bàn giao cụ thể và review chéo không gây chồng chéo trách nhiệm. Thiết kế này minh họa các quy trình phát triển an toàn, đồng thời không phải production:
+                microservices, Redis, message broker, Kubernetes, ứng dụng mobile native, chatbot LLM, tracking shipper thời gian
+                thực và tích hợp hãng vận chuyển thực nằm ngoài phạm vi và có thể cắt giảm nếu cần.
             </p>
         </section>
 
@@ -452,7 +456,7 @@ Database
             <h2>5. Mô hình Dữ liệu và Miền Kinh doanh</h2>
 
             <h3>Tổng quan Cơ sở Dữ liệu</h3>
-            <p>Hệ thống sử dụng 22 bảng được nhóm thành 10 miền kinh doanh:</p>
+            <p>Hệ thống sử dụng 22 bảng được nhóm thành 9 miền kinh doanh:</p>
             <table>
                 <thead>
                     <tr>
@@ -520,14 +524,120 @@ Database
             </ul>
         </section>
 
-        <section id="section-6">
-            <h2>6. API, Bảo mật, và Thanh toán</h2>
+        <section id="section-5-5">
+            <h2>5.5. Danh mục Yêu cầu Chức năng (FR) và Phi chức năng (NFR)</h2>
 
-            <h3>API Boundary (Sprint 1)</h3>
+            <h3>Yêu cầu Chức năng (FR)</h3>
             <p>
-                Sprint 1 cung cấp nền tảng kỹ thuật với một health endpoint được đăng ký trong OpenAPI contract đã kiểm tra.
-                Các endpoint được lên kế hoạch cho catalog, cart, order, payment, và reporting sẽ được triển khai trong các sprint
-                tiếp theo theo quy trình design-review-implement-test được phê duyệt.
+                Mỗi yêu cầu chức năng được gán một ID ổn định (FR-NNN) để truy vết qua ERD, DFD và sitemap.
+                <strong>Canonical registry của tất cả 24 Functional Requirements và 5 Scope Drift items được tập trung tại:
+                <a href="../../requirements/functional-requirements.md" target="_blank">docs/requirements/functional-requirements.md</a></strong>
+            </p>
+            <p>
+                Để tránh sai lệch multi-source, bảng FR tại section này đã được thay thế bằng tham chiếu tới source of truth duy nhất.
+                Mỗi FR được ghi rõ Actor, Priority, Status, API endpoint, Backlog token, Owner, và Reviewer.
+                Các Scope Drift items (SD-001 đến SD-005) cũng được quản lý trong registry chính.
+            </p>
+            <div class="highlight-box">
+                <strong>Truy vết Yêu cầu (Requirement Tracing):</strong><br>
+                Mọi FR/SD được ánh xạ tới Process trong DFD (docs/architecture/dfd.md) và Route trong Sitemap (docs/architecture/sitemap.md).
+                Validator <code>node .opencode/tools/requirements-policy.mjs validate</code> tự động kiểm tra consistency của toàn bộ traceability.
+            </div>
+
+            <h3>Yêu cầu Phi chức năng (NFR)</h3>
+            <p>Các yêu cầu chất lượng, bảo mật, hiệu năng và vận hành được gán ID (NFR-NNN).</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Danh mục</th>
+                        <th>Mô tả</th>
+                        <th>Phép Đo / Tiêu chí Xác minh</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>NFR-501</strong></td>
+                        <td>Bảo mật</td>
+                        <td>Không lưu card number, CVV, expiry; mật khẩu hash; connection strings ở biến môi trường</td>
+                        <td>Code review: grep không tìm thấy credit card fields; .env.example chỉ placeholder</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-502</strong></td>
+                        <td>Authorization</td>
+                        <td>Guest không checkout/review/admin; Customer không admin; role enforce ở backend</td>
+                        <td>API test: 403 Forbidden khi role không đủ; authorization middleware active</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-503</strong></td>
+                        <td>Tính nhất quán Transaction</td>
+                        <td>Checkout atomicity: price recalc + reserve stock trong MySQL transaction; nếu fail → rollback</td>
+                        <td>Integration test: concurrent checkout → tối đa 1 success, rest 409 INSUFFICIENT_STOCK; available ≥ 0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-504</strong></td>
+                        <td>Tính nhất quán Payment</td>
+                        <td>IPN callback validation (signature, amount, external_event_id); return URL không update status</td>
+                        <td>Unit test: invalid signature rejected; duplicate event_id idempotent; status only via IPN</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-505</strong></td>
+                        <td>Hiệu năng</td>
+                        <td>Browse/search response ≤ 1000ms; checkout ≤ 2000ms (lock, reserve, create); index product, branch, order</td>
+                        <td>Load test: response times meet target; query plan uses index; no full table scan</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-506</strong></td>
+                        <td>Khả dụng / Failure Handling</td>
+                        <td>DB backup daily; 5xx error → user-friendly message + error ID; retry logic on transient failure</td>
+                        <td>Deployment: backup schedule configured; 5xx returns no stack trace; exponential backoff on timeout</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-507</strong></td>
+                        <td>Accessibility</td>
+                        <td>Color contrast ≥ 4.5:1 (text), ≥ 3:1 (UI); keyboard nav Tab/Enter/Escape; ARIA labels</td>
+                        <td>Manual accessibility audit; lighthouse score ≥ 80; screen reader tested</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-508</strong></td>
+                        <td>Responsive Design</td>
+                        <td>Layout mobile (320px), tablet (768px), desktop (1024px+); print-friendly invoice/picking slip</td>
+                        <td>Browser dev tools: responsive checked; print CSS tested; no horizontal scroll on mobile</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-509</strong></td>
+                        <td>Logging & Audit</td>
+                        <td>Log authentication events (login, token refresh, invalid); user actions (order, payment, review); errors</td>
+                        <td>Log files present; entries timestamped, structured; sensitive data (password, card) never logged</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-510</strong></td>
+                        <td>Backup & Restore</td>
+                        <td>Daily MySQL backup; retention 7 days; restore procedure documented; test quarterly</td>
+                        <td>Backup file exists, size > 0; restore test succeeds; documentation checked</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-511</strong></td>
+                        <td>Compatibility</td>
+                        <td>Frontend: Chrome, Firefox, Safari, Edge (last 2 versions); Backend: .NET 10 LTS, MySQL 8.4 LTS</td>
+                        <td>CI pipeline runs on supported versions; no deprecation warnings</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NFR-512</strong></td>
+                        <td>Maintainability</td>
+                        <td>Code follows conventions (C# PascalCase, TS camelCase); unit/integration tests ≥ 70% coverage; comments on complex logic</td>
+                        <td>Code review checklist; test coverage report; no SonarQube major issues</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+            <h3>API Boundary (Trạng thái Đích)</h3>
+            <p>
+                Hệ thống đích cung cấp API toàn diện cho catalog, cart, order, payment, reporting, và AI capabilities.
+                Các endpoint được thiết kế theo quy trình design-review-implement-test được phê duyệt.
+                OpenAPI contract mô tả toàn bộ API mục tiêu; triển khai theo giai đoạn 30 ngày.
             </p>
 
             <h3>Xác thực và Ủy quyền</h3>
@@ -594,20 +704,26 @@ Database
                 <li>Một E2E demo đầu cuối: duyệt → giỏ → checkout → payment sandbox/COD → hoàn thành → đánh giá.</li>
             </ul>
 
-            <h3>Tiêu chí Chấp nhận Sprint 1</h3>
+            <h3>Tiêu chí Chấp nhận Trạng thái Đích</h3>
             <ul>
-                <li>Backend, frontend, test, migration năm bảng foundation, Docker config, và OpenAPI được tạo.</li>
-                <li>Hệ thống chạy qua Docker Compose; health endpoint tại <code>http://localhost:8080/api/health</code> trả 200.</li>
-                <li>ERD mô tả 22 bảng mục tiêu toàn hệ thống; Sprint 1 chỉ hiện thực năm bảng foundation (Users, Addresses,
-                    RefreshTokens, Branches, Categories).</li>
-                <li>Tài liệu tham chiếu API được xuất vào <code>docs/api/openapi.json</code> cho phép xem contract API khi phát triển.</li>
+                <li>Backend, frontend, test, migration 22 bảng hoàn chỉnh, Docker config, và OpenAPI được triển khai.</li>
+                <li>Hệ thống chạy qua Docker Compose với ba dịch vụ (React, ASP.NET Core, MySQL).</li>
+                <li>Tất cả 22 bảng được tạo theo ERD; kiến trúc Api → Infrastructure → Domain; Domain không phụ thuộc EF Core hay ASP.NET.</li>
+                <li>Tài liệu tham chiếu API được xuất vào <code>docs/api/openapi.json</code> mô tả contract API hoàn chỉnh.</li>
+                <li>Checkout, tồn kho đa chi nhánh, payment sandbox (VNPay, MoMo), authorization, và AI capabilities hoàn thành.</li>
             </ul>
         </section>
 
         <section id="section-8">
             <h2>8. Phương thức Giao hàng và Lộ trình Dự án</h2>
 
-            <h3>Giao hàng Hiện tại (Sprint 1)</h3>
+            <h3>Giao hàng Trạng thái Đích</h3>
+            <p>
+                Hai phương thức giao hàng được chốt cho đặc tả đích. Từ "Hiện tại" trong bảng dưới có nghĩa là
+                các phương thức này là phạm vi hiện tại của dự án (được thiết kế để triển khai), không phải đã
+                triển khai trong Sprint 1. Xem <a href="#section-8">Lộ trình 30 Ngày</a> để phân biệt trạng thái
+                dự phòng (Giao hàng Tương Lai).
+            </p>
             <table>
                 <thead>
                     <tr>
@@ -700,68 +816,82 @@ Database
                 <tbody>
                     <tr>
                         <td><strong>Thành viên 1</strong></td>
-                        <td>Tài khoản, xác thực, hồ sơ, địa chỉ</td>
+                        <td>Identity, nền tảng, bảo mật</td>
                         <td>
                             <ul style="margin: 0; padding-left: 1.5rem;">
-                                <li>Identity domain: users, roles, refresh tokens.</li>
+                                <li>Identity domain: users, roles, refresh tokens, password hash.</li>
                                 <li>Address management: thêm/sửa/xóa/đặt mặc định.</li>
                                 <li>Profile UI: form đăng ký, đăng nhập, quản lý hồ sơ.</li>
-                                <li>Unit/integration tests: xác thực mật khẩu, token refresh.</li>
+                                <li>Backend configuration, environment secrets, security boundary.</li>
+                                <li>Unit/integration tests: xác thực mật khẩu, token refresh, authorization enforcement.</li>
                             </ul>
                         </td>
                     </tr>
                     <tr>
                         <td><strong>Thành viên 2</strong></td>
-                        <td>Catalog, danh mục, thương hiệu, tìm kiếm, so sánh, quản lý sản phẩm</td>
+                        <td>Catalog, recommendation, AI content-based</td>
                         <td>
                             <ul style="margin: 0; padding-left: 1.5rem;">
                                 <li>Catalog domain: products, categories, brands.</li>
                                 <li>Product detail UI: hiển thị kỹ thuật, so sánh (localStorage).</li>
-                                <li>Search/filter UI: full-text, danh mục, khoảng giá.</li>
+                                <li>Search/filter UI: full-text, danh mục, khoảng giá, phân trang.</li>
                                 <li>Admin product management: CRUD sản phẩm, upload hình.</li>
-                                <li>Tests: tìm kiếm, lọc, phân trang.</li>
+                                <li>AI recommendation: content-based fallback (seed data).</li>
+                                <li>Tests: tìm kiếm, lọc, phân trang, recommendation cold-start.</li>
                             </ul>
                         </td>
                     </tr>
                     <tr>
                         <td><strong>Thành viên 3</strong></td>
-                        <td>Chi nhánh, tồn kho, giỏ hàng, khuyến mãi</td>
+                        <td>Branch, inventory, cart, promotion, demand forecast, stock alert</td>
                         <td>
                             <ul style="margin: 0; padding-left: 1.5rem;">
-                                <li>Branch + BranchInventory domain: lưu trữ tồn kho đa chi nhánh, giá.</li>
+                                <li>Branch + BranchInventory domain: lưu trữ tồn kho đa chi nhánh, giá, reserved_quantity.</li>
                                 <li>Cart domain: tạo/cập nhật giỏ khi đổi chi nhánh.</li>
                                 <li>Promotions domain: kiểm tra coupon, tính discount.</li>
+                                <li>Demand forecast: moving average hoặc ML.NET seed data.</li>
+                                <li>Stock alert: cảnh báo tồn kho dưới ngưỡng.</li>
                                 <li>Branch selector UI, cart display, promotion input.</li>
                                 <li>Admin: quản lý chi nhánh, tồn kho, khuyến mãi.</li>
-                                <li>Tests: xác thực tồn kho, apply coupon.</li>
+                                <li>Tests: xác thực tồn kho, apply coupon, stock alert rules, demand forecast.</li>
                             </ul>
                         </td>
                     </tr>
                     <tr>
                         <td><strong>Thành viên 4</strong></td>
-                        <td>Checkout, giao hàng, đơn hàng, thanh toán, báo cáo</td>
+                        <td>Checkout, fulfillment, order, review, payment, reporting, AI dashboard</td>
                         <td>
                             <ul style="margin: 0; padding-left: 1.5rem;">
-                                <li>Checkout domain: validate, giữ tồn kho transactional.</li>
-                                <li>Order + Fulfillment domain: pickup vs. delivery, snapshot.</li>
-                                <li>Payment domain: COD, VNPay/MoMo callback, verify signature.</li>
-                                <li>Checkout UI, payment method selection, order history.</li>
-                                <li>Admin: order management, sales reports (daily/weekly/monthly/brand/category).</li>
-                                <li>Tests: checkout concurrency, callback IPN, payment state.</li>
+                                <li>Checkout domain: orchestration, price recalculation, promotion apply, fee logic, reservation transactional.</li>
+                                <li>Order domain: order creation, order items, status history, delivery method snapshot.</li>
+                                <li>Payment domain: COD, VNPay sandbox, MoMo sandbox; callback validation (signature, amount, external_event_id).</li>
+                                <li>Review domain: verified-purchase review, rating, comment.</li>
+                                <li>Reporting: sales dashboard, order analytics, revenue reports for admin.</li>
+                                <li>AI dashboard UI: display recommendation, demand forecast, stock alerts (consume Member 2/3 APIs).</li>
+                                <li>Checkout UI, order status history, payment method selection, review UI.</li>
+                                <li>Tests: checkout transactional reserve, insufficient stock 409, callback deduplication, payment idempotency.</li>
                             </ul>
                         </td>
                     </tr>
-                </tbody>
-            </table>
+                 </tbody>
+              </table>
 
-            <h3>Công việc Chia sẻ</h3>
-            <ul>
-                <li><strong>Nền tảng (tuần đầu):</strong> Tất cả xác nhận scope, wireframe, ERD, API contract.</li>
-                <li><strong>Tích hợp (tuần 2–3):</strong> Cặp lập trình khi tích hợp các miền.</li>
-                <li><strong>Review:</strong> Thành viên sở hữu sản phẩm tiêu dùng yêu cầu review các thay đổi API từ thành viên nhà cung cấp.</li>
-                <li><strong>Tài liệu:</strong> Cập nhật OpenAPI, ERD, README cho API mới.</li>
-                <li><strong>Demo:</strong> Thành viên 4 hướng dẫn E2E; tất cả hỗ trợ QA.</li>
-            </ul>
+             <h3>Công việc Chia sẻ</h3>
+             <ul>
+                 <li><strong>Nền tảng (Giai đoạn 1):</strong> Tất cả xác nhận scope, wireframe, ERD, API contract.</li>
+                 <li><strong>Tích hợp (Giai đoạn 2–3):</strong> Cặp lập trình khi tích hợp các miền giữa các thành viên.</li>
+                 <li><strong>Review chéo:</strong>
+                     <ul>
+                         <li>Thành viên 2 review Identity contract được sử dụng bởi Catalog.</li>
+                         <li>Thành viên 3 review Catalog contract (product/branch-facing) và price/stock contract.</li>
+                         <li>Thành viên 4 review Cart/Inventory/Promotion contract (reserve, checkout-facing).</li>
+                         <li>Thành viên 1 review authorization, secret handling, security boundary của tất cả module khác.</li>
+                         <li>Owner vẫn chịu trách nhiệm sửa finding; reviewer không trở thành đồng owner.</li>
+                     </ul>
+                 </li>
+                 <li><strong>Tài liệu:</strong> Cập nhật OpenAPI, ERD, README cho API mới.</li>
+                 <li><strong>Demo:</strong> Tất cả hỗ trợ E2E demo và QA.</li>
+             </ul>
         </section>
 
         <section id="section-10">
@@ -769,10 +899,11 @@ Database
 
             <h3>Phụ thuộc Chéo</h3>
             <ul>
-                <li><strong>Thành viên 1 ← Tất cả:</strong> Identity là nền tảng; mọi người cần xác thực trước.</li>
-                <li><strong>Thành viên 2 ← 3, 4:</strong> Catalog được tiêu thụ bởi cart (TM 3) và order (TM 4).</li>
-                <li><strong>Thành viên 3 ← 4:</strong> Cart → Checkout; cân bằng tồn kho phải transactional.</li>
-                <li><strong>Thành viên 4:</strong> Phụ thuộc vào tất cả miền trước; cần verify tất cả thay đổi trước commit.</li>
+                <li><strong>Thành viên 1 ← Tất cả:</strong> Identity là nền tảng; mọi người cần xác thực trước. Handoff: Identity contract xác thực.</li>
+                <li><strong>Thành viên 2 ← 3, 4:</strong> Catalog được tiêu thụ bởi cart (TM 3) và order (TM 4). Handoff: Product/branch-facing contract (giá, tồn kho query).</li>
+                <li><strong>Thành viên 3 ← 4:</strong> Cart → Checkout; cân bằng tồn kho phải transactional. Handoff: Cart reservation contract, reserve/release API.</li>
+                <li><strong>Thành viên 4:</strong> Phụ thuộc vào tất cả miền trước; cần verify tất cả thay đổi trước commit. Handoff: Checkout nhận Identity, Catalog, Cart/Inventory/Promotion contract đã ổn định.</li>
+                <li><strong>AI (Thành viên 2, 3, 4 chia sẻ):</strong> Thành viên 2 cung cấp product view events, recommendation API; Thành viên 3 cung cấp inventory data cho forecast/alert; Thành viên 4 cung cấp order data và AI dashboard UI. Handoff: Data API sau khi contract ổn định.</li>
             </ul>
 
             <h3>Rủi ro Chính</h3>
@@ -815,15 +946,20 @@ Database
 
             <h3>Định nghĩa Hoàn thành</h3>
             <div class="highlight-box">
-                <strong>Sprint 1 hoàn tất khi:</strong>
+                <strong>Hệ thống Hoàn tất khi:</strong>
                 <ul>
-                    <li>Backend, frontend, tests, migration 5 bảng foundation, Docker config, OpenAPI contract được xây dựng.</li>
-                    <li>Health endpoint trả 200; smoke test Docker Compose qua `docker compose up --build -d` và `Invoke-RestMethod http://localhost:8080/api/health` thành công.</li>
-                    <li>ERD mô tả 22 bảng mục tiêu; Sprint 1 hiện thực Users, Addresses, RefreshTokens, Branches, Categories.</li>
-                    <li>README ghi rõ Sprint 1 scope và các tính năng sắp tới.</li>
-                    <li>OpenAPI được xuất vào `docs/api/openapi.json`; hỗ trợ design quy trình tiếp theo.</li>
-                    <li>Không có credential lưu vào repository; `.env.example` chỉ có placeholder.</li>
-                    <li>Tài liệu hoàn chỉnh bằng tiếng Việt.</li>
+                    <li>Tất cả 22 bảng được tạo theo ERD; 9 miền kinh doanh triển khai đầy đủ.</li>
+                    <li>Hệ thống chạy qua Docker Compose; ba dịch vụ (React, ASP.NET Core, MySQL) khởi động thành công.</li>
+                    <li>Kiến trúc Api → Infrastructure → Domain; Domain không phụ thuộc EF Core hay ASP.NET Core.</li>
+                    <li>Checkout xác thực giá, promotion, phí và reserve tồn kho transactional; thiếu stock trả 409.</li>
+                    <li>Tồn kho đa chi nhánh; mỗi BranchInventory lưu giá bán, quantity_on_hand, reserved_quantity.</li>
+                    <li>Payment: COD, VNPay sandbox, MoMo sandbox; return URL hiển thị; IPN hợp lệ mới cập nhật trạng thái.</li>
+                    <li>Authorization: Guest xem; Customer mua/review; Admin quản lý; role không được vượt qua được enforcement ở backend.</li>
+                    <li>AI features: Recommendation (content-based fallback), demand forecast, stock alerts triển khai với seed data.</li>
+                    <li>Test: Unit domain, integration API/payment/checkout, authorization, concurrency, AI fallback.</li>
+                    <li>Không lưu card, CVV, hoặc expiry; credential chỉ trong biến môi trường; repository chỉ có `.env.example`.</li>
+                    <li>OpenAPI xuất vào `docs/api/openapi.json`; README mô tả 22 bảng, 9 miền, technology stack, và lệnh chạy.</li>
+                    <li>Tài liệu hoàn chỉnh bằng tiếng Việt; spec mô tả trạng thái đích, không báo cáo Sprint 1.</li>
                 </ul>
             </div>
 
@@ -838,10 +974,57 @@ Database
             </ul>
         </section>
 
-        <footer>
+        <section id="section-11">
+            <h2>11. Hướng dẫn Triển khai cho Agent</h2>
             <p>
-                Tài liệu này là đặc tả chính thức cho dự án Siêu thị Điện tử Trực tuyến.
-                Được tạo vào ngày 12 tháng 8 năm 2026. Phiên bản này bao gồm Sprint 1 nền tảng và kế hoạch tương lai.
+                Khi triển khai các tính năng từ đặc tả này, agent phát triển phải tuân theo hướng dẫn sau để đảm bảo
+                chất lượng, tính an toàn, và đầy đủ bằng chứng:
+            </p>
+
+            <ol>
+                <li>
+                    <strong>Kiểm tra Repository và Cấu trúc Dự án:</strong> Trước khi bắt đầu, kiểm tra rằng repository
+                    hiện tại có các tệp cấu hình, migration, và test được mô tả trong tài liệu này. Xác nhận stack công nghệ,
+                    phiên bản dependency, và cấu trúc thư mục khớp với `.ai/AGENTS.md` và `README.md`.
+                </li>
+                <li>
+                    <strong>Sử dụng CodeGraph cho Phân tích Cấu trúc và Tác động:</strong> Khi cần hiểu kiến trúc hiện tại
+                    hoặc phân tích tác động của thay đổi, dùng CodeGraph (nếu có `.codegraph/` index) để truy vấn các symbol,
+                    đường gọi, và phụ thuộc. Không giả định cấu trúc code mà phải xác nhận bằng CodeGraph hoặc text search.
+                </li>
+                <li>
+                    <strong>Chia giai đoạn Triển khai và Xác minh:</strong> Triển khai các tính năng theo giai đoạn logic
+                    (ví dụ: domain → infrastructure → API → tests → frontend). Sau mỗi giai đoạn, chạy kiểm tra tương ứng
+                    (unit tests, integration tests, build, lint) để xác minh không có regression.
+                </li>
+                <li>
+                    <strong>Không Giả định Tính năng Tồn tại:</strong> Trước khi sử dụng hay tham chiếu một tính năng,
+                    xác nhận rằng nó đã được triển khai trong mã hiện tại. Kiểm tra migration, model, API endpoint, hoặc test
+                    thực tế; không dựa vào mô tả trong tài liệu này nếu chưa thấy trong code.
+                </li>
+                <li>
+                    <strong>Viết Test cho Logic Kinh doanh Quan trọng:</strong> Khi triển khai checkout, tồn kho, thanh toán,
+                    khuyến mãi, hoặc authorization, phải viết unit test cho domain logic và integration test cho API/persistence.
+                    Test phải bao phủ các trường hợp thành công, lỗi dự kiến, concurrency, và edge case.
+                </li>
+                <li>
+                    <strong>Chạy Test, Build, và Deployment Check sau Mỗi Giai đoạn:</strong> Sau khi hoàn thành mỗi giai đoạn triển khai,
+                    chạy `dotnet build`, `dotnet test` (backend), `npm run build` (frontend), và Docker Compose validation
+                    (nếu triển khai local). Chỉ khi tất cả xanh mới tiếp tục giai đoạn tiếp theo.
+                </li>
+                <li>
+                    <strong>Chỉ Tuyên bố Hoàn thành khi Có Bằng chứng:</strong> Không tuyên bố một tính năng hoàn thành
+                    nếu chưa chạy test thực tế, build thành công, hoặc có integration test xanh. Mỗi tuyên bố hoàn thành
+                    phải đi kèm lệnh chạy, output log, và commit hash xác thực.
+                </li>
+            </ol>
+        </section>
+
+         <footer>
+            <p>
+                 <strong>Tài liệu này là đặc tả trạng thái đích chính thức cho dự án Siêu thị Điện tử Trực tuyến.
+                Được tạo vào ngày 13 tháng 8 năm 2026. Mô tả hệ thống hoàn chỉnh: 22 bảng, 9 miền kinh doanh, Bốn Thành viên, 30 ngày.
+                Lộ trình 30 ngày là mục tiêu tham khảo; ngoài phạm vi và có thể cắt được ghi rõ ở mục 8 và 10.
             </p>
         </footer>
     </div>
