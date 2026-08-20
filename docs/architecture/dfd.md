@@ -1,11 +1,11 @@
 # DFD Hệ thống Siêu thị Điện tử Trực tuyến
 
-Status: DRAFT
-Ngày: 2026-08-13
-Phạm vi: 22 bảng, 4 thành viên, 30 ngày
+Status: **OFFICIAL**
+Ngày: 2026-08-19
+Phạm vi: 22 bảng, 3 thành viên, 30 ngày
 Cấu trúc: Context → Level 0 → Level 1 (chi tiết)
 
-> **DRAFT Lifecycle Note:** Tài liệu này ở trạng thái `DRAFT` và chưa phải canonical requirement source. Chỉ chuyển `OFFICIAL` sau khi canonical FR registry được tạo (`docs/requirements/functional-requirements.md`), remap đầy đủ DFD/sitemap, và review chéo thành công trong Cycle 2 trở lên.
+> **OFFICIAL:** Tài liệu này là canonical DFD cho hệ thống. Tất cả processes mới phải được thêm vào đây.
 
 ## 1. Quy ước ký hiệu
 
@@ -315,7 +315,35 @@ Tất cả thao tác phải trong **một MySQL transaction**:
 - Admin: P.7–P.12 + báo cáo.
 - Backend enforcement bắt buộc trên mỗi endpoint.
 
-## 7. Ràng buộc & Giới hạn
+## 7. Implementation Status
+
+| Process | Status | Domain Entities |
+|---------|--------|-----------------|
+| P.1 Duyệt hàng & Tìm kiếm | 🔄 Planned | Category, Brand, Product, Branch |
+| P.2 Quản lý tài khoản | ✅ Implemented | User, RefreshToken (D2) |
+| P.3 Quản lý giỏ hàng | 🔄 Planned | Cart, CartItem |
+| P.4 Checkout & Đặt hàng | 🔄 Planned | Order, OrderItem, OrderStatusHistory |
+| P.5 Thanh toán | 🔄 Planned | Payment, PaymentCallback |
+| P.6 Đánh giá & Bình luận | 🔄 Planned | Review |
+| P.7 Quản lý Catalog | 🔄 Planned | Category, Brand, Product |
+| P.8 Quản lý Chi nhánh & Tồn kho | 🔄 Planned | Branch, BranchInventory, InventoryTransaction |
+| P.9 Quản lý Khuyến mãi | 🔄 Planned | Promotion |
+| P.10 Quản lý Đơn hàng | 🔄 Planned | Order, OrderItem, OrderStatusHistory |
+| P.11 Báo cáo & AI | 🔄 Planned | ProductViewEvent, DemandForecast, StockAlert |
+| P.12 Xem Gợi ý & Cảnh báo | 🔄 Planned | RecommendationResult |
+
+### Implemented Entities (v1)
+- ✅ User (with ASP.NET Core Identity)
+- ✅ RefreshToken
+- ✅ Branch
+- ✅ Category
+- ✅ Brand
+- ✅ Product
+- ✅ BranchInventory
+
+---
+
+## 8. Ràng buộc & Giới hạn
 
 - Mỗi Customer có **tối đa một cart** per branch; đổi branch → tải lại cart.
 - Mỗi order item được review **tối đa một lần**.

@@ -1,4 +1,6 @@
 using OnlineSupermarket.Domain.Common;
+using OnlineSupermarket.Domain.Branches;
+using OnlineSupermarket.Domain.Catalog;
 
 namespace OnlineSupermarket.Domain.Inventory;
 
@@ -31,6 +33,32 @@ public sealed class BranchInventory : Entity
     public int AvailableQuantity => QuantityOnHand - ReservedQuantity;
     public int ReorderLevel { get; private set; }
     public DateTime UpdatedAtUtc { get; private set; } = DateTime.UtcNow;
+
+    // Setters for admin inventory management
+    public void AdjustSellingPrice(decimal price)
+    {
+        if (price < 0) throw new ArgumentOutOfRangeException(nameof(price));
+        SellingPrice = price;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void AdjustQuantity(int quantityOnHand)
+    {
+        if (quantityOnHand < 0) throw new ArgumentOutOfRangeException(nameof(quantityOnHand));
+        QuantityOnHand = quantityOnHand;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void AdjustReorderLevel(int level)
+    {
+        if (level < 0) throw new ArgumentOutOfRangeException(nameof(level));
+        ReorderLevel = level;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    // Navigation properties (EF Core managed)
+    public Product? Product { get; private set; }
+    public Branch? Branch { get; private set; }
 
     public static BranchInventory Create(
         Guid branchId,
@@ -71,6 +99,17 @@ public sealed class BranchInventory : Entity
         }
 
         ReservedQuantity += quantity;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void Release(int quantity)
+    {
+        if (quantity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(quantity));
+        }
+
+        ReservedQuantity = Math.Max(0, ReservedQuantity - quantity);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 }

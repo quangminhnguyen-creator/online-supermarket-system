@@ -1,12 +1,12 @@
 # Danh mục Yêu cầu Chức năng Canonical
 
-Status: DRAFT
+Status: **OFFICIAL**
 
-Ngày: 2026-08-16
+Ngày: 2026-08-19
 Chu kỳ: Cycle 2
 Phạm vi: 24 canonical Functional Requirements (FR-101..FR-115, FR-201..FR-209) và 5 Scope Drift items (SD-001..SD-005)
 
-> **DRAFT Lifecycle Note:** Tài liệu này ở trạng thái `DRAFT` và là canonical Single Source of Truth cho tất cả FR và SD của dự án. Chỉ chuyển `OFFICIAL` sau khi Cycle 2 review chéo thành công và được phê duyệt chính thức. Mọi DFD, sitemap, và project-spec phải tham chiếu bảng này để tránh sai lệch đa nguồn.
+> **OFFICIAL:** Tài liệu này là canonical Single Source of Truth cho tất cả FR và SD của dự án. Mọi DFD, sitemap, và project-spec phải tham chiếu bảng này để tránh sai lệch đa nguồn.
 
 ## 1. Bảng Registry - Yêu cầu Chức năng (FR)
 
@@ -25,8 +25,8 @@ Phạm vi: 24 canonical Functional Requirements (FR-101..FR-115, FR-201..FR-209)
 | FR-111 | Customer | Áp dụng mã khuyến mãi (coupon) | MEDIUM | DRAFT | Validate code; áp dụng discount; kiểm tra usage limit | POST /api/checkout/coupon | PLANNED_CYCLE_5 | Dev | Rev |
 | FR-112 | Customer | Xem lịch sử đơn hàng, chi tiết, trạng thái | MEDIUM | DRAFT | Danh sách order; filter by status; xem snapshot person/address/items | GET /api/orders | PLANNED_CYCLE_4 | Dev | Rev |
 | FR-113 | Customer | Đánh giá sản phẩm đã mua (1–5 sao + comment) | MEDIUM | DRAFT | Order Completed; per item tối đa 1 review; verified purchase enforce | POST /api/reviews | PLANNED_CYCLE_5 | Dev | Rev |
-| FR-114 | Customer | Đăng ký tài khoản bằng email + password | HIGH | DRAFT | User tạo; mật khẩu hash; xác thực quyền | POST /api/auth/register | PLANNED_CYCLE_4 | Dev | Rev |
-| FR-115 | Customer | Đăng nhập, refresh token, đăng xuất | HIGH | DRAFT | JWT access token + refresh token; token hết hạn → require login lại | POST /api/auth/login | PLANNED_CYCLE_4 | Dev | Rev |
+| FR-114 | Customer | Đăng ký tài khoản bằng email + password | HIGH | ✅ IMPLEMENTED | User tạo; mật khẩu hash; xác thực quyền | POST /api/auth/register | DONE | Dev | Rev |
+| FR-115 | Customer | Đăng nhập, refresh token, đăng xuất | HIGH | ✅ IMPLEMENTED | JWT access token + refresh token; token hết hạn → require login lại | POST /api/auth/login | DONE | Dev | Rev |
 | FR-201 | Admin | CRUD danh mục, thương hiệu | MEDIUM | DRAFT | Tạo, sửa, xóa; hỗ trợ cây cha-con; slug duy nhất | POST /api/admin/categories | PLANNED_CYCLE_4 | Dev | Rev |
 | FR-202 | Admin | CRUD sản phẩm, upload hình | MEDIUM | DRAFT | Tạo, sửa, xóa (soft); SKU duy nhất; image_url lưu một ảnh chính | POST /api/admin/products | PLANNED_CYCLE_4 | Dev | Rev |
 | FR-203 | Admin | Quản lý chi nhánh, tồn kho, giá per branch | HIGH | DRAFT | CRUD branch; set price + quantity per BranchInventory; reserve tracking | POST /api/admin/branches | PLANNED_CYCLE_4 | Dev | Rev |
@@ -52,8 +52,8 @@ Phạm vi: 24 canonical Functional Requirements (FR-101..FR-115, FR-201..FR-209)
 ### Truy vết Yêu cầu
 - Mỗi FR/SD được gán ID ổn định để tham chiếu từ DFD (Process), Sitemap (Route), Project-spec, và code comment.
 - Không được dùng ID cũ từ các bản nháp khác (như FR-301..FR-507 từ bản trước).
-- Status mỗi dòng phải là `DRAFT`, `PROPOSED`, `APPROVED`, `IMPLEMENTED`, `VERIFIED`, `DEPRECATED`, `IN_PROGRESS`, hoặc `DONE`.
-- Hiện tại (Cycle 2) tất cả FR ở `DRAFT`; không dùng `OFFICIAL` cho đến khi review chéo thành công.
+- Status mỗi dòng phải là `DRAFT`, `PROPOSED`, `APPROVED`, `IMPLEMENTED`, `VERIFIED`, `DEPRECATED`, `IN_PROGRESS`, `DONE`, hoặc `✅ IMPLEMENTED`.
+- FR/SD đã implement: đánh dấu `✅ IMPLEMENTED` hoặc `DONE`.
 
 ### Priority
 - Hỗ trợ: `MUST`, `SHOULD`, `COULD`, `WONT`, `HIGH`, `MEDIUM`, `LOW`, `P0`, `P1`, `P2`, `P3`, `CRITICAL`.

@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from 'react'
 import { ApiStatus } from '../features/system/ApiStatus'
+import { UserMenu } from '../features/auth/UserMenu'
 
 export function AppShell({ children }: PropsWithChildren) {
   return (
@@ -17,7 +18,10 @@ export function AppShell({ children }: PropsWithChildren) {
           <a href="#branches">Chi nhánh</a>
           <a href="#roadmap">Lộ trình</a>
         </nav>
-        <ApiStatus />
+        <div className="header-actions">
+          <UserMenu />
+          <ApiStatus />
+        </div>
       </header>
       <main id="top">{children}</main>
     </div>

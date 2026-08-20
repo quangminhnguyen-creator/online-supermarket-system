@@ -46,4 +46,8 @@ public sealed class Product : Entity
     public string Unit { get; private set; } = string.Empty;
     public string? ImageUrl { get; private set; }
     public bool IsActive { get; private set; } = true;
+
+    // Navigation properties (EF Core managed)
+    public Category? Category { get; private set; }
+    public Brand? Brand { get; private set; }
 }

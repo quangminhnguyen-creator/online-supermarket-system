@@ -1,11 +1,11 @@
 # Sitemap Hệ thống Siêu thị Điện tử Trực tuyến
 
-Status: DRAFT
-Ngày: 2026-08-13
+Status: **OFFICIAL**
+Ngày: 2026-08-19
 Phạm vi: Guest, Customer, Admin; route đích; guard và trạng thái lỗi
 Liên kết: Trace tới FR (Functional Requirement) và DFD Process
 
-> **DRAFT Lifecycle Note:** Tài liệu này ở trạng thái `DRAFT` và chưa phải canonical requirement source. Chỉ chuyển `OFFICIAL` sau khi canonical FR registry được tạo (`docs/requirements/functional-requirements.md`), remap đầy đủ DFD/sitemap, và review chéo thành công trong Cycle 2 trở lên.
+> **OFFICIAL:** Tài liệu này là canonical sitemap cho hệ thống. Tất cả routes mới phải được thêm vào đây và trace tới FR tương ứng.
 
 ## 1. Quy ước
 
@@ -450,7 +450,29 @@ Liên kết: Trace tới FR (Functional Requirement) và DFD Process
 
 ---
 
-## 5. Error Handling & States per Route
+## 5. Implementation Status
+
+| Route | Status | Notes |
+|---|---|---|
+| `/` | ✅ Implemented | Landing page |
+| `/api/health` | ✅ Implemented | Health check endpoint |
+| `/api/auth/register` | ✅ Implemented | FR-114 |
+| `/api/auth/login` | ✅ Implemented | FR-115 |
+| `/api/auth/refresh` | ✅ Implemented | Token refresh |
+| `/api/auth/logout` | ✅ Implemented | Logout + revoke token |
+| `/api/auth/me` | ✅ Implemented | Get current user |
+| `/browse` | 🔄 Planned | FR-101 |
+| `/product/:id` | 🔄 Planned | FR-103 |
+| `/shopping/cart` | 🔄 Planned | FR-107 |
+| `/shopping/checkout` | 🔄 Planned | FR-108, FR-109, FR-110, FR-111 |
+| `/orders/history` | 🔄 Planned | FR-112 |
+| `/admin/catalog/*` | 🔄 Planned | FR-201, FR-202 |
+| `/admin/branch/*` | 🔄 Planned | FR-203 |
+| `/admin/orders/*` | 🔄 Planned | FR-205 |
+
+---
+
+## 6. Error Handling & States per Route
 
 ### Universal Error States
 
@@ -470,7 +492,7 @@ Liên kết: Trace tới FR (Functional Requirement) và DFD Process
 
 ---
 
-## 6. Responsive & Accessibility
+## 7. Responsive & Accessibility
 
 - All routes responsive on mobile/tablet/desktop.
 - Print-friendly for invoices, picking slips (PICKUP fulfillment).

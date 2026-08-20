@@ -1,18 +1,42 @@
 using Microsoft.EntityFrameworkCore;
 using OnlineSupermarket.Domain.Branches;
 using OnlineSupermarket.Domain.Catalog;
+using OnlineSupermarket.Domain.Identity;
 using OnlineSupermarket.Domain.Inventory;
+using OnlineSupermarket.Domain.Orders;
+using OnlineSupermarket.Domain.Payments;
+using OnlineSupermarket.Domain.Shopping;
 
 namespace OnlineSupermarket.Infrastructure.Persistence;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     : DbContext(options)
 {
+    // Identity
+    public DbSet<User> Users => Set<User>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    // Catalog
     public DbSet<Branch> Branches => Set<Branch>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<Product> Products => Set<Product>();
+
+    // Inventory
     public DbSet<BranchInventory> BranchInventories => Set<BranchInventory>();
+
+    // Shopping
+    public DbSet<Cart> Carts => Set<Cart>();
+    public DbSet<CartItem> CartItems => Set<CartItem>();
+
+    // Orders
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<OrderStatusHistory> OrderStatusHistories => Set<OrderStatusHistory>();
+
+    // Payments
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PaymentCallback> PaymentCallbacks => Set<PaymentCallback>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
