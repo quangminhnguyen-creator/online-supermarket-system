@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using OnlineSupermarket.Infrastructure.Identity;
 using OnlineSupermarket.Infrastructure.Persistence;
+using OnlineSupermarket.Infrastructure.Services;
 
 namespace OnlineSupermarket.Infrastructure;
 
@@ -15,8 +16,11 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("DefaultConnection is required.");
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("DefaultConnection is required.");
+        }
 
         services.AddDbContext<AppDbContext>(options => options.UseMySQL(connectionString));
 
@@ -25,6 +29,33 @@ public static class DependencyInjection
 
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<ITokenService, JwtTokenService>();
+        services.AddScoped<IPasswordResetService, PasswordResetService>();
+
+        // Register email sender based on environment — DevEmailSender only in Development
+        // Use Email:UseDevMode=true to force dev mode (useful for testing)
+        var environmentName = configuration["Environment"] ?? configuration["ASPNETCORE_ENVIRONMENT"] ?? "Production";
+        var useDevEmail = string.Equals(environmentName, "Development", StringComparison.OrdinalIgnoreCase)
+            || configuration.GetValue<bool>("Email:UseDevMode");
+
+        if (useDevEmail)
+        {
+            services.AddSingleton<IEmailSender, DevEmailSender>();
+        }
+        else
+        {
+            // Production: fail if email provider is configured but not yet implemented
+            var emailProvider = configuration["Email:Provider"];
+            if (!string.IsNullOrWhiteSpace(emailProvider))
+            {
+                throw new InvalidOperationException(
+                    $"Email provider '{emailProvider}' is configured but not yet implemented. " +
+                    "Set ASPNETCORE_ENVIRONMENT=Development or Email:UseDevMode=true to use the dev email store for local development.");
+            }
+            throw new InvalidOperationException(
+                "Email provider is not configured. Set 'Email:Provider' in configuration " +
+                "(e.g., 'SendGrid', 'Ses', 'Smtp') and configure the corresponding API key/credentials. " +
+                "Alternatively, set ASPNETCORE_ENVIRONMENT=Development or Email:UseDevMode=true to use the dev email store.");
+        }
 
         services.AddAuthentication(options =>
         {
@@ -46,7 +77,14 @@ public static class DependencyInjection
             };
         });
 
-        services.AddAuthorization();
+        services.AddAuthorizationBuilder()
+            .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+
+        // Register background services unless explicitly disabled for testing
+        if (!configuration.GetValue<bool>("Infrastructure:DisableBackgroundServices"))
+        {
+            services.AddHostedService<BackgroundServices.RefreshTokenCleanupService>();
+        }
 
         return services;
     }

@@ -244,9 +244,9 @@
         <header>
             <h1>Đặc tả Dự án Siêu thị Điện tử Trực tuyến</h1>
             <div class="doc-meta">
-                <strong>Ngày:</strong> 19 tháng 8 năm 2026<br>
-                 <strong>Trạng thái:</strong> Đặc tả trạng thái đích — 22 bảng, Bốn Thành viên, 30 ngày<br>
-                 <strong>Tiến độ:</strong> ✅ Auth Foundation (Done) | 🔄 Sprint 2 (Catalog + Browse)
+                <strong>Ngày cập nhật:</strong> 23 tháng 8 năm 2026<br>
+                <strong>Trạng thái:</strong> Đặc tả hệ thống chuẩn hóa — 16 Bảng đã Migration, 7 Bảng quy hoạch mở rộng<br>
+                <strong>Tiến độ:</strong> ✅ Core Modules Hoàn thành (Auth, Profile, Address, Catalog, Branch Stock, Cart, Transactional Checkout, Sandbox Payments, Orders)
             </div>
         </header>
 
@@ -458,60 +458,70 @@ Database
             <h2>5. Mô hình Dữ liệu và Miền Kinh doanh</h2>
 
             <h3>Tổng quan Cơ sở Dữ liệu</h3>
-            <p>Hệ thống sử dụng 22 bảng được nhóm thành 9 miền kinh doanh:</p>
+            <p>Hệ thống thiết kế 23 bảng (16 bảng đã tạo qua EF Core Migrations, 7 bảng mở rộng) nhóm thành 9 miền kinh doanh:</p>
             <table>
                 <thead>
                     <tr>
                         <th>Miền</th>
                         <th>Số bảng</th>
                         <th>Chứa</th>
+                        <th>Trạng thái</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Tài khoản</td>
-                        <td>3</td>
-                        <td>Users, Addresses, RefreshTokens</td>
+                        <td>Tài khoản & Định danh</td>
+                        <td>4</td>
+                        <td>Users, Addresses, RefreshTokens, PasswordResetTokens</td>
+                        <td><span class="status-badge status-current">✅ Đã Migration</span></td>
                     </tr>
                     <tr>
                         <td>Chi nhánh và Catalog</td>
                         <td>4</td>
                         <td>Branches, Categories, Brands, Products</td>
+                        <td><span class="status-badge status-current">✅ Đã Migration</span></td>
                     </tr>
                     <tr>
                         <td>Tồn kho</td>
                         <td>2</td>
                         <td>BranchInventories, InventoryTransactions</td>
+                        <td><span class="status-badge status-current">1 Migrated / 1 Planned</span></td>
                     </tr>
                     <tr>
                         <td>Giỏ hàng</td>
                         <td>2</td>
                         <td>Carts, CartItems</td>
+                        <td><span class="status-badge status-current">✅ Đã Migration</span></td>
                     </tr>
                     <tr>
                         <td>Khuyến mãi</td>
                         <td>1</td>
                         <td>Promotions</td>
+                        <td><span class="status-badge status-future">⏳ Kế hoạch mở rộng</span></td>
                     </tr>
                     <tr>
                         <td>Đơn hàng</td>
                         <td>3</td>
                         <td>Orders, OrderItems, OrderStatusHistories</td>
+                        <td><span class="status-badge status-current">✅ Đã Migration</span></td>
                     </tr>
                     <tr>
                         <td>Thanh toán</td>
                         <td>2</td>
                         <td>Payments, PaymentCallbacks</td>
+                        <td><span class="status-badge status-current">✅ Đã Migration</span></td>
                     </tr>
                     <tr>
                         <td>Đánh giá</td>
                         <td>1</td>
                         <td>Reviews</td>
+                        <td><span class="status-badge status-future">⏳ Kế hoạch mở rộng</span></td>
                     </tr>
                     <tr>
-                        <td>AI</td>
+                        <td>Phân tích & AI</td>
                         <td>4</td>
                         <td>ProductViewEvents, RecommendationResults, DemandForecasts, StockAlerts</td>
+                        <td><span class="status-badge status-future">⏳ Kế hoạch mở rộng</span></td>
                     </tr>
                 </tbody>
             </table>
@@ -530,65 +540,110 @@ Database
             <h2>5.5. Danh mục Yêu cầu Chức năng (FR) và Phi chức năng (NFR)</h2>
 
             <div class="highlight-box">
-                <strong>Tiến độ Implementation (Cập nhật: 2026-08-19)</strong>
+                <strong>Tiến độ Implementation (Cập nhật: 2026-08-23)</strong>
                 <table>
                     <thead>
                         <tr>
-                            <th>FR</th>
-                            <th>Mô tả</th>
-                            <th>Status</th>
+                            <th>FR ID</th>
+                            <th>Mô tả chức năng</th>
+                            <th>Trạng thái Triển khai</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr style="background: #d4edda;">
-                            <td>FR-114</td>
-                            <td>Đăng ký tài khoản</td>
+                            <td><strong>FR-114</strong></td>
+                            <td>Đăng ký tài khoản khách hàng</td>
                             <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
                         </tr>
                         <tr style="background: #d4edda;">
-                            <td>FR-115</td>
-                            <td>Đăng nhập, refresh token, đăng xuất</td>
+                            <td><strong>FR-115</strong></td>
+                            <td>Đăng nhập JWT, Refresh Token, Đăng xuất, Quên/Đặt lại mật khẩu</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-101</strong></td>
+                            <td>Duyệt sản phẩm, tìm kiếm, lọc theo danh mục/thương hiệu/giá</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-102</strong></td>
+                            <td>Chọn chi nhánh, xem giá và tồn kho theo chi nhánh</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-103</strong></td>
+                            <td>Xem chi tiết sản phẩm, tồn kho và giá chi nhánh</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-105</strong></td>
+                            <td>Quản lý hồ sơ cá nhân & đổi mật khẩu tài khoản</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-106</strong></td>
+                            <td>Quản lý sổ địa chỉ giao hàng (CRUD, đặt mặc định)</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-107</strong></td>
+                            <td>Tạo và cập nhật giỏ hàng theo chi nhánh</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-108, FR-109</strong></td>
+                            <td>Checkout giao dịch (Serializable), khóa giữ tồn kho, chọn Pickup/Delivery</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-110</strong></td>
+                            <td>Thanh toán COD, VNPay/MoMo sandbox, xử lý callback IPN</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-112</strong></td>
+                            <td>Xem lịch sử đơn hàng, chi tiết và trạng thái</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-203</strong></td>
+                            <td>Admin quản lý tồn kho chi nhánh, giá bán, định mức nhập</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-205</strong></td>
+                            <td>Admin quản lý danh sách đơn hàng, cập nhật trạng thái</td>
+                            <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
+                        </tr>
+                        <tr style="background: #d4edda;">
+                            <td><strong>FR-206</strong></td>
+                            <td>Admin quản lý người dùng, khóa / mở khóa tài khoản</td>
                             <td><span class="status-badge status-current">✅ IMPLEMENTED</span></td>
                         </tr>
                         <tr>
-                            <td>FR-101</td>
-                            <td>Duyệt sản phẩm, tìm kiếm, lọc</td>
-                            <td>🔄 Sprint 2</td>
-                        </tr>
-                        <tr>
-                            <td>FR-102</td>
-                            <td>Chọn chi nhánh, xem giá/tồn kho</td>
-                            <td>🔄 Sprint 2</td>
-                        </tr>
-                        <tr>
-                            <td>FR-103</td>
-                            <td>Xem chi tiết sản phẩm</td>
-                            <td>🔄 Sprint 2</td>
-                        </tr>
-                        <tr>
                             <td>FR-104</td>
-                            <td>So sánh sản phẩm</td>
-                            <td>🔄 Sprint 2</td>
+                            <td>So sánh sản phẩm (Client localStorage)</td>
+                            <td><span class="status-badge status-future">⏳ Kế hoạch mở rộng</span></td>
                         </tr>
                         <tr>
-                            <td>FR-107</td>
-                            <td>Tạo/cập nhật giỏ hàng</td>
-                            <td>🔄 Sprint 3</td>
+                            <td>FR-111, FR-204</td>
+                            <td>Áp dụng mã khuyến mãi & Quản trị khuyến mãi / Coupon</td>
+                            <td><span class="status-badge status-future">⏳ Kế hoạch mở rộng</span></td>
                         </tr>
                         <tr>
-                            <td>FR-108</td>
-                            <td>Checkout, reserve stock</td>
-                            <td>🔄 Sprint 3</td>
+                            <td>FR-113</td>
+                            <td>Đánh giá sản phẩm đã mua (Verified Purchase)</td>
+                            <td><span class="status-badge status-future">⏳ Kế hoạch mở rộng</span></td>
                         </tr>
                         <tr>
-                            <td>FR-109, FR-110</td>
-                            <td>Fulfillment, Payment</td>
-                            <td>🔄 Sprint 4</td>
+                            <td>FR-201, FR-202</td>
+                            <td>Admin CRUD danh mục, thương hiệu, sản phẩm portal</td>
+                            <td><span class="status-badge status-future">⏳ Kế hoạch mở rộng</span></td>
                         </tr>
                         <tr>
-                            <td>FR-201-209</td>
-                            <td>Admin features + AI</td>
-                            <td>🔄 Sprint 5-7</td>
+                            <td>FR-207, FR-208, FR-209</td>
+                            <td>Báo cáo doanh thu, Dự báo nhu cầu & Gợi ý AI</td>
+                            <td><span class="status-badge status-future">⏳ Kế hoạch mở rộng</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -776,65 +831,65 @@ Database
                         <th>Tuần</th>
                         <th>Mục tiêu</th>
                         <th>Deliverables</th>
-                        <th>Members</th>
+                        <th>Trạng thái</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Sprint 1</td>
+                    <tr style="background: #d4edda;">
+                        <td><strong>Sprint 1</strong></td>
                         <td>Week 1</td>
-                        <td>Foundation & Auth</td>
-                        <td>ERD, DFD, Auth System (FR-114, FR-115)</td>
-                        <td>All</td>
+                        <td>Foundation, Identity & Auth</td>
+                        <td>ERD, DFD, Auth System (FR-114, FR-115, Password Reset)</td>
+                        <td><span class="status-badge status-current">✅ Done</span></td>
                     </tr>
                     <tr style="background: #d4edda;">
                         <td><strong>Sprint 2</strong></td>
-                        <td><strong>Week 2</strong></td>
-                        <td><strong>Catalog + Browse</strong></td>
-                        <td><strong>FR-101, FR-102, FR-103, FR-104</strong></td>
-                        <td><strong>A, B</strong></td>
+                        <td>Week 2</td>
+                        <td>Catalog & Multi-Branch Stock</td>
+                        <td>FR-101, FR-102, FR-103 (Products, Categories, Brands, Stock)</td>
+                        <td><span class="status-badge status-current">✅ Done</span></td>
                     </tr>
-                    <tr>
-                        <td>Sprint 3</td>
+                    <tr style="background: #d4edda;">
+                        <td><strong>Sprint 3</strong></td>
                         <td>Week 3</td>
-                        <td>Cart + Checkout</td>
-                        <td>FR-107, FR-108, FR-203 (Inventory)</td>
-                        <td>A, B</td>
+                        <td>Cart & Transactional Checkout</td>
+                        <td>FR-107, FR-108, FR-203 (Cart, Stock Reservation)</td>
+                        <td><span class="status-badge status-current">✅ Done</span></td>
                     </tr>
-                    <tr>
-                        <td>Sprint 4</td>
+                    <tr style="background: #d4edda;">
+                        <td><strong>Sprint 4</strong></td>
                         <td>Week 4</td>
-                        <td>Fulfillment + Payment</td>
-                        <td>FR-109, FR-110, FR-205</td>
-                        <td>C</td>
+                        <td>Fulfillment, Payment & Orders</td>
+                        <td>FR-109, FR-110, FR-112, FR-205, FR-206 (COD/VNPay/MoMo, Orders)</td>
+                        <td><span class="status-badge status-current">✅ Done</span></td>
                     </tr>
                     <tr>
                         <td>Sprint 5</td>
                         <td>Week 5</td>
-                        <td>Promotions + Reviews</td>
-                        <td>FR-111, FR-112, FR-113, FR-204</td>
-                        <td>B, C</td>
+                        <td>Promotions & Reviews</td>
+                        <td>FR-111, FR-113, FR-204 (Coupons, Verified Reviews)</td>
+                        <td><span class="status-badge status-future">⏳ Planned</span></td>
                     </tr>
                     <tr>
                         <td>Sprint 6</td>
                         <td>Week 6</td>
-                        <td>Admin Portal</td>
-                        <td>FR-201, FR-202, FR-206</td>
-                        <td>D</td>
+                        <td>Admin Portal UI</td>
+                        <td>FR-201, FR-202 (Admin Management Screens)</td>
+                        <td><span class="status-badge status-future">⏳ Planned</span></td>
                     </tr>
                     <tr>
                         <td>Sprint 7</td>
                         <td>Week 7-8</td>
-                        <td>AI + Reports</td>
-                        <td>FR-207, FR-208, FR-209</td>
-                        <td>D, C</td>
+                        <td>AI & Demand Forecasting</td>
+                        <td>FR-207, FR-208, FR-209 (Reports, Forecast, Alerts)</td>
+                        <td><span class="status-badge status-future">⏳ Planned</span></td>
                     </tr>
                     <tr>
                         <td>Sprint 8</td>
                         <td>Week 9-10</td>
-                        <td>Integration + E2E</td>
-                        <td>Full E2E Demo</td>
-                        <td>All</td>
+                        <td>Integration & Full E2E</td>
+                        <td>Full E2E Demo & Optimization</td>
+                        <td><span class="status-badge status-future">⏳ Planned</span></td>
                     </tr>
                 </tbody>
             </table>
@@ -856,47 +911,47 @@ Database
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>A-1: Catalog API Foundation</td>
                             <td>1-2</td>
                             <td>FR-101</td>
                             <td>GET /api/products (list, filter, paginate)</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>A-2: Product Detail API</td>
                             <td>2-3</td>
                             <td>FR-103</td>
                             <td>GET /api/products/:id với branch inventory</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>A-3: Branch API</td>
                             <td>3</td>
                             <td>FR-102</td>
                             <td>GET /api/branches, GET /api/branches/:id/inventory</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>A-4: Cart Domain + API</td>
                             <td>4-5</td>
                             <td>FR-107</td>
                             <td>Cart entity, CartItem, POST/PUT/DELETE /api/cart/items</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>A-5: Checkout + Inventory Locking</td>
                             <td>6-8</td>
                             <td>FR-108, FR-203</td>
                             <td>POST /api/checkout, atomic reserve, SELECT FOR UPDATE</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>A-6: Branch/Inventory Admin APIs</td>
                             <td>9-10</td>
                             <td>FR-203</td>
                             <td>CRUD branch, inventory management</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -1004,47 +1059,47 @@ POST /api/checkout
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>C-1: Fulfillment Selection</td>
                             <td>1-2</td>
                             <td>FR-109</td>
-                            <td>POST /api/checkout/fulfillment, delivery address snapshot</td>
-                            <td>🔄 Planned</td>
+                            <td>POST /api/checkout, delivery address snapshot</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>C-2: Payment Integration</td>
                             <td>3-5</td>
                             <td>FR-110</td>
                             <td>POST /api/checkout/payment, COD/VNPay/MoMo</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>C-3: Payment Callbacks</td>
                             <td>5-6</td>
                             <td>FR-110</td>
                             <td>IPN handler, signature validation, idempotency</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>C-4: Order APIs</td>
                             <td>7-8</td>
                             <td>FR-205</td>
                             <td>GET /api/orders, PUT /api/admin/orders/:id/status</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>C-5: Order Status History</td>
                             <td>8-9</td>
                             <td>FR-205</td>
                             <td>OrderStatusHistory entity, status transitions</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
-                        <tr>
+                        <tr style="background: #d4edda;">
                             <td>C-6: Payment Release on Failure</td>
                             <td>9-10</td>
                             <td>FR-110</td>
                             <td>Release inventory on payment timeout/failure</td>
-                            <td>🔄 Planned</td>
+                            <td><span class="status-badge status-current">✅ Done</span></td>
                         </tr>
                     </tbody>
                 </table>

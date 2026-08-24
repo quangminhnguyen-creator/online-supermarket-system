@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiến Độ Công Việc: Thành Viên 1 & 3 | Online Supermarket System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --primary-bg: #eff6ff;
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --success-text: #065f46;
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --warning-text: #92400e;
+            --info: #06b6d4;
+            --info-bg: #ecfeff;
+            --info-text: #155e75;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: var(--gray-800);
+            line-height: 1.6;
+            padding: 1.5rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+        }
+
+        .badge-role {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        header p.lead {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+        }
+
+        .header-meta {
+            margin-top: 1.25rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+            opacity: 0.85;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 1rem;
+        }
+
+        .header-meta div {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Metric Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .metric-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .metric-sub {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+            margin-top: 0.35rem;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-100);
+            border-radius: 9999px;
+            margin-top: 0.75rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .progress-success { background: var(--success); }
+        .progress-primary { background: var(--primary); }
+        .progress-warning { background: var(--warning); }
+
+        /* Tabs Navigation */
+        .tabs-nav {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--gray-200);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-btn .tab-count {
+            background: var(--gray-200);
+            color: var(--gray-700);
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+        }
+
+        .tab-btn.active .tab-count {
+            background: var(--primary-bg);
+            color: var(--primary);
+        }
+
+        /* Tab Content */
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .section-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        /* Custom Table */
+        .data-table-wrapper {
+            overflow-x: auto;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        table.data-table th {
+            background: var(--gray-50);
+            color: var(--gray-700);
+            font-weight: 600;
+            padding: 0.85rem 1rem;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        table.data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            vertical-align: middle;
+        }
+
+        table.data-table tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-done { background: var(--success-bg); color: var(--success-text); border: 1px solid #a7f3d0; }
+        .badge-progress { background: var(--info-bg); color: var(--info-text); border: 1px solid #a5f3fc; }
+        .badge-planned { background: var(--warning-bg); color: var(--warning-text); border: 1px solid #fde68a; }
+
+        .method-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .method-get { background: #dbeafe; color: #1e40af; }
+        .method-post { background: #dcfce7; color: #166534; }
+        .method-put { background: #fef3c7; color: #92400e; }
+        .method-delete { background: #fee2e2; color: #991b1b; }
+
+        code.endpoint {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            background: var(--gray-100);
+            padding: 0.2rem 0.5rem;
+            border-radius: var(--radius-sm);
+            color: var(--gray-900);
+        }
+
+        /* Architecture Flow Box */
+        .flow-box {
+            background: var(--gray-900);
+            color: #f8fafc;
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-left: 4px solid var(--primary);
+        }
+
+        .flow-box .comment { color: #94a3b8; }
+        .flow-box .keyword { color: #38bdf8; font-weight: bold; }
+        .flow-box .success-txt { color: #4ade80; }
+
+        /* Checklist */
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.85rem 1rem;
+            border-radius: var(--radius-sm);
+            background: var(--gray-50);
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .checklist-item.done {
+            background: var(--success-bg);
+            border-color: #bbf7d0;
+        }
+
+        .checklist-icon {
+            font-size: 1.1rem;
+            margin-top: 0.1rem;
+        }
+
+        .checklist-content h5 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.2rem;
+        }
+
+        .checklist-content p {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--gray-200);
+            margin-top: 3rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="badge-role">Phân Công Đồ Án: Thành Viên 1 & Thành Viên 3</div>
+        <h1>Bảng Theo Dõi Tiến Độ Toàn Diện</h1>
+        <p class="lead">Trục Nghiệp Vụ Cốt Lõi: Catalog & Tồn Kho Chi Nhánh ➔ Giỏ Hàng ➔ Transactional Checkout ➔ Thanh Toán Sandbox ➔ Quản Lý Đơn Hàng.</p>
+        
+        <div class="header-meta">
+            <div>📅 <strong>Ngày báo cáo:</strong> 23/08/2026</div>
+            <div>⚡ <strong>Tech Stack:</strong> .NET 10 Minimal APIs, EF Core 10, MySQL 8.4 LTS, React 19</div>
+            <div>🎯 <strong>Phạm vi FR:</strong> FR-101, 102, 103, 107, 108, 109, 110, 112, 203, 205</div>
+        </div>
+    </header>
+
+    <!-- Metrics Grid -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-title">Tiến Độ Backend Core (TV 1 & 3)</div>
+            <div class="metric-value">
+                <span>100%</span>
+                <span class="badge badge-done" style="font-size: 0.8rem;">12 / 12 Tasks</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar progress-success" style="width: 100%;"></div>
+            </div>
+            <div class="metric-sub">Tất cả Endpoints & Domain Invariants đã sẵn sàng</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-title">Tiến Độ Frontend Storefront</div>
+            <div class="metric-value">
+                <span>~40%</span>
+                <span class="badge badge-progress" style="font-size: 0.8rem;">Ready for UI</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar progress-primary" style="width: 40%;"></div>
+            </div>
+            <div class="metric-sub">Đã có Auth Shell, Sổ địa chỉ, Profile & API Status</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-title">Database Entities Phụ Trách</div>
+            <div class="metric-value">12 / 16</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar progress-success" style="width: 100%;"></div>
+            </div>
+            <div class="metric-sub">Products, Branches, Inventory, Cart, Order, Payment</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-title">Kết Quả Kiểm Thử (Unit/Integration)</div>
+            <div class="metric-value">
+                <span>55/55</span>
+                <span class="badge badge-done" style="font-size: 0.8rem;">Passed</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar progress-success" style="width: 100%;"></div>
+            </div>
+            <div class="metric-sub">45 Domain + 2 Infra + 8 Frontend Vitest</div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('overview')">📊 Tổng Quan Nghiệp Vụ</button>
+        <button class="tab-btn" onclick="switchTab('member1')">👤 Thành Viên 1 (Backend Core) <span class="tab-count">6 Tasks</span></button>
+        <button class="tab-btn" onclick="switchTab('member3')">👤 Thành Viên 3 (Payment & Order) <span class="tab-count">6 Tasks</span></button>
+        <button class="tab-btn" onclick="switchTab('frontend')">💻 Frontend Tương Ứng <span class="tab-count">Storefront Flow</span></button>
+        <button class="tab-btn" onclick="switchTab('apis')">🔌 Danh Mục API & Contracts</button>
+        <button class="tab-btn" onclick="switchTab('checklist')">✅ Checklist Nghiệm Thu</button>
+    </div>
+
+    <!-- TAB 1: OVERVIEW -->
+    <div id="overview" class="tab-pane active">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">🚀 Luồng Nghiệp Vụ Xuyên Suốt Do Thành Viên 1 & 3 Đảm Nhận</div>
+                <span class="badge badge-done">End-to-End Transactional Architecture</span>
+            </div>
+
+            <p style="margin-bottom: 1.5rem; color: var(--gray-700);">
+                Sự kết hợp giữa <strong>Thành viên 1</strong> (Catalog, Tồn kho chi nhánh, Giỏ hàng, Khóa giữ tồn kho) và <strong>Thành viên 3</strong> (Giao nhận Fulfillment, Cổng thanh toán Sandbox, Webhook Idempotency, Quản lý đơn hàng) tạo thành <strong>toàn bộ trục kinh doanh cốt lõi</strong> của Siêu thị điện tử.
+            </p>
+
+            <div class="flow-box">
+<span class="comment">// 1. Khách hàng duyệt sản phẩm theo chi nhánh (Member 1 - FR-101, 102, 103)</span>
+<span class="keyword">GET</span> /api/products?branchId={branchId}&categoryId={catId} ➔ Lấy giá bán & tồn kho khả dụng tại chi nhánh
+
+<span class="comment">// 2. Khách hàng thêm sản phẩm vào giỏ hàng (Member 1 - FR-107)</span>
+<span class="keyword">POST</span> /api/cart/items ➔ Kiểm tra availableQuantity tại chi nhánh, tính toán LineTotal
+
+<span class="comment">// 3. Đặt hàng giao dịch an toàn (Member 1 & 3 - FR-108, 109)</span>
+<span class="keyword">POST</span> /api/checkout ➔ <span class="success-txt">[MySQL Serializable Transaction]</span>
+   ├─ SELECT ... FOR UPDATE (Khóa bản ghi BranchInventory theo thứ tự ID)
+   ├─ Xác thực available_quantity >= requested
+   ├─ <span class="keyword">Tăng reserved_quantity</span> (Khóa giữ hàng trong kho chi nhánh)
+   ├─ Snapshot tên sản phẩm, đơn giá, địa chỉ giao hàng vào bảng Orders & OrderItems
+   └─ Xóa sạch giỏ hàng & tạo Order ở trạng thái 'Pending'
+
+<span class="comment">// 4. Khởi tạo thanh toán & Nhận Webhook (Member 3 - FR-110)</span>
+<span class="keyword">POST</span> /api/checkout/payment ➔ Khởi tạo VNPay/MoMo Sandbox URL hoặc xác nhận COD
+<span class="keyword">POST</span> /api/checkout/payment/callback ➔ Webhook xác thực chữ ký & idempotency:
+   ├─ <span class="success-txt">NẾU THÀNH CÔNG:</span> Đổi Order -> 'Confirmed', Payment -> 'Completed'
+   └─ <span class="keyword">NẾU THẤT BẠI:</span> Tự động GIẢI PHÓNG reserved_quantity hoàn trả kho
+
+<span class="comment">// 5. Quản lý & Cập nhật trạng thái đơn hàng (Member 3 - FR-112, 205)</span>
+<span class="keyword">GET</span> /api/orders ➔ Khách hàng theo dõi đơn hàng
+<span class="keyword">PUT</span> /api/admin/orders/:id/status ➔ Admin chuyển trạng thái: Confirmed ➔ Preparing ➔ Shipping ➔ Completed
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: MEMBER 1 -->
+    <div id="member1" class="tab-pane">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">📦 Thành Viên 1 (Member A): Backend Core & Tồn Kho Chi Nhánh</div>
+                <span class="badge badge-done">6 / 6 Tasks Hoàn Thành (100%)</span>
+            </div>
+
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Task ID</th>
+                            <th>Mục Tiêu & Chức Năng</th>
+                            <th>FR ID</th>
+                            <th>Endpoint / File Hiện Thực</th>
+                            <th>Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>A-1</strong></td>
+                            <td>
+                                <strong>Catalog API Foundation</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Tìm kiếm sản phẩm, lọc theo danh mục, thương hiệu, khoảng giá, phân trang</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-101</span></td>
+                            <td>
+                                <span class="method-badge method-get">GET</span> <code class="endpoint">/api/products</code><br>
+                                <span class="method-badge method-get">GET</span> <code class="endpoint">/api/categories</code>, <code class="endpoint">/api/brands</code><br>
+                                <small style="color: var(--gray-600);">CatalogEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>A-2</strong></td>
+                            <td>
+                                <strong>Product Detail API</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Chi tiết thông số kỹ thuật, hình ảnh, giá bán và tồn kho theo chi nhánh cụ thể</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-103</span></td>
+                            <td>
+                                <span class="method-badge method-get">GET</span> <code class="endpoint">/api/products/{id}?branchId={guid}</code><br>
+                                <small style="color: var(--gray-600);">CatalogEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>A-3</strong></td>
+                            <td>
+                                <strong>Multi-Branch API</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Danh sách chi nhánh siêu thị, thông tin liên hệ, tọa độ, tồn kho chi nhánh</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-102</span></td>
+                            <td>
+                                <span class="method-badge method-get">GET</span> <code class="endpoint">/api/branches</code><br>
+                                <span class="method-badge method-get">GET</span> <code class="endpoint">/api/branches/{id}/inventory</code><br>
+                                <small style="color: var(--gray-600);">BranchEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>A-4</strong></td>
+                            <td>
+                                <strong>Cart Domain & APIs</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Giỏ hàng gắn với User & Chi nhánh, thêm/sửa/xóa item, xác thực tồn kho, đổi chi nhánh</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-107</span></td>
+                            <td>
+                                <span class="method-badge method-get">GET</span> / <span class="method-badge method-post">POST</span> <code class="endpoint">/api/cart/items</code><br>
+                                <span class="method-badge method-put">PUT</span> / <span class="method-badge method-delete">DELETE</span> <code class="endpoint">/api/cart/items/{id}</code><br>
+                                <span class="method-badge method-post">POST</span> <code class="endpoint">/api/cart/change-branch</code><br>
+                                <small style="color: var(--gray-600);">CartEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>A-5</strong></td>
+                            <td>
+                                <strong>Checkout & Inventory Locking</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Đặt hàng transactional (Serializable), khóa giữ tồn kho (Reserve Stock), rollback khi thiếu</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-108</span></td>
+                            <td>
+                                <span class="method-badge method-post">POST</span> <code class="endpoint">/api/checkout</code><br>
+                                <small style="color: var(--gray-600);">CheckoutEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>A-6</strong></td>
+                            <td>
+                                <strong>Branch Inventory Admin API</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Admin cập nhật giá bán, số lượng on-hand, định mức nhập hàng (Reorder Level)</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-203</span></td>
+                            <td>
+                                <span class="method-badge method-put">PUT</span> <code class="endpoint">/api/admin/branches/{branchId}/inventory</code><br>
+                                <small style="color: var(--gray-600);">BranchEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: MEMBER 3 -->
+    <div id="member3" class="tab-pane">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">💳 Thành Viên 3 (Member C): Fulfillment, Thanh Toán & Đơn Hàng</div>
+                <span class="badge badge-done">6 / 6 Tasks Hoàn Thành (100%)</span>
+            </div>
+
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Task ID</th>
+                            <th>Mục Tiêu & Chức Năng</th>
+                            <th>FR ID</th>
+                            <th>Endpoint / File Hiện Thực</th>
+                            <th>Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>C-1</strong></td>
+                            <td>
+                                <strong>Fulfillment Selection & Address Snapshot</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Chọn nhận hàng Pickup hoặc Giao hàng tận nơi Delivery, chụp snapshot địa chỉ bất biến</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-109</span></td>
+                            <td>
+                                <span class="method-badge method-post">POST</span> <code class="endpoint">/api/checkout</code><br>
+                                <small style="color: var(--gray-600);">CheckoutEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>C-2</strong></td>
+                            <td>
+                                <strong>Payment Sandbox Integration</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Khởi tạo giao dịch COD, sinh URL giả lập VNPay Sandbox, MoMo Sandbox</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-110</span></td>
+                            <td>
+                                <span class="method-badge method-post">POST</span> <code class="endpoint">/api/checkout/payment</code><br>
+                                <small style="color: var(--gray-600);">CheckoutEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>C-3</strong></td>
+                            <td>
+                                <strong>Payment Callbacks / Webhook IPN</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Tiếp nhận IPN callback, xác minh số tiền, chống lặp giao dịch (Idempotency)</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-110</span></td>
+                            <td>
+                                <span class="method-badge method-post">POST</span> <code class="endpoint">/api/checkout/payment/callback</code><br>
+                                <small style="color: var(--gray-600);">CheckoutEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>C-4</strong></td>
+                            <td>
+                                <strong>Customer Order APIs</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Xem danh sách lịch sử đơn hàng, xem chi tiết sản phẩm và snapshot giao hàng</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-112</span></td>
+                            <td>
+                                <span class="method-badge method-get">GET</span> <code class="endpoint">/api/orders</code><br>
+                                <span class="method-badge method-get">GET</span> <code class="endpoint">/api/orders/{id}</code><br>
+                                <small style="color: var(--gray-600);">OrderEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>C-5</strong></td>
+                            <td>
+                                <strong>Admin Order Management & Audit History</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Admin xem toàn bộ đơn hàng, chuyển trạng thái đơn (Confirmed ➔ Preparing ➔ Shipping...) kèm note</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-205</span></td>
+                            <td>
+                                <span class="method-badge method-get">GET</span> <code class="endpoint">/api/admin/orders</code><br>
+                                <span class="method-badge method-put">PUT</span> <code class="endpoint">/api/admin/orders/{id}/status</code><br>
+                                <small style="color: var(--gray-600);">OrderEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>C-6</strong></td>
+                            <td>
+                                <strong>Payment Release on Failure / Cancellation</strong><br>
+                                <span style="color: var(--gray-600); font-size: 0.85rem;">Tự động hoàn trả tồn kho đã khóa (Release Reserved Quantity) khi hủy đơn hoặc thanh toán thất bại</span>
+                            </td>
+                            <td><span class="badge badge-done">FR-110</span></td>
+                            <td>
+                                <code class="endpoint">ReleaseOrderInventoryAsync()</code><br>
+                                <small style="color: var(--gray-600);">CheckoutEndpoints.cs, OrderEndpoints.cs</small>
+                            </td>
+                            <td><span class="badge badge-done">✅ Hoàn thành</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: FRONTEND -->
+    <div id="frontend" class="tab-pane">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">💻 Phân Hệ Frontend Tương Ứng (React 19 + TypeScript + Vite)</div>
+                <span class="badge badge-progress">Giai đoạn kết nối UI Storefront</span>
+            </div>
+
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Màn Hình / Module UI</th>
+                            <th>Route Frontend</th>
+                            <th>API Backend Kết Nối</th>
+                            <th>Trạng Thái Giao Diện</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1. Authentication & Session</strong></td>
+                            <td><code class="endpoint">/auth/login</code>, <code class="endpoint">/register</code></td>
+                            <td><code class="endpoint">/api/auth/*</code></td>
+                            <td><span class="badge badge-done">✅ Đã hoàn thành (AuthContext, Forms)</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>2. Hồ Sơ & Sổ Địa Chỉ</strong></td>
+                            <td><code class="endpoint">/account/profile</code>, <code class="endpoint">/addresses</code></td>
+                            <td><code class="endpoint">/api/users/me</code>, <code class="endpoint">/api/users/me/addresses</code></td>
+                            <td><span class="badge badge-done">✅ Đã hoàn thành (AddressManagement)</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>3. Duyệt Sản Phẩm & Lọc Kho</strong></td>
+                            <td><code class="endpoint">/browse</code>, <code class="endpoint">/products</code></td>
+                            <td><code class="endpoint">/api/products</code>, <code class="endpoint">/api/branches</code></td>
+                            <td><span class="badge badge-planned">🔄 Sẵn sàng kết nối API Backend</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>4. Chi Tiết Sản Phẩm & Đổi Kho</strong></td>
+                            <td><code class="endpoint">/product/:id</code></td>
+                            <td><code class="endpoint">/api/products/{id}?branchId=</code></td>
+                            <td><span class="badge badge-planned">🔄 Sẵn sàng kết nối API Backend</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>5. Giỏ Hàng Mua Sắm</strong></td>
+                            <td><code class="endpoint">/shopping/cart</code></td>
+                            <td><code class="endpoint">/api/cart</code>, <code class="endpoint">/api/cart/items</code></td>
+                            <td><span class="badge badge-planned">🔄 Sẵn sàng kết nối API Backend</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>6. Thanh Toán & Đặt Hàng</strong></td>
+                            <td><code class="endpoint">/shopping/checkout</code></td>
+                            <td><code class="endpoint">/api/checkout</code>, <code class="endpoint">/api/checkout/payment</code></td>
+                            <td><span class="badge badge-planned">🔄 Sẵn sàng kết nối API Backend</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>7. Theo Dõi Lịch Sử Đơn Hàng</strong></td>
+                            <td><code class="endpoint">/orders/history</code></td>
+                            <td><code class="endpoint">/api/orders</code>, <code class="endpoint">/api/orders/{id}</code></td>
+                            <td><span class="badge badge-planned">🔄 Sẵn sàng kết nối API Backend</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: APIS -->
+    <div id="apis" class="tab-pane">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">🔌 Danh Mục Endpoints Chi Tiết Thuộc Quyền Phụ Trách</div>
+                <span class="badge badge-done">OpenAPI 3.1.1 Aligned</span>
+            </div>
+
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Chức Năng</th>
+                            <th>Authentication</th>
+                            <th>Chủ Quản</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code class="endpoint">/api/products</code></td>
+                            <td>Lấy danh sách sản phẩm (tìm kiếm, lọc, phân trang)</td>
+                            <td>Anonymous</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code class="endpoint">/api/products/{id}</code></td>
+                            <td>Chi tiết sản phẩm kèm giá/tồn kho chi nhánh</td>
+                            <td>Anonymous</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code class="endpoint">/api/categories</code></td>
+                            <td>Cây danh mục sản phẩm</td>
+                            <td>Anonymous</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code class="endpoint">/api/brands</code></td>
+                            <td>Danh sách thương hiệu</td>
+                            <td>Anonymous</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code class="endpoint">/api/branches</code></td>
+                            <td>Danh sách chi nhánh siêu thị</td>
+                            <td>Anonymous</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code class="endpoint">/api/branches/{id}/inventory</code></td>
+                            <td>Tồn kho & giá bán sản phẩm tại chi nhánh</td>
+                            <td>Anonymous</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code class="endpoint">/api/cart</code></td>
+                            <td>Xem giỏ hàng người dùng theo chi nhánh</td>
+                            <td>Bearer JWT</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post">POST</span></td>
+                            <td><code class="endpoint">/api/cart/items</code></td>
+                            <td>Thêm sản phẩm vào giỏ (xác thực tồn kho khả dụng)</td>
+                            <td>Bearer JWT</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-put">PUT</span></td>
+                            <td><code class="endpoint">/api/cart/items/{itemId}</code></td>
+                            <td>Cập nhật số lượng sản phẩm trong giỏ</td>
+                            <td>Bearer JWT</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-delete">DELETE</span></td>
+                            <td><code class="endpoint">/api/cart/items/{itemId}</code></td>
+                            <td>Xóa sản phẩm khỏi giỏ hàng</td>
+                            <td>Bearer JWT</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post">POST</span></td>
+                            <td><code class="endpoint">/api/cart/change-branch</code></td>
+                            <td>Đổi chi nhánh mua hàng của giỏ</td>
+                            <td>Bearer JWT</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post">POST</span></td>
+                            <td><code class="endpoint">/api/checkout</code></td>
+                            <td>Đặt hàng giao dịch & Khóa giữ tồn kho</td>
+                            <td>Bearer JWT</td>
+                            <td>Thành viên 1 & 3</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post">POST</span></td>
+                            <td><code class="endpoint">/api/checkout/payment</code></td>
+                            <td>Khởi tạo giao dịch thanh toán COD / VNPay / MoMo</td>
+                            <td>Bearer JWT</td>
+                            <td>Thành viên 3</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-post">POST</span></td>
+                            <td><code class="endpoint">/api/checkout/payment/callback</code></td>
+                            <td>Tiếp nhận webhook IPN từ cổng thanh toán</td>
+                            <td>Anonymous / IPN Signature</td>
+                            <td>Thành viên 3</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code class="endpoint">/api/orders</code></td>
+                            <td>Xem lịch sử đơn hàng của cá nhân</td>
+                            <td>Bearer JWT</td>
+                            <td>Thành viên 3</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code class="endpoint">/api/orders/{id}</code></td>
+                            <td>Xem chi tiết đơn hàng, snapshot và lịch sử trạng thái</td>
+                            <td>Bearer JWT</td>
+                            <td>Thành viên 3</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-get">GET</span></td>
+                            <td><code class="endpoint">/api/admin/orders</code></td>
+                            <td>(Admin) Xem danh sách toàn bộ đơn hàng</td>
+                            <td>Bearer JWT (Admin)</td>
+                            <td>Thành viên 3</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-put">PUT</span></td>
+                            <td><code class="endpoint">/api/admin/orders/{id}/status</code></td>
+                            <td>(Admin) Cập nhật trạng thái đơn hàng</td>
+                            <td>Bearer JWT (Admin)</td>
+                            <td>Thành viên 3</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge method-put">PUT</span></td>
+                            <td><code class="endpoint">/api/admin/branches/{branchId}/inventory</code></td>
+                            <td>(Admin) Cập nhật tồn kho, giá bán, reorder level</td>
+                            <td>Bearer JWT (Admin)</td>
+                            <td>Thành viên 1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 6: CHECKLIST -->
+    <div id="checklist" class="tab-pane">
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">✅ Checklist Kiểm Thử & Nghiệm Thu Kỹ Thuật</div>
+                <span class="badge badge-done">Verified</span>
+            </div>
+
+            <div class="checklist-item done">
+                <div class="checklist-icon">✅</div>
+                <div class="checklist-content">
+                    <h5>Kiểm tra tính nhất quán tồn kho đa chi nhánh (NFR-503)</h5>
+                    <p>Khả dụng = <code>quantity_on_hand - reserved_quantity</code>. Đảm bảo độc lập giữa từng chi nhánh, không bị trừ âm.</p>
+                </div>
+            </div>
+
+            <div class="checklist-item done">
+                <div class="checklist-icon">✅</div>
+                <div class="checklist-content">
+                    <h5>Kiểm tra Transactional Checkout Serializable (NFR-503)</h5>
+                    <p>Đặt hàng thực hiện khóa giữ tồn kho trong một transaction duy nhất. Đã có retry logic xử lý conflict concurrency.</p>
+                </div>
+            </div>
+
+            <div class="checklist-item done">
+                <div class="checklist-icon">✅</div>
+                <div class="checklist-content">
+                    <h5>Snapshot bất biến đơn hàng (3NF Justification)</h5>
+                    <p>Tên sản phẩm, đơn giá tại thời điểm mua và địa chỉ giao hàng được lưu bất biến vào OrderItems và Orders.</p>
+                </div>
+            </div>
+
+            <div class="checklist-item done">
+                <div class="checklist-icon">✅</div>
+                <div class="checklist-content">
+                    <h5>Xử lý Webhook / IPN Thanh toán Idempotency (NFR-504)</h5>
+                    <p>Xác thực số tiền, chữ ký cổng và kiểm tra <code>external_event_id</code> chống duplicate callback.</p>
+                </div>
+            </div>
+
+            <div class="checklist-item done">
+                <div class="checklist-icon">✅</div>
+                <div class="checklist-content">
+                    <h5>Tự động hoàn trả tồn kho khi thất bại / hủy đơn</h5>
+                    <p>Hàm <code>ReleaseOrderInventoryAsync()</code> giải phóng toàn bộ số lượng hàng đã khóa giữ khi giao dịch bị hủy.</p>
+                </div>
+            </div>
+
+            <div class="checklist-item done">
+                <div class="checklist-icon">✅</div>
+                <div class="checklist-content">
+                    <h5>Build & Automated Test Pass 100%</h5>
+                    <p>45 Domain Unit Tests + 2 Infrastructure Tests + 8 Frontend Vitest Tests đều chạy thành công không có lỗi.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p><strong>Online Supermarket System</strong> — Báo cáo tiến độ phân công Thành viên 1 & 3.</p>
+        <p style="margin-top: 0.5rem;">
+            Tài liệu liên quan: 
+            <a href="project-spec.html">project-spec.html</a> | 
+            <a href="architecture/erd.md">erd.md</a> | 
+            <a href="architecture/dfd.md">dfd.md</a> | 
+            <a href="api/openapi.json">openapi.json</a>
+        </p>
+    </footer>
+</div>
+
+<script>
+    function switchTab(tabId) {
+        // Remove active class from all tabs and buttons
+        document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        // Activate selected tab and button
+        const targetPane = document.getElementById(tabId);
+        if (targetPane) targetPane.classList.add('active');
+        
+        const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+        if (targetBtn) targetBtn.classList.add('active');
+    }
+</script>
+
+</body>
+</html>

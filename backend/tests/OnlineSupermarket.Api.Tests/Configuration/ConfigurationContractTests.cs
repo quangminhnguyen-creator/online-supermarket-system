@@ -29,7 +29,11 @@ public sealed class ConfigurationContractTests
 
         try
         {
-            using var factory = new WebApplicationFactory<Program>();
+            using var factory = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.UseSetting("ConnectionStrings:DefaultConnection", "");
+                });
 
             var exception = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
 

@@ -452,23 +452,31 @@ Liên kết: Trace tới FR (Functional Requirement) và DFD Process
 
 ## 5. Implementation Status
 
-| Route | Status | Notes |
-|---|---|---|
-| `/` | ✅ Implemented | Landing page |
-| `/api/health` | ✅ Implemented | Health check endpoint |
-| `/api/auth/register` | ✅ Implemented | FR-114 |
-| `/api/auth/login` | ✅ Implemented | FR-115 |
-| `/api/auth/refresh` | ✅ Implemented | Token refresh |
-| `/api/auth/logout` | ✅ Implemented | Logout + revoke token |
-| `/api/auth/me` | ✅ Implemented | Get current user |
-| `/browse` | 🔄 Planned | FR-101 |
-| `/product/:id` | 🔄 Planned | FR-103 |
-| `/shopping/cart` | 🔄 Planned | FR-107 |
-| `/shopping/checkout` | 🔄 Planned | FR-108, FR-109, FR-110, FR-111 |
-| `/orders/history` | 🔄 Planned | FR-112 |
-| `/admin/catalog/*` | 🔄 Planned | FR-201, FR-202 |
-| `/admin/branch/*` | 🔄 Planned | FR-203 |
-| `/admin/orders/*` | 🔄 Planned | FR-205 |
+| Route / Phân hệ | Loại | Status | Notes / Endpoints |
+|---|---|---|---|
+| `/` | Frontend | ✅ Implemented | Landing page, Hero, Branch intro |
+| `/api/health` | Backend | ✅ Implemented | Health check endpoint |
+| `/api/auth/register` | Backend & UI | ✅ Implemented | FR-114 (Đăng ký tài khoản) |
+| `/api/auth/login` | Backend & UI | ✅ Implemented | FR-115 (Đăng nhập JWT + Refresh Token) |
+| `/api/auth/refresh` | Backend | ✅ Implemented | Refresh token rotation |
+| `/api/auth/logout` | Backend & UI | ✅ Implemented | Logout + revoke token |
+| `/api/auth/me` | Backend & UI | ✅ Implemented | Get current user profile |
+| `/api/auth/password-reset` | Backend & UI | ✅ Implemented | Quên mật khẩu & xác nhận đổi mật khẩu |
+| `/api/users/me/addresses` | Backend & UI | ✅ Implemented | FR-106 (CRUD địa chỉ & đặt mặc định) |
+| `/api/users/me` | Backend & UI | ✅ Implemented | FR-105 (Cập nhật hồ sơ & đổi mật khẩu) |
+| `/api/products` | Backend API | ✅ Implemented | FR-101, FR-103 (Catalog, tìm kiếm, lọc, phân trang) |
+| `/api/branches` | Backend API | ✅ Implemented | FR-102 (Chi nhánh, tồn kho, giá theo chi nhánh) |
+| `/api/cart` | Backend API | ✅ Implemented | FR-107 (Giỏ hàng theo chi nhánh, thêm/sửa/xóa item) |
+| `/api/checkout` | Backend API | ✅ Implemented | FR-108, FR-109, FR-110 (Checkout giao dịch, thanh toán COD/VNPay/MoMo sandbox, callback) |
+| `/api/orders` | Backend API | ✅ Implemented | FR-112 (Lịch sử đơn hàng, chi tiết đơn) |
+| `/api/admin/orders` | Backend API | ✅ Implemented | FR-205 (Admin xem đơn, cập nhật trạng thái đơn) |
+| `/api/admin/users` | Backend API | ✅ Implemented | FR-206 (Admin xem danh sách, khóa/mở tài khoản) |
+| `/api/admin/branches/:id/inventory` | Backend API | ✅ Implemented | FR-203 (Admin cập nhật tồn kho & giá chi nhánh) |
+| `/browse` (Storefront UI) | Frontend | 🔄 Planned | Giao diện duyệt sản phẩm storefront |
+| `/shopping/cart` (Cart UI) | Frontend | 🔄 Planned | Giao diện giỏ hàng khách hàng |
+| `/shopping/checkout` (Checkout UI) | Frontend | 🔄 Planned | Giao diện thanh toán & đặt hàng |
+| `/orders/history` (Orders UI) | Frontend | 🔄 Planned | Giao diện theo dõi đơn hàng |
+| `/admin/*` (Admin Dashboard UI) | Frontend | 🔄 Planned | Giao diện portal quản trị |
 
 ---
 

@@ -1,0 +1,259 @@
+.filter-sidebar {
+  background: var(--paper);
+  border: 1px solid rgba(11, 61, 46, 0.14);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.filter-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--mist);
+  padding-bottom: 12px;
+}
+
+.filter-sidebar__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--leaf);
+}
+
+.filter-sidebar__header h2 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--forest);
+  margin: 0;
+}
+
+.filter-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: #6b827a;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--forest);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.filter-input,
+.filter-select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid rgba(11, 61, 46, 0.2);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.15);
+}
+
+.filter-search-form {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-search-input-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.filter-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.filter-search-btn,
+.filter-price-btn {
+  background: var(--forest);
+  color: var(--paper);
+  border: none;
+  font-size: 13px;
+  font-weight: 650;
+  padding: 0 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.filter-search-btn:hover,
+.filter-price-btn:hover {
+  background: var(--leaf);
+}
+
+.filter-price-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-input--price {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.filter-price-separator {
+  color: #888;
+  font-weight: 700;
+}
+
+.filter-price-btn {
+  padding: 8px 12px;
+  align-self: flex-end;
+}
+
+.filter-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.filter-preset-chip {
+  background: var(--mist);
+  border: 1px solid rgba(11, 61, 46, 0.12);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--forest);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-preset-chip:hover {
+  background: #d5e5dd;
+  border-color: var(--leaf);
+}
+
+.filter-preset-chip--active {
+  background: var(--leaf);
+  color: #ffffff;
+  border-color: var(--leaf);
+  font-weight: 600;
+}
+
+.filter-actions {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(11, 61, 46, 0.16);
+}
+
+.filter-reset-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #ffffff;
+  border: 1px solid #d14e3b;
+  color: #d14e3b;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-reset-btn:hover:not(:disabled) {
+  background: #fff0ed;
+}
+
+.filter-reset-btn:disabled {
+  opacity: 0.45;
+  border-color: #ccc;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.filter-reset-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Mobile responsive drawer styles */
+@media (max-width: 900px) {
+  .filter-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 100;
+  }
+
+  .filter-sidebar {
+    display: none;
+  }
+
+  .filter-sidebar--open {
+    display: flex;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 320px;
+    max-width: 85vw;
+    z-index: 101;
+    border-radius: 0;
+    overflow-y: auto;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+    animation: slideLeft 0.25s ease-out;
+  }
+
+  @keyframes slideLeft {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+}

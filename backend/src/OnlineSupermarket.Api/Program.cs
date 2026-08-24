@@ -37,6 +37,12 @@ app.MapCheckoutEndpoints();
 // Orders (C-4, C-5)
 app.MapOrderEndpoints();
 
+// Users (FR-114)
+app.MapUserEndpoints();
+
+// Addresses (FR-115)
+app.MapAddressEndpoints();
+
 app.Run();
 
 public partial class Program;

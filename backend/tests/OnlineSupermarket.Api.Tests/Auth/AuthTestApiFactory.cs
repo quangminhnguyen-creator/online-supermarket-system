@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OnlineSupermarket.Infrastructure.Persistence;
+using OnlineSupermarket.Infrastructure.Services;
 
 namespace OnlineSupermarket.Api.Tests.Auth;
 
@@ -14,6 +16,9 @@ public sealed class AuthTestApiFactory : WebApplicationFactory<Program>
     private readonly string? _originalConnectionString;
     private readonly string _dbName = Guid.NewGuid().ToString();
     private readonly InMemoryDatabaseRoot _databaseRoot = new();
+    private readonly InMemoryCapturingEmailSender _emailSender = new();
+
+    public InMemoryCapturingEmailSender EmailSender => _emailSender;
 
     public AuthTestApiFactory()
     {
@@ -26,6 +31,15 @@ public sealed class AuthTestApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:DefaultConnection", "Server=localhost;Port=3306;Database=test;User=test;Password=test");
+        builder.UseSetting("ASPNETCORE_ENVIRONMENT", "Development");
+        builder.UseSetting("Email:UseDevMode", "true");
+        builder.UseSetting("Infrastructure:DisableBackgroundServices", "true");
+
+        builder.ConfigureLogging(logging =>
+        {
+            logging.AddFilter("Microsoft", LogLevel.Warning);
+            logging.AddFilter("System", LogLevel.Warning);
+        });
 
         builder.ConfigureServices(services =>
         {
@@ -46,6 +60,25 @@ public sealed class AuthTestApiFactory : WebApplicationFactory<Program>
                 options.UseInMemoryDatabase(_dbName, _databaseRoot);
                 options.ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
             });
+
+            // Suppress EventLog provider that causes Access Denied on Windows without admin rights
+            services.Configure<LoggerFilterOptions>(options =>
+            {
+                options.Rules.Add(new LoggerFilterRule(
+                    "Microsoft.Extensions.Logging.EventLog.EventLogLoggerProvider",
+                    null,
+                    LogLevel.None,
+                    null));
+            });
+
+            // Replace email sender with in-memory capturer for tests
+            var existingEmailSender = services.SingleOrDefault(d => d.ServiceType == typeof(IEmailSender));
+            if (existingEmailSender != null)
+            {
+                services.Remove(existingEmailSender);
+            }
+            services.AddSingleton<IEmailSender>(_emailSender);
+            services.AddSingleton(_emailSender);
         });
     }
 
@@ -58,6 +91,7 @@ public sealed class AuthTestApiFactory : WebApplicationFactory<Program>
         finally
         {
             Environment.SetEnvironmentVariable(VariableName, _originalConnectionString);
+            _emailSender.Clear();
         }
     }
 }

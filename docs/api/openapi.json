@@ -1,47 +1,58 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "OnlineSupermarket.Api | v1",
+    "title": "Online Supermarket System API",
+    "description": "RESTful API specification for the Multi-branch Online Supermarket System (.NET 10 Minimal APIs).",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://127.0.0.1:5077/"
+      "url": "http://localhost:5072",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "http://localhost:8080",
+      "description": "Docker Container API Gateway"
     }
   ],
   "paths": {
     "/api/health": {
       "get": {
-        "tags": [
-          "System"
-        ],
+        "tags": ["System"],
+        "summary": "Health check",
         "operationId": "GetHealth",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/auth/register": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
+        "summary": "Register customer account",
         "operationId": "Register",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RegisterRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
-            "description": "Created",
+            "description": "User created successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -51,7 +62,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Validation failure",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -61,7 +72,7 @@
             }
           },
           "409": {
-            "description": "Conflict",
+            "description": "Email already registered",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -75,23 +86,22 @@
     },
     "/api/auth/login": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
+        "summary": "Login with email and password",
         "operationId": "Login",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/LoginRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Authentication successful",
             "content": {
               "application/json": {
                 "schema": {
@@ -101,7 +111,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Invalid input",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -111,7 +121,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Invalid credentials or inactive account",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -125,23 +135,22 @@
     },
     "/api/auth/refresh": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
+        "summary": "Refresh access token",
         "operationId": "RefreshToken",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RefreshTokenRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Token rotated successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -151,7 +160,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Missing refresh token",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -161,7 +170,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Invalid, expired, or reused token",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -175,42 +184,39 @@
     },
     "/api/auth/logout": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
+        "summary": "Logout and revoke refresh token",
         "operationId": "Logout",
         "requestBody": {
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
-                "oneOf": [
-                  {
-                    "type": "null"
-                  },
-                  {
-                    "$ref": "#/components/schemas/LogoutRequest"
-                  }
-                ]
+                "$ref": "#/components/schemas/LogoutRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Logged out successfully"
           }
         }
       }
     },
     "/api/auth/me": {
       "get": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
+        "summary": "Get authenticated user profile",
         "operationId": "GetMe",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "User details",
             "content": {
               "application/json": {
                 "schema": {
@@ -220,233 +226,1371 @@
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/api/auth/password-reset": {
+      "post": {
+        "tags": ["PasswordReset"],
+        "summary": "Request password reset email",
+        "operationId": "RequestPasswordReset",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request processed (idempotent/safe message)"
+          },
+          "400": {
+            "description": "Invalid email"
+          }
+        }
+      }
+    },
+    "/api/auth/password-reset/confirm": {
+      "post": {
+        "tags": ["PasswordReset"],
+        "summary": "Confirm password reset with token",
+        "operationId": "ConfirmPasswordReset",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          },
+          "400": {
+            "description": "Invalid or expired token"
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update user profile",
+        "operationId": "UpdateProfile",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/users/me/password": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Change password",
+        "operationId": "ChangePassword",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully"
+          },
+          "400": {
+            "description": "Current password incorrect or validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": ["Admin/Users"],
+        "summary": "List users (Admin)",
+        "operationId": "ListUsers",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "integer", "default": 20 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of users",
             "content": {
-              "application/problem+json": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
+                  "$ref": "#/components/schemas/PaginatedUsersDto"
                 }
               }
             }
           },
-          "404": {
-            "description": "Not Found",
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden - Admin role required" }
+        }
+      }
+    },
+    "/api/admin/users/{id}/status": {
+      "put": {
+        "tags": ["Admin/Users"],
+        "summary": "Update user status (Lock/Unlock/Disable)",
+        "operationId": "UpdateUserStatus",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserStatusRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User status updated" },
+          "400": { "description": "Invalid status value" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/api/users/me/addresses": {
+      "get": {
+        "tags": ["Addresses"],
+        "summary": "Get user delivery addresses",
+        "operationId": "GetAddresses",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of user addresses",
             "content": {
-              "application/problem+json": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AddressDto" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Addresses"],
+        "summary": "Create delivery address",
+        "operationId": "CreateAddress",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateAddressRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Address created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AddressDto" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/users/me/addresses/{id}": {
+      "put": {
+        "tags": ["Addresses"],
+        "summary": "Update delivery address",
+        "operationId": "UpdateAddress",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAddressRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Address updated" },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Address not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Addresses"],
+        "summary": "Delete delivery address",
+        "operationId": "DeleteAddress",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "204": { "description": "Address deleted" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Address not found" }
+        }
+      }
+    },
+    "/api/users/me/addresses/{id}/default": {
+      "put": {
+        "tags": ["Addresses"],
+        "summary": "Set address as default",
+        "operationId": "SetAddressAsDefault",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Default address set" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Address not found" }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "Browse and search products with filter & pagination",
+        "operationId": "GetProducts",
+        "parameters": [
+          { "name": "categoryId", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "brandId", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "minPrice", "in": "query", "schema": { "type": "number" } },
+          { "name": "maxPrice", "in": "query", "schema": { "type": "number" } },
+          { "name": "branchId", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of products",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedProductSummary" }
+              }
+            }
+          },
+          "400": { "description": "Invalid parameters" }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "Get product detail and branch inventory",
+        "operationId": "GetProductById",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "branchId", "in": "query", "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProductDetailDto" }
+              }
+            }
+          },
+          "404": { "description": "Product not found" }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "List hierarchical categories",
+        "operationId": "GetCategories",
+        "responses": {
+          "200": {
+            "description": "Categories list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CategoryDto" }
                 }
               }
             }
           }
+        }
+      }
+    },
+    "/api/brands": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "List active brands",
+        "operationId": "GetBrands",
+        "responses": {
+          "200": {
+            "description": "Brands list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BrandDto" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches": {
+      "get": {
+        "tags": ["Branches"],
+        "summary": "List all active supermarket branches",
+        "operationId": "GetBranches",
+        "responses": {
+          "200": {
+            "description": "Branches list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BranchDto" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/{id}": {
+      "get": {
+        "tags": ["Branches"],
+        "summary": "Get branch by ID",
+        "operationId": "GetBranchById",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branch info",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BranchDto" }
+              }
+            }
+          },
+          "404": { "description": "Branch not found" }
+        }
+      }
+    },
+    "/api/branches/{id}/inventory": {
+      "get": {
+        "tags": ["Branches"],
+        "summary": "Get inventory stock & price at branch",
+        "operationId": "GetBranchInventory",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branch inventory list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BranchInventoryListDto" }
+              }
+            }
+          },
+          "404": { "description": "Branch not found" }
+        }
+      }
+    },
+    "/api/admin/branches/{branchId}/inventory": {
+      "put": {
+        "tags": ["Admin-Branches"],
+        "summary": "Update branch inventory price, quantity and reorder level (Admin)",
+        "operationId": "UpdateBranchInventory",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "branchId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/InventoryAdjustmentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inventory updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BranchProductInventoryDto" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Inventory not found" }
+        }
+      }
+    },
+    "/api/cart": {
+      "get": {
+        "tags": ["Cart"],
+        "summary": "Get user cart for current branch",
+        "operationId": "GetCart",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Current cart details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CartDto" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "delete": {
+        "tags": ["Cart"],
+        "summary": "Clear all items from cart",
+        "operationId": "ClearCart",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "204": { "description": "Cart cleared" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/cart/items": {
+      "post": {
+        "tags": ["Cart"],
+        "summary": "Add item to cart with branch stock check",
+        "operationId": "AddCartItem",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddCartItemRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated cart",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CartDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid quantity" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Product not found at branch" },
+          "409": { "description": "Insufficient stock" }
+        }
+      }
+    },
+    "/api/cart/items/{itemId}": {
+      "put": {
+        "tags": ["Cart"],
+        "summary": "Update item quantity in cart",
+        "operationId": "UpdateCartItem",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "itemId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCartItemRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated cart",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CartDto" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Cart item not found" },
+          "409": { "description": "Insufficient stock" }
+        }
+      },
+      "delete": {
+        "tags": ["Cart"],
+        "summary": "Remove item from cart",
+        "operationId": "RemoveCartItem",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "itemId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated cart",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CartDto" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Cart item not found" }
+        }
+      }
+    },
+    "/api/cart/change-branch": {
+      "post": {
+        "tags": ["Cart"],
+        "summary": "Change shopping branch for current cart",
+        "operationId": "ChangeBranch",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChangeBranchRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cart updated with new branch prices",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CartDto" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Branch or cart not found" }
+        }
+      }
+    },
+    "/api/checkout": {
+      "post": {
+        "tags": ["Checkout"],
+        "summary": "Transactional checkout with stock reservation",
+        "operationId": "Checkout",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CheckoutRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created & stock reserved",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CheckoutResponse" }
+              }
+            }
+          },
+          "400": { "description": "Invalid input or empty cart" },
+          "401": { "description": "Unauthorized" },
+          "409": { "description": "Insufficient stock for items" }
+        }
+      }
+    },
+    "/api/checkout/payment": {
+      "post": {
+        "tags": ["Checkout"],
+        "summary": "Initiate payment (COD, VNPay, MoMo)",
+        "operationId": "InitiatePayment",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PaymentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment initialized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentInitDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid payment method" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Order not found" }
+        }
+      }
+    },
+    "/api/checkout/payment/callback": {
+      "post": {
+        "tags": ["Payment-Callback"],
+        "summary": "Webhook / IPN callback handler from payment gateway",
+        "operationId": "PaymentCallback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PaymentCallbackRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Callback processed" },
+          "404": { "description": "Payment transaction not found" }
+        }
+      }
+    },
+    "/api/orders": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Get customer order history",
+        "operationId": "GetOrders",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of user orders",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedOrdersDto" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/orders/{id}": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Get order details by ID",
+        "operationId": "GetOrderById",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details with items, snapshot and payment",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderDetailDto" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Order not found" }
+        }
+      }
+    },
+    "/api/admin/orders": {
+      "get": {
+        "tags": ["Admin-Orders"],
+        "summary": "List all orders (Admin)",
+        "operationId": "GetAllOrders",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "userId", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of all orders",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedOrdersDto" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/api/admin/orders/{id}": {
+      "get": {
+        "tags": ["Admin-Orders"],
+        "summary": "Get order details for Admin",
+        "operationId": "GetOrderByIdForAdmin",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderDetailDto" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Order not found" }
+        }
+      }
+    },
+    "/api/admin/orders/{id}/status": {
+      "put": {
+        "tags": ["Admin-Orders"],
+        "summary": "Update order status & record status history (Admin)",
+        "operationId": "UpdateOrderStatus",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateOrderStatusRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderDetailDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid transition" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Order not found" }
         }
       }
     }
   },
   "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
-      "AuthResponse": {
-        "required": [
-          "accessToken",
-          "refreshToken",
-          "expiresInSeconds",
-          "user"
-        ],
+      "HealthResponse": {
         "type": "object",
+        "required": ["status"],
         "properties": {
-          "accessToken": {
-            "type": "string"
-          },
-          "refreshToken": {
-            "type": "string"
-          },
-          "expiresInSeconds": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "user": {
-            "$ref": "#/components/schemas/UserDto"
-          }
+          "status": { "type": "string", "example": "ok" }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["email", "password", "fullName"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 6 },
+          "fullName": { "type": "string" },
+          "phone": { "type": "string", "nullable": true }
+        }
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "required": ["id", "email", "fullName", "role"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "fullName": { "type": "string" },
+          "phone": { "type": "string", "nullable": true },
+          "role": { "type": "string" }
         }
       },
       "LoginRequest": {
-        "required": [
-          "email",
-          "password"
-        ],
         "type": "object",
+        "required": ["email", "password"],
         "properties": {
-          "email": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
-          }
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "RefreshTokenRequest": {
+        "type": "object",
+        "required": ["refreshToken"],
+        "properties": {
+          "refreshToken": { "type": "string" }
         }
       },
       "LogoutRequest": {
-        "required": [
-          "refreshToken"
-        ],
         "type": "object",
         "properties": {
-          "refreshToken": {
-            "type": [
-              "null",
-              "string"
-            ]
+          "refreshToken": { "type": "string", "nullable": true }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "required": ["accessToken", "refreshToken", "expiresIn", "user"],
+        "properties": {
+          "accessToken": { "type": "string" },
+          "refreshToken": { "type": "string" },
+          "expiresIn": { "type": "integer" },
+          "user": { "$ref": "#/components/schemas/UserDto" }
+        }
+      },
+      "UserDto": {
+        "type": "object",
+        "required": ["id", "email", "fullName", "role"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "fullName": { "type": "string" },
+          "phone": { "type": "string", "nullable": true },
+          "role": { "type": "string" }
+        }
+      },
+      "PasswordResetRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": { "type": "string", "format": "email" }
+        }
+      },
+      "PasswordResetConfirmRequest": {
+        "type": "object",
+        "required": ["token", "newPassword"],
+        "properties": {
+          "token": { "type": "string" },
+          "newPassword": { "type": "string", "minLength": 6 }
+        }
+      },
+      "UpdateProfileRequest": {
+        "type": "object",
+        "required": ["fullName"],
+        "properties": {
+          "fullName": { "type": "string" },
+          "phone": { "type": "string", "nullable": true }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "required": ["currentPassword", "newPassword"],
+        "properties": {
+          "currentPassword": { "type": "string" },
+          "newPassword": { "type": "string", "minLength": 6 }
+        }
+      },
+      "UpdateUserStatusRequest": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "type": "string", "enum": ["Active", "Locked", "Disabled"] }
+        }
+      },
+      "UserSummaryDto": {
+        "type": "object",
+        "required": ["id", "email", "fullName", "role", "status", "createdAtUtc", "updatedAtUtc"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string" },
+          "fullName": { "type": "string" },
+          "phone": { "type": "string", "nullable": true },
+          "role": { "type": "string" },
+          "status": { "type": "string" },
+          "createdAtUtc": { "type": "string", "format": "date-time" },
+          "updatedAtUtc": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedUsersDto": {
+        "type": "object",
+        "required": ["page", "pageSize", "totalCount", "users"],
+        "properties": {
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "totalCount": { "type": "integer" },
+          "users": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserSummaryDto" }
           }
+        }
+      },
+      "CreateAddressRequest": {
+        "type": "object",
+        "required": ["recipientName", "phone", "street", "ward", "district", "city"],
+        "properties": {
+          "recipientName": { "type": "string" },
+          "phone": { "type": "string" },
+          "street": { "type": "string" },
+          "ward": { "type": "string" },
+          "district": { "type": "string" },
+          "city": { "type": "string" },
+          "postalCode": { "type": "string", "nullable": true }
+        }
+      },
+      "UpdateAddressRequest": {
+        "type": "object",
+        "required": ["recipientName", "phone", "street", "ward", "district", "city"],
+        "properties": {
+          "recipientName": { "type": "string" },
+          "phone": { "type": "string" },
+          "street": { "type": "string" },
+          "ward": { "type": "string" },
+          "district": { "type": "string" },
+          "city": { "type": "string" },
+          "postalCode": { "type": "string", "nullable": true }
+        }
+      },
+      "AddressDto": {
+        "type": "object",
+        "required": ["id", "recipientName", "phone", "street", "ward", "district", "city", "isDefault", "createdAtUtc", "updatedAtUtc"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "recipientName": { "type": "string" },
+          "phone": { "type": "string" },
+          "street": { "type": "string" },
+          "ward": { "type": "string" },
+          "district": { "type": "string" },
+          "city": { "type": "string" },
+          "postalCode": { "type": "string", "nullable": true },
+          "isDefault": { "type": "boolean" },
+          "createdAtUtc": { "type": "string", "format": "date-time" },
+          "updatedAtUtc": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CategoryDto": {
+        "type": "object",
+        "required": ["id", "name", "slug", "isActive"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "parentCategoryId": { "type": "string", "format": "uuid", "nullable": true },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "BrandDto": {
+        "type": "object",
+        "required": ["id", "name", "slug", "isActive"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "ProductSummaryDto": {
+        "type": "object",
+        "required": ["id", "name", "slug", "sku", "basePrice", "categoryName", "brandName"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "sku": { "type": "string" },
+          "basePrice": { "type": "number" },
+          "imageUrl": { "type": "string", "nullable": true },
+          "categoryName": { "type": "string" },
+          "brandName": { "type": "string" }
+        }
+      },
+      "PaginatedProductSummary": {
+        "type": "object",
+        "required": ["items", "meta"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ProductSummaryDto" }
+          },
+          "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "required": ["totalCount", "page", "pageSize", "totalPages"],
+        "properties": {
+          "totalCount": { "type": "integer" },
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "totalPages": { "type": "integer" }
+        }
+      },
+      "ProductDetailDto": {
+        "type": "object",
+        "required": ["id", "name", "slug", "sku", "basePrice", "unit", "categoryId", "categoryName", "brandId", "brandName"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "sku": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "basePrice": { "type": "number" },
+          "unit": { "type": "string" },
+          "imageUrl": { "type": "string", "nullable": true },
+          "categoryId": { "type": "string", "format": "uuid" },
+          "categoryName": { "type": "string" },
+          "brandId": { "type": "string", "format": "uuid" },
+          "brandName": { "type": "string" },
+          "inventory": { "$ref": "#/components/schemas/BranchInventoryDto", "nullable": true }
+        }
+      },
+      "BranchDto": {
+        "type": "object",
+        "required": ["id", "name", "address", "phone", "latitude", "longitude", "isActive"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "address": { "type": "string" },
+          "phone": { "type": "string" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "BranchInventoryDto": {
+        "type": "object",
+        "required": ["branchId", "sellingPrice", "availableQuantity", "quantityOnHand"],
+        "properties": {
+          "branchId": { "type": "string", "format": "uuid" },
+          "sellingPrice": { "type": "number" },
+          "availableQuantity": { "type": "integer" },
+          "quantityOnHand": { "type": "integer" }
+        }
+      },
+      "BranchProductInventoryDto": {
+        "type": "object",
+        "required": ["productId", "productName", "sku", "sellingPrice", "quantityOnHand", "reservedQuantity", "availableQuantity", "reorderLevel"],
+        "properties": {
+          "productId": { "type": "string", "format": "uuid" },
+          "productName": { "type": "string" },
+          "sku": { "type": "string" },
+          "sellingPrice": { "type": "number" },
+          "quantityOnHand": { "type": "integer" },
+          "reservedQuantity": { "type": "integer" },
+          "availableQuantity": { "type": "integer" },
+          "reorderLevel": { "type": "integer" }
+        }
+      },
+      "BranchInventoryListDto": {
+        "type": "object",
+        "required": ["branchId", "inventory"],
+        "properties": {
+          "branchId": { "type": "string", "format": "uuid" },
+          "inventory": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BranchProductInventoryDto" }
+          }
+        }
+      },
+      "InventoryAdjustmentRequest": {
+        "type": "object",
+        "required": ["productId", "quantityOnHand"],
+        "properties": {
+          "productId": { "type": "string", "format": "uuid" },
+          "sellingPrice": { "type": "number", "nullable": true },
+          "quantityOnHand": { "type": "integer" },
+          "reorderLevel": { "type": "integer", "nullable": true }
+        }
+      },
+      "CartDto": {
+        "type": "object",
+        "required": ["id", "userId", "branchId", "items", "totalItems", "subtotal"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "branchId": { "type": "string", "format": "uuid" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CartItemDto" }
+          },
+          "totalItems": { "type": "integer" },
+          "subtotal": { "type": "number" }
+        }
+      },
+      "CartItemDto": {
+        "type": "object",
+        "required": ["id", "productId", "productName", "sku", "unitPrice", "quantity", "lineTotal", "availableStock"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "productId": { "type": "string", "format": "uuid" },
+          "productName": { "type": "string" },
+          "sku": { "type": "string" },
+          "unitPrice": { "type": "number" },
+          "quantity": { "type": "integer" },
+          "lineTotal": { "type": "number" },
+          "availableStock": { "type": "integer" }
+        }
+      },
+      "AddCartItemRequest": {
+        "type": "object",
+        "required": ["productId", "quantity"],
+        "properties": {
+          "productId": { "type": "string", "format": "uuid" },
+          "quantity": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "UpdateCartItemRequest": {
+        "type": "object",
+        "required": ["quantity"],
+        "properties": {
+          "quantity": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "ChangeBranchRequest": {
+        "type": "object",
+        "required": ["branchId"],
+        "properties": {
+          "branchId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "CheckoutRequest": {
+        "type": "object",
+        "required": ["fulfillmentType"],
+        "properties": {
+          "fulfillmentType": { "type": "string", "enum": ["Pickup", "Delivery"] },
+          "recipientName": { "type": "string", "nullable": true },
+          "recipientPhone": { "type": "string", "nullable": true },
+          "deliveryAddress": { "type": "string", "nullable": true },
+          "deliveryAddressId": { "type": "string", "format": "uuid", "nullable": true }
+        }
+      },
+      "CheckoutResponse": {
+        "type": "object",
+        "required": ["orderId", "subtotal", "discountAmount", "shippingFee", "totalAmount", "status", "payment"],
+        "properties": {
+          "orderId": { "type": "string", "format": "uuid" },
+          "subtotal": { "type": "number" },
+          "discountAmount": { "type": "number" },
+          "shippingFee": { "type": "number" },
+          "totalAmount": { "type": "number" },
+          "status": { "type": "string" },
+          "payment": { "$ref": "#/components/schemas/PaymentInitDto" }
+        }
+      },
+      "PaymentRequest": {
+        "type": "object",
+        "required": ["orderId", "method"],
+        "properties": {
+          "orderId": { "type": "string", "format": "uuid" },
+          "method": { "type": "string", "enum": ["COD", "VNPay", "MoMo"] }
+        }
+      },
+      "PaymentInitDto": {
+        "type": "object",
+        "required": ["paymentId", "method", "status"],
+        "properties": {
+          "paymentId": { "type": "string", "format": "uuid" },
+          "method": { "type": "string" },
+          "status": { "type": "string" },
+          "checkoutUrl": { "type": "string", "nullable": true }
+        }
+      },
+      "PaymentCallbackRequest": {
+        "type": "object",
+        "required": ["provider", "data"],
+        "properties": {
+          "provider": { "type": "string" },
+          "data": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      },
+      "OrderListDto": {
+        "type": "object",
+        "required": ["id", "createdAtUtc", "totalAmount", "status", "fulfillmentType", "totalItems"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "createdAtUtc": { "type": "string", "format": "date-time" },
+          "totalAmount": { "type": "number" },
+          "status": { "type": "string" },
+          "fulfillmentType": { "type": "string" },
+          "totalItems": { "type": "integer" }
+        }
+      },
+      "PaginatedOrdersDto": {
+        "type": "object",
+        "required": ["orders", "totalCount", "page", "pageSize"],
+        "properties": {
+          "orders": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderListDto" }
+          },
+          "totalCount": { "type": "integer" },
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" }
+        }
+      },
+      "OrderItemDto": {
+        "type": "object",
+        "required": ["productId", "productName", "sku", "unitPrice", "quantity", "lineTotal"],
+        "properties": {
+          "productId": { "type": "string", "format": "uuid" },
+          "productName": { "type": "string" },
+          "sku": { "type": "string" },
+          "unitPrice": { "type": "number" },
+          "quantity": { "type": "integer" },
+          "lineTotal": { "type": "number" }
+        }
+      },
+      "StatusHistoryDto": {
+        "type": "object",
+        "required": ["fromStatus", "toStatus", "createdAtUtc"],
+        "properties": {
+          "fromStatus": { "type": "string" },
+          "toStatus": { "type": "string" },
+          "note": { "type": "string", "nullable": true },
+          "createdAtUtc": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaymentDto": {
+        "type": "object",
+        "required": ["id", "method", "status", "amount", "createdAtUtc"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "method": { "type": "string" },
+          "status": { "type": "string" },
+          "amount": { "type": "number" },
+          "providerTransactionId": { "type": "string", "nullable": true },
+          "createdAtUtc": { "type": "string", "format": "date-time" }
+        }
+      },
+      "OrderDetailDto": {
+        "type": "object",
+        "required": ["id", "userId", "branchId", "fulfillmentType", "recipientName", "recipientPhone", "deliveryAddressSnapshot", "subtotal", "discountAmount", "shippingFee", "totalAmount", "status", "createdAtUtc", "updatedAtUtc", "items", "statusHistory"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "branchId": { "type": "string", "format": "uuid" },
+          "fulfillmentType": { "type": "string" },
+          "recipientName": { "type": "string" },
+          "recipientPhone": { "type": "string" },
+          "deliveryAddressSnapshot": { "type": "string" },
+          "subtotal": { "type": "number" },
+          "discountAmount": { "type": "number" },
+          "shippingFee": { "type": "number" },
+          "totalAmount": { "type": "number" },
+          "promotionCodeSnapshot": { "type": "string", "nullable": true },
+          "status": { "type": "string" },
+          "createdAtUtc": { "type": "string", "format": "date-time" },
+          "updatedAtUtc": { "type": "string", "format": "date-time" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderItemDto" }
+          },
+          "statusHistory": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/StatusHistoryDto" }
+          },
+          "payment": { "$ref": "#/components/schemas/PaymentDto", "nullable": true }
+        }
+      },
+      "UpdateOrderStatusRequest": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "type": "string" },
+          "note": { "type": "string", "nullable": true }
         }
       },
       "ProblemDetails": {
         "type": "object",
         "properties": {
-          "type": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "title": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "status": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "detail": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "instance": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "RefreshTokenRequest": {
-        "required": [
-          "refreshToken"
-        ],
-        "type": "object",
-        "properties": {
-          "refreshToken": {
-            "type": "string"
-          }
-        }
-      },
-      "RegisterRequest": {
-        "required": [
-          "email",
-          "password",
-          "fullName",
-          "phone"
-        ],
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "phone": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "RegisterResponse": {
-        "required": [
-          "id",
-          "email",
-          "fullName",
-          "phone",
-          "role"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "phone": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "role": {
-            "type": "string"
-          }
-        }
-      },
-      "UserDto": {
-        "required": [
-          "id",
-          "email",
-          "fullName",
-          "phone",
-          "role"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "phone": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "role": {
-            "type": "string"
-          }
+          "type": { "type": "string", "nullable": true },
+          "title": { "type": "string", "nullable": true },
+          "status": { "type": "integer", "nullable": true },
+          "detail": { "type": "string", "nullable": true },
+          "instance": { "type": "string", "nullable": true }
         }
       }
     }
-  },
-  "tags": [
-    {
-      "name": "System"
-    },
-    {
-      "name": "Auth"
-    }
-  ]
+  }
 }

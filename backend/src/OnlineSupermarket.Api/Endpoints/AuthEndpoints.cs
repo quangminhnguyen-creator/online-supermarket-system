@@ -43,6 +43,8 @@ public static class AuthEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        routes.MapPasswordResetEndpoints();
+
         return routes;
     }
 

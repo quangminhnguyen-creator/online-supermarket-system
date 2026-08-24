@@ -13,8 +13,10 @@ TestResults/
 # Local AI agent workflow (never publish)
 .ai/
 .opencode/
+.claude/
 .mcp.json
 opencode.json
 AGENTS.md
 scripts/workflow-config.test.mjs
 docs/superpowers/
+.vs/

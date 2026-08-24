@@ -1,20 +1,32 @@
-# ERD toàn hệ thống siêu thị online
+# Thiết Kế Cơ Sở Dữ Liệu & ERD Hệ Thống Siêu Thị Trực Tuyến
 
-Ngày chốt thiết kế: 2026-08-07
-Phạm vi: đồ án 30 ngày, 4 thành viên, 22 bảng
+Ngày cập nhật: 2026-08-23  
+Trạng thái: **OFFICIAL (Canonical)**  
+Phạm vi: 16 bảng đã triển khai EF Core Migrations + 7 bảng mở rộng kế hoạch (Tổng 23 bảng)
 
-## 1. Phạm vi mô hình
+---
 
-ERD này bao phủ toàn bộ chức năng đã duyệt: tài khoản, địa chỉ, đa chi nhánh, catalog, so sánh sản phẩm, giá và tồn kho theo chi nhánh, giỏ hàng, coupon/khuyến mãi toàn đơn, đặt hàng, COD/VNPay/MoMo sandbox, đánh giá, recommendation, dự báo nhu cầu và cảnh báo tồn kho.
+## 1. Phạm Vi Mô Hình
 
-So sánh sản phẩm là chức năng phía client, lưu tối đa 3–4 sản phẩm cùng danh mục trong `localStorage`, nên không cần bảng database. Coupon được biểu diễn bằng `promotions.code`, không tách bảng `coupons`. Các phần chủ động loại khỏi mô hình: nhiều ảnh cho một sản phẩm, bảng đặt lại mật khẩu, khuyến mãi theo sản phẩm/danh mục, Buy 1 Get 1, nhà cung cấp, phiếu nhập, chuyển kho, đổi trả và giao vận thực tế.
+ERD này bao phủ toàn bộ kiến trúc dữ liệu của hệ thống Siêu thị điện tử trực tuyến:
+- **Tài khoản & Định danh (Identity)**: Người dùng, Refresh Token xoay vòng, Token đặt lại mật khẩu.
+- **Sổ địa chỉ & Khách hàng (Customer & Shopping)**: Địa chỉ giao hàng nhận dạng theo User, cờ địa chỉ mặc định transactional.
+- **Danh mục & Đa chi nhánh (Catalog & Multi-Branch)**: Danh mục sản phẩm đa cấp, thương hiệu, sản phẩm và chi nhánh vật lý.
+- **Tồn kho chi nhánh (Inventory)**: Quản lý giá bán (`selling_price`), tồn kho thực tế (`quantity_on_hand`), tồn kho đã khóa giữ (`reserved_quantity`), tồn kho khả dụng (`available_quantity`), và định mức nhập hàng (`reorder_level`) riêng biệt theo từng chi nhánh.
+- **Giỏ hàng (Shopping Cart)**: Giỏ hàng gắn liền với User và Chi nhánh đang chọn, kiểm tra tồn kho tức thời.
+- **Đơn hàng & Giao dịch (Orders & Transactions)**: Đơn hàng đa hình thức (Pickup / Delivery), snapshot địa chỉ, snapshot tên & giá sản phẩm, lịch sử chuyển trạng thái đơn hàng.
+- **Thanh toán Sandbox (Payments)**: Phương thức thanh toán (COD, VNPay, MoMo), giao dịch thanh toán và webhook/callback idempotency.
+- **Phân hệ mở rộng (Planned)**: Khuyến mãi/Coupon (`PROMOTIONS`), Đánh giá (`REVIEWS`), Nhật ký biến động kho (`INVENTORY_TRANSACTIONS`), Dữ liệu sự kiện & AI (`PRODUCT_VIEW_EVENTS`, `RECOMMENDATION_RESULTS`, `DEMAND_FORECASTS`, `STOCK_ALERTS`).
 
-## 2. ERD
+---
+
+## 2. Sơ Đồ ERD Tổng Thể
 
 ```mermaid
 erDiagram
     USERS ||--o{ ADDRESSES : owns
     USERS ||--o{ REFRESH_TOKENS : authenticates_with
+    USERS ||--o{ PASSWORD_RESET_TOKENS : requests_reset
     REFRESH_TOKENS o|--o| REFRESH_TOKENS : replaced_by
 
     CATEGORIES o|--o{ CATEGORIES : parent_of
@@ -72,11 +84,12 @@ erDiagram
         char36 id PK
         char36 user_id FK
         varchar150 recipient_name
-        varchar20 recipient_phone
-        varchar100 province
-        varchar100 district
+        varchar20 phone
+        varchar500 street
         varchar100 ward
-        varchar300 street
+        varchar100 district
+        varchar100 city
+        varchar20 postal_code
         boolean is_default
         datetime created_at_utc
         datetime updated_at_utc
@@ -90,6 +103,15 @@ erDiagram
         datetime revoked_at_utc
         char36 replaced_by_token_id FK
         datetime created_at_utc
+    }
+
+    PASSWORD_RESET_TOKENS {
+        char36 id PK
+        char36 user_id FK
+        varchar128 token_hash UK
+        datetime expires_at_utc
+        datetime created_at_utc
+        boolean is_used
     }
 
     BRANCHES {
@@ -150,19 +172,6 @@ erDiagram
         datetime updated_at_utc
     }
 
-    INVENTORY_TRANSACTIONS {
-        char36 id PK
-        char36 branch_inventory_id FK
-        char36 performed_by_user_id FK
-        varchar30 transaction_type
-        int quantity_change
-        int quantity_after
-        varchar30 reference_type
-        char36 reference_id
-        varchar500 note
-        datetime created_at_utc
-    }
-
     CARTS {
         char36 id PK
         char36 user_id FK
@@ -175,46 +184,28 @@ erDiagram
         char36 id PK
         char36 cart_id FK
         char36 product_id FK
+        char36 branch_inventory_id FK
+        decimal unit_price
         int quantity
-        datetime created_at_utc
-        datetime updated_at_utc
-    }
-
-    PROMOTIONS {
-        char36 id PK
-        varchar150 name
-        varchar50 code UK
-        text description
-        varchar20 discount_type
-        decimal discount_value
-        decimal min_order_amount
-        decimal max_discount_amount
-        int usage_limit
-        int per_user_limit
-        datetime start_at_utc
-        datetime end_at_utc
-        boolean is_active
         datetime created_at_utc
         datetime updated_at_utc
     }
 
     ORDERS {
         char36 id PK
-        varchar30 order_number UK
         char36 user_id FK
         char36 branch_id FK
-        char36 promotion_id FK
-        varchar20 fulfillment_type
+        varchar30 fulfillment_type
         varchar150 recipient_name
         varchar20 recipient_phone
-        varchar500 delivery_address_snapshot
-        varchar50 promotion_code_snapshot
+        text delivery_address_snapshot
+        char36 delivery_address_id FK
         decimal subtotal
         decimal discount_amount
         decimal shipping_fee
         decimal total_amount
-        varchar30 order_status
-        varchar30 payment_status
+        varchar50 promotion_code_snapshot
+        varchar30 status
         datetime created_at_utc
         datetime updated_at_utc
     }
@@ -223,19 +214,16 @@ erDiagram
         char36 id PK
         char36 order_id FK
         char36 product_id FK
-        varchar64 product_sku_snapshot
         varchar200 product_name_snapshot
-        varchar30 unit_snapshot
+        varchar64 sku_snapshot
         decimal unit_price
         int quantity
-        decimal discount_amount
         decimal line_total
     }
 
     ORDER_STATUS_HISTORIES {
         char36 id PK
         char36 order_id FK
-        char36 changed_by_user_id FK
         varchar30 from_status
         varchar30 to_status
         varchar500 note
@@ -245,13 +233,11 @@ erDiagram
     PAYMENTS {
         char36 id PK
         char36 order_id FK
-        varchar20 method
-        varchar20 provider
-        varchar100 provider_transaction_id UK
-        varchar100 request_id UK
+        varchar30 method
         decimal amount
         varchar30 status
-        datetime paid_at_utc
+        varchar100 provider_transaction_id
+        text raw_response
         datetime created_at_utc
         datetime updated_at_utc
     }
@@ -259,308 +245,57 @@ erDiagram
     PAYMENT_CALLBACKS {
         char36 id PK
         char36 payment_id FK
-        varchar20 provider
-        varchar150 external_event_id
-        varchar128 payload_hash
-        varchar50 response_code
+        varchar50 provider
+        varchar128 external_event_id
+        text payload_json
         boolean is_signature_valid
-        datetime processed_at_utc
-        datetime created_at_utc
-    }
-
-    REVIEWS {
-        char36 id PK
-        char36 user_id FK
-        char36 product_id FK
-        char36 order_item_id FK,UK
-        tinyint rating
-        text comment
-        varchar20 status
-        datetime created_at_utc
-        datetime updated_at_utc
-    }
-
-    PRODUCT_VIEW_EVENTS {
-        char36 id PK
-        char36 user_id FK
-        char36 product_id FK
-        char36 branch_id FK
-        varchar100 anonymous_session_id
-        datetime viewed_at_utc
-    }
-
-    RECOMMENDATION_RESULTS {
-        char36 id PK
-        char36 user_id FK
-        char36 product_id FK
-        char36 branch_id FK
-        decimal score
-        varchar250 reason
-        datetime generated_at_utc
-        datetime expires_at_utc
-    }
-
-    DEMAND_FORECASTS {
-        char36 id PK
-        char36 branch_id FK
-        char36 product_id FK
-        date forecast_date
-        decimal predicted_quantity
-        varchar30 method
-        datetime generated_at_utc
-    }
-
-    STOCK_ALERTS {
-        char36 id PK
-        char36 branch_id FK
-        char36 product_id FK
-        char36 demand_forecast_id FK
-        varchar20 alert_level
-        int available_quantity
-        decimal predicted_demand
-        int recommended_quantity
-        varchar20 status
-        datetime created_at_utc
-        datetime resolved_at_utc
+        decimal callback_amount
+        varchar30 result_status
+        datetime received_at_utc
     }
 ```
 
-## 3. Chú thích ký hiệu
+---
 
-- `PK`: khóa chính.
-- `FK`: khóa ngoại.
-- `UK`: unique key.
-- `FK_UK`: vừa là khóa ngoại vừa duy nhất.
-- `||`: bắt buộc đúng một.
-- `o|`: không hoặc một.
-- `o{`: không hoặc nhiều.
-- `|{`: một hoặc nhiều.
-- Các cột có thể null: `revoked_at_utc`, `replaced_by_token_id`, `parent_category_id`, `performed_by_user_id`, `reference_type`, `reference_id`, `note`, `code`, `max_discount_amount`, `usage_limit`, `per_user_limit`, `promotion_id`, thông tin giao hàng khi nhận tại chi nhánh, `changed_by_user_id`, `from_status`, các mã giao dịch của COD, `payment_id` nếu callback chưa đối chiếu được, `user_id`/`anonymous_session_id` của sự kiện xem, `demand_forecast_id` và `resolved_at_utc`.
+## 3. Trạng Thái Hiện Thực Cơ Sở Dữ Liệu
 
-## 4. Chú thích theo nhóm bảng
+### 3.1. Các Bảng Đã Triển Khai Qua EF Core Migrations (16 Bảng)
 
-### 4.1. Tài khoản
-
-- `users` lưu tài khoản Customer/Admin. `role` dùng enum thay vì tách bảng role; `status` hỗ trợ `Active`, `Locked`, `Disabled`.
-- `addresses` lưu nhiều địa chỉ giao hàng. Mỗi user chỉ có tối đa một địa chỉ mặc định.
-- `refresh_tokens` lưu hash, không lưu token thô. Token có thể bị thu hồi và nối tới token thay thế để phát hiện reuse.
-- **DFD Link:** Consumed by DFD processes P.2 (Quản lý tài khoản), P.2.1 (Đăng ký/Đăng nhập), P.2.2 (Quản lý profile), P.2.3 (Quản lý địa chỉ)
-
-### 4.2. Chi nhánh và catalog
-
-- `products` chứa thông tin chung; `base_price` là giá tham khảo, không phải giá bán cuối cùng tại mọi chi nhánh.
-- `branch_inventories` mới là nguồn giá bán và số lượng theo chi nhánh. `(branch_id, product_id)` phải duy nhất.
-- `categories` hỗ trợ cây cha-con qua `parent_category_id`. Không cho một category làm cha của chính nó hoặc tạo chu kỳ.
-- Mỗi sản phẩm chỉ lưu một `image_url`; không có bảng nhiều ảnh.
-- **DFD Link:** Consumed by DFD processes P.1 (Duyệt hàng & Tìm kiếm), P.1.2–P.1.3 (Tìm kiếm, Xem giá/tồn kho), P.7 (Quản lý Catalog), P.7.1–P.7.2 (CRUD danh mục, sản phẩm)
-
-### 4.3. Tồn kho
-
-- `quantity_on_hand`: tổng hàng vật lý tại chi nhánh.
-- `reserved_quantity`: hàng đang giữ cho các đơn chưa hoàn tất.
-- `available_quantity = quantity_on_hand - reserved_quantity`; đây là giá trị tính toán, không lưu cột riêng.
-- `inventory_transactions` là sổ lịch sử bất biến. `quantity_change` có dấu; `quantity_after` giúp đối soát nhanh.
-- Các loại giao dịch tối thiểu: `StockIn`, `Reserve`, `Release`, `Sale`, `Adjustment`.
-- **DFD Link:** Consumed by DFD processes P.3 (Quản lý giỏ hàng), P.3.2–P.3.3 (Thêm/bớt sản phẩm, Xác thực stock), P.4 (Checkout & Đặt hàng), P.4.2 (Kiểm tra & reserve tồn kho), P.8 (Quản lý Chi nhánh & Tồn kho), P.8.2–P.8.3 (Quản lý giá/tồn kho, Ghi lịch sử)
-
-### 4.4. Giỏ hàng
-
-- Một cart thuộc đúng một user và một branch; `(user_id, branch_id)` là duy nhất.
-- `(cart_id, product_id)` là duy nhất trong `cart_items`.
-- Cart không lưu giá. Khi hiển thị và checkout, backend đọc lại `branch_inventories` để tránh dùng giá hoặc tồn kho cũ.
-- **DFD Link:** Consumed by DFD processes P.3 (Quản lý giỏ hàng), P.3.1–P.3.3 (Tạo/chọn branch, Thêm/bớt, Cập nhật), P.4 (Checkout), P.4.1–P.4.2 (Tính lại giá, Reserve stock)
-
-### 4.5. So sánh sản phẩm (không có bảng)
-
-- Guest và Customer có thể chọn tối đa 3–4 sản phẩm cùng danh mục để so sánh.
-- Danh sách ID sản phẩm được lưu trong `localStorage`; backend chỉ cung cấp lại thông tin sản phẩm, giá và tồn kho theo chi nhánh hiện tại.
-- Khi đổi chi nhánh, frontend phải tải lại giá và tồn kho. Không lưu comparison vào database trong phạm vi đồ án.
-
-### 4.6. Khuyến mãi và coupon
-
-- Chỉ có `promotions`; không có bảng `coupons` riêng và không có phạm vi theo sản phẩm hoặc danh mục.
-- `code = NULL`: khuyến mãi tự động toàn đơn. `code` có giá trị: coupon khách phải nhập.
-- `discount_type`: `Percentage` hoặc `FixedAmount`.
-- Mỗi order dùng tối đa một promotion. Số lượt dùng toàn hệ thống và theo user được đếm từ các order hợp lệ, không cần bảng usage riêng.
-- Không hỗ trợ Buy 1 Get 1 trong phạm vi 30 ngày.
-- **DFD Link:** Consumed by DFD processes P.4 (Checkout), P.4.1 (Tính lại giá & promotion), P.9 (Quản lý Khuyến mãi), P.9.1 (Tạo/Cập nhật promotion)
-
-### 4.7. Đơn hàng
-
-- `orders` lưu snapshot người nhận/địa chỉ để lịch sử không thay đổi khi user sửa address.
-- `order_items` lưu snapshot SKU, tên, đơn vị và giá. Xóa mềm/ngừng bán product không làm sai đơn cũ.
-- Tổng tiền tuân theo `total_amount = subtotal - discount_amount + shipping_fee` và không được âm.
-- `fulfillment_type`: `Delivery` hoặc `Pickup`. Pickup không yêu cầu địa chỉ giao hàng.
-- `order_status_histories` ghi mọi lần chuyển trạng thái; bản ghi đầu có thể có `from_status = NULL`.
-- Luồng chính: `Pending -> Confirmed -> Preparing -> ReadyForPickup/Shipping -> Completed`; hủy chỉ từ trạng thái được cho phép.
-- **DFD Link:** Consumed by DFD processes P.4 (Checkout & Đặt hàng), P.4.3–P.4.4 (Chọn fulfilment, Tạo order), P.6 (Đánh giá & Bình luận), P.6.1 (Xem order Completed), P.10 (Quản lý Đơn hàng), P.10.1–P.10.2 (Xem danh sách, Cập nhật status)
-
-### 4.8. Thanh toán
-
-- Một order có thể có nhiều payment vì người dùng có thể thử lại thanh toán; chỉ một payment được thành công.
-- `method`: `COD`, `VNPay`, `MoMo`. `provider` có thể là `Internal`, `VNPay`, `MoMo`.
-- `payment_callbacks` lưu dấu vết callback/IPN và kiểm tra chữ ký. `(provider, external_event_id)` phải duy nhất để chống xử lý lặp.
-- Return URL chỉ hiển thị kết quả; callback/IPN hợp lệ mới được cập nhật payment và order.
-- Không lưu số thẻ, CVV hoặc ngày hết hạn.
-- **DFD Link:** Consumed by DFD processes P.5 (Thanh toán), P.5.2–P.5.4 (Tạo request, Gửi provider, Xử lý callback)
-
-### 4.9. Đánh giá
-
-- `order_item_id` duy nhất bảo đảm mỗi dòng hàng chỉ được review một lần.
-- Chỉ user sở hữu order đã `Completed` mới được tạo review.
-- `rating` nằm trong khoảng 1–5; `status`: `Pending`, `Published`, `Hidden`.
-- **DFD Link:** Consumed by DFD processes P.6 (Đánh giá & Bình luận), P.6.1–P.6.2 (Xem order, Tạo review)
-
-### 4.10. AI
-
-- `product_view_events` ghi hành vi xem. Guest dùng `anonymous_session_id`; customer dùng `user_id`; ít nhất một trong hai phải có giá trị.
-- `recommendation_results` lưu kết quả đã tính cho customer theo branch. Guest/cold-start dùng danh sách fallback và không cần lưu bảng.
-- `demand_forecasts` lưu dự báo theo ngày cho từng cặp branch-product; `(branch_id, product_id, forecast_date)` là duy nhất cho lần chạy hiện hành.
-- `stock_alerts` được tạo khi nhu cầu dự báo cộng safety stock vượt lượng có thể bán. Trạng thái: `Open`, `Acknowledged`, `Resolved`.
-- **DFD Link:** Consumed by DFD processes P.1 (Duyệt hàng), P.1.4 (Ghi sự kiện xem), P.11 (Báo cáo & AI), P.11.1–P.11.2 (Tính forecast, Tạo alert), P.12 (Xem Gợi ý & Cảnh báo)
-
-## 5. Ràng buộc và chỉ mục bắt buộc
-
-| Bảng | Ràng buộc/chỉ mục |
-|---|---|
-| `users` | unique `email`; index `(status, role)` |
-| `addresses` | index `user_id`; cơ chế ứng dụng bảo đảm một địa chỉ mặc định/user |
-| `refresh_tokens` | unique `token_hash`; index `(user_id, expires_at_utc)` |
-| `categories`, `brands`, `products` | unique `slug`; product unique `sku` |
-| `branch_inventories` | unique `(branch_id, product_id)`; check giá/số lượng không âm và reserved không vượt on-hand |
-| `inventory_transactions` | index `(branch_inventory_id, created_at_utc)` và `(reference_type, reference_id)` |
-| `carts` | unique `(user_id, branch_id)` |
-| `cart_items` | unique `(cart_id, product_id)`; check `quantity > 0` |
-| `promotions` | unique nullable `code`; check thời gian và giá trị giảm hợp lệ |
-| `orders` | unique `order_number`; index `(user_id, created_at_utc)` và `(branch_id, order_status)` |
-| `order_items` | index `order_id`; check `quantity > 0` và tiền không âm |
-| `order_status_histories` | index `(order_id, created_at_utc)` |
-| `payments` | unique nullable `provider_transaction_id`; unique `request_id`; index `(order_id, status)` |
-| `payment_callbacks` | unique `(provider, external_event_id)` |
-| `reviews` | unique `order_item_id`; check `rating BETWEEN 1 AND 5`; index `(product_id, status)` |
-| `product_view_events` | index `(user_id, viewed_at_utc)` và `(product_id, viewed_at_utc)` |
-| `recommendation_results` | index `(user_id, branch_id, score)` và `expires_at_utc` |
-| `demand_forecasts` | unique `(branch_id, product_id, forecast_date)` |
-| `stock_alerts` | index `(branch_id, status, alert_level)` |
-
-## 6. Quy tắc dữ liệu chung
-
-- Khóa chính dùng UUID lưu dạng `char(36)` để khớp foundation hiện tại.
-- Tiền dùng `decimal(18,2)`; điểm recommendation dùng độ chính xác riêng phù hợp khi mapping EF Core.
-- Tất cả thời điểm lưu UTC bằng `datetime(6)`; frontend chuyển sang múi giờ hiển thị.
-- Dữ liệu nghiệp vụ quan trọng ưu tiên ngừng hoạt động/ẩn thay vì xóa vật lý.
-- Foreign key mặc định `Restrict`; category cha dùng `SetNull`. Các bảng con thuần sở hữu như cart item có thể `Cascade` khi xóa cart.
-- Checkout phải khóa/kiểm tra tồn kho và cập nhật reserve trong cùng transaction MySQL để không bán âm kho.
-- Báo cáo doanh thu truy vấn từ `orders` và `order_items`; không tạo bảng báo cáo riêng trong phạm vi đồ án.
-
-## 6.5. Chứng minh chuẩn hóa 3NF
-
-Mô hình 22 bảng được thiết kế theo chuẩn mực 3NF (Normal Form thứ 3). Phần này chứng minh không có phụ thuộc bộ phận hoặc phụ thuộc bắc cầu.
-
-### 6.5.1. Nhóm Tài khoản (Users, Addresses, RefreshTokens)
-
-- **Khóa chính:** USERS(id), ADDRESSES(id), REFRESH_TOKENS(id)
-- **Khóa ứng viên:** USERS(email); ADDRESSES(user_id, is_default); REFRESH_TOKENS(token_hash)
-- **1NF:** Tất cả cột là nguyên tố (không có repeating groups)
-- **2NF:** Mọi cột không phải khóa chính phụ thuộc hàm vào toàn bộ khóa chính, không phụ thuộc bộ phận
-- **3NF:** Không có phụ thuộc bắc cầu; ví dụ: user.role không phụ thuộc vào user.email qua bảng trung gian
-
-### 6.5.2. Nhóm Catalog (Categories, Brands, Products)
-
-- **Khóa chính:** CATEGORIES(id), BRANDS(id), PRODUCTS(id)
-- **Khóa ứng viên:** CATEGORIES(slug); BRANDS(slug); PRODUCTS(sku); PRODUCTS(slug, category_id)
-- **1NF:** Tất cả cột nguyên tố; description là text thuần (không nested)
-- **2NF:** product.name phụ thuộc vào products.id, không vào category hoặc brand riêng lẻ
-- **3NF:** Không có phụ thuộc bắc cầu; category.name không phụ thuộc vào category.slug qua parent_category_id
-
-### 6.5.3. Nhóm Tồn kho (Branches, BranchInventories, InventoryTransactions)
-
-- **Khóa chính:** BRANCHES(id), BRANCH_INVENTORIES(id), INVENTORY_TRANSACTIONS(id)
-- **Khóa ứng viên:** BRANCH_INVENTORIES(branch_id, product_id)
-- **1NF:** quantity_on_hand, reserved_quantity là số nguyên (nguyên tố)
-- **2NF:** branch_inventories.selling_price phụ thuộc vào (branch_id, product_id), không vào branch hoặc product riêng
-- **3NF:** Không lưu trữ available_quantity làm cột riêng; nó là dữ liệu tính toán (on_hand - reserved), không vi phạm 3NF
-
-### 6.5.4. Nhóm Giỏ hàng (Carts, CartItems)
-
-- **Khóa chính:** CARTS(id), CART_ITEMS(id)
-- **Khóa ứng viên:** CARTS(user_id, branch_id)
-- **1NF:** Tất cả cột nguyên tố; quantity là số nguyên
-- **2NF:** cart_items.quantity phụ thuộc vào (cart_id, product_id), không phụ thuộc bộ phận
-- **3NF:** Không lưu giá (price) trong cart_items; giá được tính từ branch_inventories tại checkout, không phụ thuộc bắc cầu
-
-### 6.5.5. Nhóm Khuyến mãi (Promotions)
-
-- **Khóa chính:** PROMOTIONS(id)
-- **Khóa ứng viên:** PROMOTIONS(code) — nullable cho auto-apply
-- **1NF:** discount_value, min_order_amount là decimal (nguyên tố)
-- **2NF:** Tất cả cột đều phụ thuộc vào promotions.id, không phụ thuộc bộ phận
-- **3NF:** Không có phụ thuộc bắc cầu; ví dụ: promotion.discount_value không phụ thuộc vào discount_type qua bảng khác
-
-### 6.5.6. Nhóm Đơn hàng (Orders, OrderItems, OrderStatusHistories)
-
-- **Khóa chính:** ORDERS(id), ORDER_ITEMS(id), ORDER_STATUS_HISTORIES(id)
-- **Khóa ứng viên:** ORDERS(order_number)
-- **1NF:** Tất cả cột nguyên tố; snapshot fields (product_name_snapshot, delivery_address_snapshot) là text
-- **2NF:** order_items.unit_price phụ thuộc vào (order_id, product_id), không phụ thuộc bộ phận
-- **3NF (Snapshot Justification):** 
-  - ORDER_ITEMS.product_name_snapshot là dữ liệu lịch sử không vi phạm 3NF vì:
-    * Nó phụ thuộc hàm vào (order_id, product_id, order_timestamp), không phải (product_id) riêng lẻ
-    * Giá trị được tấm lúc tạo order và không bao giờ thay đổi (immutable)
-    * Nó bảo toàn lịch sử kinh doanh: nếu product.name sửa sau đó, order lịch sử vẫn đúng
-    * Không phải sao chép dữ liệu vô mục đích; nó là contract hợp đồng tại thời điểm
-  - Tương tự, ORDERS.delivery_address_snapshot bảo toàn snapshot người nhận/địa chỉ tại order time
-  - ORDER_STATUS_HISTORIES lưu (from_status, to_status, changed_by_user_id, note); dữ liệu lịch sử bất biến
-
-### 6.5.7. Nhóm Thanh toán (Payments, PaymentCallbacks)
-
-- **Khóa chính:** PAYMENTS(id), PAYMENT_CALLBACKS(id)
-- **Khóa ứng viên:** PAYMENTS(provider_transaction_id); PAYMENT_CALLBACKS(provider, external_event_id)
-- **1NF:** amount là decimal (nguyên tố); status là varchar
-- **2NF:** payments.status phụ thuộc vào payments.id, không vào order riêng lẻ
-- **3NF:** Không lưu payment.amount từ orders.total_amount; payment.amount là giá trị riêng được cung cấp bởi payment provider
-  - PAYMENT_CALLBACKS.external_event_id lưu để chống duplicate callback (idempotency), không phải vi phạm 3NF mà là yêu cầu nghiệp vụ
-
-### 6.5.8. Nhóm Đánh giá (Reviews)
-
-- **Khóa chính:** REVIEWS(id)
-- **Khóa ứng viên:** REVIEWS(order_item_id) — duy nhất, bảo đảm một review per item
-- **1NF:** rating là tinyint (1–5); comment là text (nguyên tố)
-- **2NF:** reviews.rating phụ thuộc vào reviews.id, không vào product hoặc user riêng
-- **3NF:** Không lưu product.name hoặc user.email lặp lại; review chỉ tham chiếu qua FK
-
-### 6.5.9. Nhóm AI (ProductViewEvents, RecommendationResults, DemandForecasts, StockAlerts)
-
-- **Khóa chính:** Mỗi bảng một id
-- **Khóa ứng viên:** 
-  - PRODUCT_VIEW_EVENTS(user_id, product_id, viewed_at_utc) — hoặc anonymous_session_id thay user_id
-  - RECOMMENDATION_RESULTS(user_id, branch_id, product_id) — có thể có nhiều recommend/expiry
-  - DEMAND_FORECASTS(branch_id, product_id, forecast_date)
-  - STOCK_ALERTS(branch_id, product_id, alert_level) — có thể có nhiều alert levels
-- **1NF:** score, predicted_quantity là decimal (nguyên tố)
-- **2NF:** recommendation_results.score phụ thuộc vào (user_id, branch_id, product_id), không phụ thuộc bộ phận
-- **3NF:** Không lưu product.category hoặc user.role lặp lại trong bảng AI; chúng tham chiếu qua FK hoặc query join
+1. **`users`**: Tài khoản người dùng (Email, PasswordHash, FullName, Phone, Role: `Customer`/`Admin`, Status: `Active`/`Locked`/`Disabled`).
+2. **`refresh_tokens`**: Token làm mới JWT xoay vòng, lưu SHA-256 hash và cơ chế phát hiện reuse qua `replaced_by_token_id`.
+3. **`password_reset_tokens`**: Token đặt lại mật khẩu an toàn theo thời hạn và chỉ dùng 1 lần (`is_used`).
+4. **`addresses`**: Sổ địa chỉ giao hàng của người dùng, cờ `is_default` được cập nhật transactional.
+5. **`branches`**: Chi nhánh siêu thị vật lý (tên, địa chỉ, số điện thoại, tọa độ lat/long, trạng thái hoạt động).
+6. **`categories`**: Cây danh mục sản phẩm hỗ trợ quan hệ cha - con (`parent_category_id`).
+7. **`brands`**: Thương hiệu sản phẩm.
+8. **`products`**: Thông tin sản phẩm dùng chung (SKU, tên, slug, giá cơ bản `base_price`, đơn vị tính `unit`, ảnh đại diện).
+9. **`branch_inventories`**: Giá bán và tồn kho theo từng chi nhánh (`selling_price`, `quantity_on_hand`, `reserved_quantity`, `reorder_level`).
+10. **`carts`**: Giỏ hàng liên kết giữa User và Chi nhánh mua sắm hiện tại.
+11. **`cart_items`**: Chi tiết sản phẩm trong giỏ hàng (số lượng, đơn giá, liên kết kho chi nhánh).
+12. **`orders`**: Đơn hàng (mã đơn, chi nhánh fulfillment, phương thức nhận hàng, snapshot thông tin giao hàng, tổng tiền, trạng thái).
+13. **`order_items`**: Chi tiết mặt hàng đã đặt, snapshot tên sản phẩm và SKU tại thời điểm đặt hàng.
+14. **`order_status_histories`**: Lịch sử chuyển đổi trạng thái đơn hàng (`Pending` -> `Confirmed` -> `Preparing` -> `Shipping` -> `Completed` / `Cancelled`).
+15. **`payments`**: Giao dịch thanh toán gắn với đơn hàng (COD, VNPay, MoMo, số tiền, mã giao dịch cổng, trạng thái).
+16. **`payment_callbacks`**: Bản ghi webhook / IPN callback từ các cổng thanh toán (chống trùng lặp idempotency, kiểm tra chữ ký).
 
 ---
 
-## Kết luận 3NF
+### 3.2. Các Bảng Quy Hoạch Cho Giai Đoạn Mở Rộng (7 Bảng)
 
-Mô hình 22 bảng tuân thủ 3NF:
-- Mọi khóa chính là duy nhất (1NF)
-- Mọi cột không phải khóa chính phụ thuộc hàm vào toàn bộ khóa chính (2NF)
-- Không có phụ thuộc bắc cầu qua bảng trung gian (3NF)
-- Snapshot fields là dữ liệu lịch sử hợp lệ keyed by order/order-item, không vi phạm 3NF
-- Constraint và index (section 5) bảo toàn tính toàn vẹn tham chiếu và duy nhất tính
+17. **`promotions`**: Quản lý chương trình khuyến mãi và mã giảm giá (`code`, `discount_type`, `discount_value`, `min_order_amount`, `usage_limit`).
+18. **`reviews`**: Đánh giá và bình luận sản phẩm dựa trên đơn hàng đã hoàn thành (Verified Purchase).
+19. **`inventory_transactions`**: Nhật ký lịch sử nhập kho, xuất kho, điều chỉnh kiểm kê theo từng chi nhánh.
+20. **`product_view_events`**: Ghi nhận hành vi xem sản phẩm của khách hàng phục vụ gợi ý.
+21. **`recommendation_results`**: Kết quả tính toán gợi ý sản phẩm cho từng user tại chi nhánh.
+22. **`demand_forecasts`**: Kết quả dự báo nhu cầu tiêu thụ sản phẩm 7-14 ngày tới.
+23. **`stock_alerts`**: Cảnh báo nguy cơ thiếu hụt tồn kho dựa trên dự báo và lượng hàng thực tế.
 
-| Nhóm | Số lượng |
-|---|---:|
-| Tài khoản | 3 |
-| Chi nhánh và catalog | 4 |
-| Tồn kho | 2 |
-| Giỏ hàng | 2 |
-| Khuyến mãi | 1 |
-| Đơn hàng | 3 |
-| Thanh toán | 2 |
-| Đánh giá | 1 |
-| AI | 4 |
-| **Tổng cộng** | **22** |
+---
+
+## 4. Chuẩn Hóa Dữ Liệu & Ràng Buộc (3NF Compliance)
+
+Mô hình dữ liệu tuân thủ nghiêm ngặt **Chuẩn 3 (Third Normal Form - 3NF)**:
+1. **1NF**: Tất cả các trường dữ liệu đều mang tính nguyên tố, mỗi bảng đều có Khóa chính (`CHAR(36)` GUID).
+2. **2NF**: Toàn bộ các thuộc tính không khóa đều phụ thuộc đầy đủ vào Khóa chính.
+3. **3NF**: Không có thuộc tính nào phụ thuộc bắc cầu.
+   - *Snapshot fields hợp lệ*: Các trường snapshot như `product_name_snapshot`, `sku_snapshot`, `delivery_address_snapshot` trong đơn hàng là **dữ liệu lịch sử bất biến** tại thời điểm giao dịch, không vi phạm 3NF vì chúng phản ánh đúng bản chất hợp đồng pháp lý của đơn hàng tại thời điểm đặt.

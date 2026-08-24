@@ -4,6 +4,7 @@ using OnlineSupermarket.Domain.Catalog;
 using OnlineSupermarket.Domain.Identity;
 using OnlineSupermarket.Domain.Inventory;
 using OnlineSupermarket.Domain.Orders;
+using OnlineSupermarket.Domain.Entities;
 using OnlineSupermarket.Domain.Payments;
 using OnlineSupermarket.Domain.Shopping;
 
@@ -15,6 +16,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     // Identity
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     // Catalog
     public DbSet<Branch> Branches => Set<Branch>();
@@ -28,6 +30,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     // Shopping
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
+    public DbSet<Address> Addresses => Set<Address>();
 
     // Orders
     public DbSet<Order> Orders => Set<Order>();

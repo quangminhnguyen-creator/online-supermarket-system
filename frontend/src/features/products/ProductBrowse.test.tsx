@@ -1,0 +1,237 @@
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
+import { ProductCard, formatPrice } from './ProductCard'
+import { FilterSidebar } from './FilterSidebar'
+import { ProductGrid } from './ProductGrid'
+import { Pagination } from './Pagination'
+import { ProductBrowsePage } from './ProductBrowsePage'
+import { catalogApi } from '../../api/catalogApi'
+import { branchApi } from '../../api/branchApi'
+
+const mockProduct = {
+  id: 'prod-1',
+  name: 'Sữa tươi tiệt trùng ít đường 1L',
+  slug: 'sua-tuoi-tiet-trung-it-duong-1l',
+  sku: 'MILK-001',
+  basePrice: 38000,
+  imageUrl: 'https://example.com/milk.jpg',
+  categoryName: 'Sữa & Bơ sữa',
+  brandName: 'Vinamilk',
+}
+
+const mockCategories = [
+  { id: 'cat-1', name: 'Rau củ quả', slug: 'rau-cu-qua', parentCategoryId: null, isActive: true },
+  { id: 'cat-2', name: 'Sữa & Bơ sữa', slug: 'sua-bo-sua', parentCategoryId: null, isActive: true },
+]
+
+const mockBrands = [
+  { id: 'brand-1', name: 'Vinamilk', slug: 'vinamilk', isActive: true },
+  { id: 'brand-2', name: 'TH True Milk', slug: 'th-true-milk', isActive: true },
+]
+
+const mockBranches = [
+  {
+    id: 'branch-1',
+    name: 'Chi nhánh Quận 1',
+    address: '123 Lê Lợi, Q1, TP.HCM',
+    phone: '0901234567',
+    latitude: 10.77,
+    longitude: 106.7,
+    isActive: true,
+  },
+]
+
+describe('Product Browse Feature', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  describe('formatPrice helper', () => {
+    it('formats numbers into VND string correctly', () => {
+      const formatted = formatPrice(38000)
+      expect(formatted).toContain('38.000')
+      expect(formatted).toMatch(/₫|đ|VND/i)
+    })
+  })
+
+  describe('ProductCard component', () => {
+    it('renders product information properly', () => {
+      render(<ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" />)
+
+      expect(screen.getByText('Sữa tươi tiệt trùng ít đường 1L')).toBeInTheDocument()
+      expect(screen.getByText('Vinamilk')).toBeInTheDocument()
+      expect(screen.getByText('Sữa & Bơ sữa')).toBeInTheDocument()
+      expect(screen.getByText(/SKU: MILK-001/)).toBeInTheDocument()
+      expect(screen.getByText(/38\.000/)).toBeInTheDocument()
+      expect(screen.getByText('Chi nhánh Quận 1')).toBeInTheDocument()
+    })
+
+    it('triggers onSelect when card or button is clicked', () => {
+      const onSelect = vi.fn()
+      render(<ProductCard product={mockProduct} onSelect={onSelect} />)
+
+      const detailBtn = screen.getByRole('button', { name: `Xem ${mockProduct.name}` })
+      fireEvent.click(detailBtn)
+      expect(onSelect).toHaveBeenCalledWith(mockProduct)
+    })
+  })
+
+  describe('FilterSidebar component', () => {
+    it('renders categories, brands, branches and handles filter changes', () => {
+      const onFilterChange = vi.fn()
+      const onReset = vi.fn()
+
+      render(
+        <FilterSidebar
+          categories={mockCategories}
+          brands={mockBrands}
+          branches={mockBranches}
+          filters={{}}
+          onFilterChange={onFilterChange}
+          onReset={onReset}
+        />
+      )
+
+      // Test category selection
+      const categorySelect = screen.getByLabelText('Danh mục sản phẩm')
+      fireEvent.change(categorySelect, { target: { value: 'cat-2' } })
+      expect(onFilterChange).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId: 'cat-2' })
+      )
+
+      // Test brand selection
+      const brandSelect = screen.getByLabelText('Thương hiệu')
+      fireEvent.change(brandSelect, { target: { value: 'brand-1' } })
+      expect(onFilterChange).toHaveBeenCalledWith(
+        expect.objectContaining({ brandId: 'brand-1' })
+      )
+
+      // Test search keyword
+      const searchInput = screen.getByPlaceholderText('Nhập tên sản phẩm, SKU...')
+      fireEvent.change(searchInput, { target: { value: 'sữa tươi' } })
+      const searchSubmitBtn = screen.getByRole('button', { name: 'Tìm' })
+      fireEvent.click(searchSubmitBtn)
+      expect(onFilterChange).toHaveBeenCalledWith(
+        expect.objectContaining({ search: 'sữa tươi' })
+      )
+    })
+
+    it('handles reset button when filters are active', () => {
+      const onReset = vi.fn()
+      render(
+        <FilterSidebar
+          categories={mockCategories}
+          brands={mockBrands}
+          branches={mockBranches}
+          filters={{ search: 'test' }}
+          onFilterChange={vi.fn()}
+          onReset={onReset}
+        />
+      )
+
+      const resetBtn = screen.getByRole('button', { name: /Xóa toàn bộ bộ lọc/i })
+      expect(resetBtn).not.toBeDisabled()
+      fireEvent.click(resetBtn)
+      expect(onReset).toHaveBeenCalled()
+    })
+  })
+
+  describe('ProductGrid component', () => {
+    it('shows skeleton loading state when loading is true', () => {
+      render(<ProductGrid products={[]} loading={true} />)
+      const skeletons = screen.getAllByTestId('product-skeleton')
+      expect(skeletons.length).toBeGreaterThan(0)
+    })
+
+    it('shows empty state when no products and loading is false', () => {
+      const onReset = vi.fn()
+      render(<ProductGrid products={[]} loading={false} onResetFilters={onReset} />)
+      expect(screen.getByText('Không tìm thấy sản phẩm phù hợp')).toBeInTheDocument()
+      const resetBtn = screen.getByRole('button', { name: 'Xóa bộ lọc tìm kiếm' })
+      fireEvent.click(resetBtn)
+      expect(onReset).toHaveBeenCalled()
+    })
+
+    it('shows error message and retry button when error occurs', () => {
+      const onRetry = vi.fn()
+      render(
+        <ProductGrid
+          products={[]}
+          loading={false}
+          error="Network Error 500"
+          onRetry={onRetry}
+        />
+      )
+      expect(screen.getByText('Không thể tải danh sách sản phẩm')).toBeInTheDocument()
+      expect(screen.getByText('Network Error 500')).toBeInTheDocument()
+      const retryBtn = screen.getByRole('button', { name: 'Thử lại' })
+      fireEvent.click(retryBtn)
+      expect(onRetry).toHaveBeenCalled()
+    })
+
+    it('renders list of products when available', () => {
+      render(<ProductGrid products={[mockProduct]} loading={false} />)
+      expect(screen.getByTestId('product-grid')).toBeInTheDocument()
+      expect(screen.getByText('Sữa tươi tiệt trùng ít đường 1L')).toBeInTheDocument()
+    })
+  })
+
+  describe('Pagination component', () => {
+    it('renders page buttons and triggers onPageChange', () => {
+      const onPageChange = vi.fn()
+      render(
+        <Pagination
+          meta={{ totalCount: 45, page: 2, pageSize: 20, totalPages: 3 }}
+          onPageChange={onPageChange}
+        />
+      )
+
+      expect(screen.getByText(/Hiển thị/)).toBeInTheDocument()
+      expect(screen.getByText('21')).toBeInTheDocument()
+      expect(screen.getByText('40')).toBeInTheDocument()
+      expect(screen.getByText('45')).toBeInTheDocument()
+
+      const page3Btn = screen.getByRole('button', { name: 'Trang 3' })
+      fireEvent.click(page3Btn)
+      expect(onPageChange).toHaveBeenCalledWith(3)
+
+      const prevBtn = screen.getByRole('button', { name: 'Trang trước' })
+      fireEvent.click(prevBtn)
+      expect(onPageChange).toHaveBeenCalledWith(1)
+    })
+  })
+
+  describe('ProductBrowsePage component', () => {
+    it('fetches products, categories, brands, branches and displays them', async () => {
+      vi.spyOn(catalogApi, 'getCategories').mockResolvedValue(mockCategories)
+      vi.spyOn(catalogApi, 'getBrands').mockResolvedValue(mockBrands)
+      vi.spyOn(branchApi, 'getBranches').mockResolvedValue(mockBranches)
+      vi.spyOn(catalogApi, 'getProducts').mockResolvedValue({
+        data: [mockProduct],
+        meta: {
+          totalCount: 1,
+          page: 1,
+          pageSize: 20,
+          totalPages: 1,
+        },
+      })
+
+      render(
+        <MemoryRouter initialEntries={['/browse']}>
+          <ProductBrowsePage />
+        </MemoryRouter>
+      )
+
+      expect(screen.getByText('Duyệt & Tìm Kiếm Sản Phẩm')).toBeInTheDocument()
+
+      await waitFor(() => {
+        expect(screen.getByText('Sữa tươi tiệt trùng ít đường 1L')).toBeInTheDocument()
+      })
+    })
+  })
+})

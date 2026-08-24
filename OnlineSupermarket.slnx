@@ -8,5 +8,6 @@
   <Folder Name="/backend/tests/">
     <Project Path="backend/tests/OnlineSupermarket.Api.Tests/OnlineSupermarket.Api.Tests.csproj" />
     <Project Path="backend/tests/OnlineSupermarket.Domain.Tests/OnlineSupermarket.Domain.Tests.csproj" />
+    <Project Path="backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

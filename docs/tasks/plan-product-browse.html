@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan: Frontend - Duyệt Sản Phẩm & Lọc Kho</title>
+    <style>
+        :root {
+            --forest: #0b3d2e;
+            --leaf: #1f7a4d;
+            --mist: #e8f1ed;
+            --paper: #f9fbf4;
+            --label: #f49b45;
+            --ink: #132a23;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--ink);
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--forest);
+            color: white;
+            padding: 32px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .status-bar {
+            background: var(--leaf);
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-container {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: white;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section-number {
+            width: 28px;
+            height: 28px;
+            background: var(--mist);
+            color: var(--forest);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .section-number.done {
+            background: var(--leaf);
+            color: white;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--forest);
+        }
+
+        .section-toggle {
+            margin-left: auto;
+            font-size: 20px;
+            color: #999;
+        }
+
+        .section-content {
+            margin-left: 40px;
+        }
+
+        .section.collapsed .section-content {
+            display: none;
+        }
+
+        .section.collapsed .section-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: var(--paper);
+            border-radius: 8px;
+            border: 1px solid var(--mist);
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            border-color: var(--leaf);
+        }
+
+        .task-item.checked {
+            opacity: 0.6;
+            background: #f0f0f0;
+        }
+
+        .task-item.checked .task-text {
+            text-decoration: line-through;
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: var(--leaf);
+        }
+
+        .task-text {
+            flex: 1;
+        }
+
+        .task-text code {
+            background: var(--mist);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--forest);
+        }
+
+        .task-text pre {
+            background: #1a1a2e;
+            color: #a8dadc;
+            padding: 12px 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 8px 0;
+        }
+
+        .task-text p {
+            margin: 4px 0;
+        }
+
+        .files-summary {
+            background: var(--mist);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+
+        .files-summary h4 {
+            color: var(--forest);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .files-summary ul {
+            list-style: none;
+            font-size: 13px;
+        }
+
+        .files-summary li {
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .files-summary li::before {
+            content: '📄';
+            font-size: 12px;
+        }
+
+        .files-summary li.new::before {
+            content: '✨';
+        }
+
+        .files-summary li.edit::before {
+            content: '✏️';
+        }
+
+        .footer {
+            background: var(--mist);
+            padding: 20px 32px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .footer button {
+            background: var(--leaf);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .footer button:hover {
+            background: var(--forest);
+        }
+
+        @media (max-width: 600px) {
+            .status-bar {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .progress-container {
+                max-width: 100%;
+                width: 100%;
+            }
+            .section-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Frontend - Duyệt Sản Phẩm & Lọc Kho</h1>
+            <p>Task: /browse, /products | API: /api/products, /api/branches</p>
+        </div>
+
+        <div class="status-bar">
+            <div>
+                <strong>Tiến độ:</strong> <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="checked-count">0</span> / <span id="total-count">0</span> tasks hoàn thành
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- PHẦN 1 -->
+            <div class="section" id="section-1">
+                <div class="section-header" onclick="toggleSection(1)">
+                    <div class="section-number" id="section-num-1">1</div>
+                    <div class="section-title">Chuẩn bị - Cài react-router-dom</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="1">
+                            <div class="task-text">
+                                <p><strong>Cài react-router-dom</strong></p>
+                                <pre>cd frontend
+npm install react-router-dom</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PHẦN 2 -->
+            <div class="section" id="section-2">
+                <div class="section-header" onclick="toggleSection(2)">
+                    <div class="section-number" id="section-num-2">2</div>
+                    <div class="section-title">Tạo API Clients</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="2">
+                            <div class="task-text">
+                                <p><strong>Tạo <code>frontend/src/api/catalogApi.ts</code></strong></p>
+                                <p>Export: ProductSummaryDto, CategoryDto, BrandDto, PaginatedResponse, catalogApi (getProducts, getCategories, getBrands)</p>
+                            </div>
+                        </li>
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="2">
+                            <div class="task-text">
+                                <p><strong>Tạo <code>frontend/src/api/branchApi.ts</code></strong></p>
+                                <p>Export: BranchDto, branchApi (getBranches)</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PHẦN 3 -->
+            <div class="section" id="section-3">
+                <div class="section-header" onclick="toggleSection(3)">
+                    <div class="section-number" id="section-num-3">3</div>
+                    <div class="section-title">Tạo Components</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="3">
+                            <div class="task-text">
+                                <p><strong>Tạo <code>ProductCard.tsx</code> + <code>ProductCard.css</code></strong></p>
+                                <p>Hiển thị: ảnh, tên, danh mục, thương hiệu, giá, tag tồn kho</p>
+                            </div>
+                        </li>
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="3">
+                            <div class="task-text">
+                                <p><strong>Tạo <code>FilterSidebar.tsx</code> + <code>FilterSidebar.css</code></strong></p>
+                                <p>Filters: search, category, brand, minPrice, maxPrice. Có nút Reset</p>
+                            </div>
+                        </li>
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="3">
+                            <div class="task-text">
+                                <p><strong>Tạo <code>ProductGrid.tsx</code> + <code>ProductGrid.css</code></strong></p>
+                                <p>Grid layout, skeleton loading, empty state</p>
+                            </div>
+                        </li>
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="3">
+                            <div class="task-text">
+                                <p><strong>Tạo <code>Pagination.tsx</code> + <code>Pagination.css</code></strong></p>
+                                <p>Điều hướng trang, hiển thị số sản phẩm</p>
+                            </div>
+                        </li>
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="3">
+                            <div class="task-text">
+                                <p><strong>Tạo <code>ProductBrowsePage.tsx</code> + <code>ProductBrowsePage.css</code></strong></p>
+                                <p>Page chính: kết hợp FilterSidebar + ProductGrid + Pagination. Dùng useSearchParams</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PHẦN 4 -->
+            <div class="section" id="section-4">
+                <div class="section-header" onclick="toggleSection(4)">
+                    <div class="section-number" id="section-num-4">4</div>
+                    <div class="section-title">Setup Routing</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="4">
+                            <div class="task-text">
+                                <p><strong>Cập nhật <code>App.tsx</code></strong></p>
+                                <p>Thêm BrowserRouter, Routes: /browse, /products, /</p>
+                                <pre>import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ProductBrowsePage } from './features/products/ProductBrowsePage';
+
+function App() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;AppShell&gt;
+        &lt;Routes&gt;
+          &lt;Route path="/browse" element={&lt;ProductBrowsePage /&gt;} /&gt;
+          &lt;Route path="/products" element={&lt;ProductBrowsePage /&gt;} /&gt;
+          &lt;Route path="/" element={&lt;ProductBrowsePage /&gt;} /&gt;
+        &lt;/Routes&gt;
+      &lt;/AppShell&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}</pre>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PHẦN 5 -->
+            <div class="section" id="section-5">
+                <div class="section-header" onclick="toggleSection(5)">
+                    <div class="section-number" id="section-num-5">5</div>
+                    <div class="section-title">Verify & Commit</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="5">
+                            <div class="task-text">
+                                <p><strong>Build</strong></p>
+                                <pre>cd frontend
+npm run build</pre>
+                            </div>
+                        </li>
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" data-section="5">
+                            <div class="task-text">
+                                <p><strong>Commit</strong></p>
+                                <pre>git add .
+git commit -m "feat(frontend): add product browse page with filters
+
+- Add ProductBrowsePage with search, category, brand, price filters
+- Add ProductGrid, ProductCard components
+- Add FilterSidebar with category and brand selectors
+- Add Pagination component
+- Add API clients for catalog and branch
+- Setup react-router-dom with /browse and /products routes
+
+Closes FR-101, FR-102, FR-103"</pre>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="files-summary">
+                        <h4>Tổng hợp files cần tạo/sửa:</h4>
+                        <ul>
+                            <li class="new">frontend/src/api/catalogApi.ts</li>
+                            <li class="new">frontend/src/api/branchApi.ts</li>
+                            <li class="new">frontend/src/features/products/ProductBrowsePage.tsx</li>
+                            <li class="new">frontend/src/features/products/ProductBrowsePage.css</li>
+                            <li class="new">frontend/src/features/products/ProductCard.tsx</li>
+                            <li class="new">frontend/src/features/products/ProductCard.css</li>
+                            <li class="new">frontend/src/features/products/ProductGrid.tsx</li>
+                            <li class="new">frontend/src/features/products/ProductGrid.css</li>
+                            <li class="new">frontend/src/features/products/FilterSidebar.tsx</li>
+                            <li class="new">frontend/src/features/products/FilterSidebar.css</li>
+                            <li class="new">frontend/src/features/products/Pagination.tsx</li>
+                            <li class="new">frontend/src/features/products/Pagination.css</li>
+                            <li class="edit">frontend/src/App.tsx (thêm routes)</li>
+                            <li class="new">package.json (thêm react-router-dom)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Risk Level: <strong>MEDIUM</strong> | Estimated: 150-300 dòng code | 11 files</p>
+            <button onclick="resetAll()">Reset Progress</button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'product-browse-progress';
+
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : {};
+        }
+
+        function saveProgress(progress) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+        }
+
+        function updateUI() {
+            const progress = loadProgress();
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            let checkedCount = 0;
+            const sectionProgress = {};
+
+            checkboxes.forEach(cb => {
+                const key = cb.dataset.section;
+                if (progress[key]) {
+                    cb.checked = true;
+                    cb.closest('.task-item').classList.add('checked');
+                    checkedCount++;
+                    sectionProgress[key] = true;
+                } else {
+                    cb.checked = false;
+                    cb.closest('.task-item').classList.remove('checked');
+                }
+            });
+
+            // Update section numbers
+            for (let i = 1; i <= 5; i++) {
+                const sectionNum = document.getElementById(`section-num-${i}`);
+                if (sectionProgress[i]) {
+                    sectionNum.classList.add('done');
+                    sectionNum.textContent = '✓';
+                } else {
+                    sectionNum.classList.remove('done');
+                    sectionNum.textContent = i;
+                }
+            }
+
+            const totalCount = checkboxes.length;
+            const percent = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+
+            document.getElementById('progress-percent').textContent = `${percent}%`;
+            document.getElementById('progress-fill').style.width = `${percent}%`;
+            document.getElementById('checked-count').textContent = checkedCount;
+            document.getElementById('total-count').textContent = totalCount;
+        }
+
+        function toggleSection(num) {
+            const section = document.getElementById(`section-${num}`);
+            section.classList.toggle('collapsed');
+        }
+
+        function resetAll() {
+            if (confirm('Reset tất cả tiến độ?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                updateUI();
+            }
+        }
+
+        // Event listeners
+        document.querySelectorAll('.task-checkbox').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const progress = loadProgress();
+                const key = this.dataset.section;
+                progress[key] = this.checked;
+                saveProgress(progress);
+                updateUI();
+            });
+        });
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
