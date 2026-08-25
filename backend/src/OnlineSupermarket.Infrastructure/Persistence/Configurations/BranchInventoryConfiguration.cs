@@ -22,7 +22,7 @@ internal sealed class BranchInventoryConfiguration : IEntityTypeConfiguration<Br
         builder.Property(inventory => inventory.ReorderLevel).HasColumnName("reorder_level");
         builder.Property(inventory => inventory.UpdatedAtUtc).HasColumnName("updated_at_utc").HasColumnType("datetime(6)");
         builder.HasIndex(inventory => new { inventory.BranchId, inventory.ProductId }).IsUnique();
-        builder.HasOne<Branch>().WithMany().HasForeignKey(inventory => inventory.BranchId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Product>().WithMany().HasForeignKey(inventory => inventory.ProductId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(inventory => inventory.Branch).WithMany().HasForeignKey(inventory => inventory.BranchId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(inventory => inventory.Product).WithMany().HasForeignKey(inventory => inventory.ProductId).OnDelete(DeleteBehavior.Restrict);
     }
 }

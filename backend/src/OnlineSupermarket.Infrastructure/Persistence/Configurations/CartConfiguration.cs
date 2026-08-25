@@ -76,7 +76,7 @@ public sealed class CartItemConfiguration : IEntityTypeConfiguration<CartItem>
             .HasColumnName("created_at_utc")
             .HasColumnType("datetime(6)");
 
-        builder.HasOne<Cart>()
+        builder.HasOne(ci => ci.Cart)
             .WithMany(c => c.Items)
             .HasForeignKey(ci => ci.CartId)
             .OnDelete(DeleteBehavior.Cascade);

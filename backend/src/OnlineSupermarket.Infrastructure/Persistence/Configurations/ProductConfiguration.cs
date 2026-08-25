@@ -23,7 +23,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(product => product.IsActive).HasColumnName("is_active");
         builder.HasIndex(product => product.Sku).IsUnique();
         builder.HasIndex(product => product.Slug).IsUnique();
-        builder.HasOne<Category>().WithMany().HasForeignKey(product => product.CategoryId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Brand>().WithMany().HasForeignKey(product => product.BrandId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(product => product.Category).WithMany().HasForeignKey(product => product.CategoryId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(product => product.Brand).WithMany().HasForeignKey(product => product.BrandId).OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,4 +1,4 @@
-# Online Supermarket System (Hệ Thống Siêu Thị Điện Tử Đa Chi Nhánh)
+# AptechMart - Hệ Thống Siêu Thị Điện Tử Đa Chi Nhánh
 
 Hệ thống bán hàng và siêu thị điện tử trực tuyến đa chi nhánh xây dựng trên nền tảng **.NET 10 (ASP.NET Core Minimal API)**, **Entity Framework Core 10**, **MySQL 8.4 LTS** và **React 19 (TypeScript + Vite 7)**.
 

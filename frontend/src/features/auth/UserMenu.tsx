@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { AuthModal } from './AuthModal'
 
@@ -27,17 +28,22 @@ export function UserMenu() {
 
     return (
       <div className="user-menu user-menu--authenticated">
-        <div className="user-profile">
-          <div className="user-avatar" title={user.fullName}>
-            {initials || 'U'}
+        <Link to="/account/profile" className="user-profile-link" title="Quản lý hồ sơ cá nhân">
+          <div className="user-profile">
+            <div className="user-avatar" title={user.fullName}>
+              {initials || 'U'}
+            </div>
+            <div className="user-info">
+              <span className="user-name">{user.fullName}</span>
+              <span className="user-role-badge">
+                {user.role === 'Admin' ? 'Quản trị viên' : 'Khách hàng'}
+              </span>
+            </div>
           </div>
-          <div className="user-info">
-            <span className="user-name">{user.fullName}</span>
-            <span className="user-role-badge">
-              {user.role === 'Admin' ? 'Quản trị viên' : 'Khách hàng'}
-            </span>
-          </div>
-        </div>
+        </Link>
+        <Link to="/account/addresses" className="btn-nav-address" title="Sổ địa chỉ giao hàng">
+          📍 Địa chỉ
+        </Link>
         <button
           type="button"
           className="btn-logout"

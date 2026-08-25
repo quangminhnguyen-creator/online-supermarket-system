@@ -293,14 +293,14 @@
 
         <div class="status-bar">
             <div>
-                <strong>Tiến độ:</strong> <span id="progress-percent">0%</span>
+                <strong>Tiến độ:</strong> <span id="progress-percent">100%</span>
             </div>
             <div class="progress-container">
                 <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                    <div class="progress-fill" id="progress-fill" style="width: 100%"></div>
                 </div>
                 <div class="progress-text">
-                    <span id="checked-count">0</span> / <span id="total-count">0</span> tasks hoàn thành
+                    <span id="checked-count">11</span> / <span id="total-count">11</span> tasks hoàn thành
                 </div>
             </div>
         </div>
@@ -309,14 +309,14 @@
             <!-- PHẦN 1 -->
             <div class="section" id="section-1">
                 <div class="section-header" onclick="toggleSection(1)">
-                    <div class="section-number" id="section-num-1">1</div>
+                    <div class="section-number done" id="section-num-1">✓</div>
                     <div class="section-title">Chuẩn bị - Cài react-router-dom</div>
                     <div class="section-toggle">▼</div>
                 </div>
                 <div class="section-content">
                     <ul class="task-list">
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="1">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-1" data-section="1" checked>
                             <div class="task-text">
                                 <p><strong>Cài react-router-dom</strong></p>
                                 <pre>cd frontend
@@ -330,21 +330,21 @@ npm install react-router-dom</pre>
             <!-- PHẦN 2 -->
             <div class="section" id="section-2">
                 <div class="section-header" onclick="toggleSection(2)">
-                    <div class="section-number" id="section-num-2">2</div>
+                    <div class="section-number done" id="section-num-2">✓</div>
                     <div class="section-title">Tạo API Clients</div>
                     <div class="section-toggle">▼</div>
                 </div>
                 <div class="section-content">
                     <ul class="task-list">
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="2">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-2" data-section="2" checked>
                             <div class="task-text">
                                 <p><strong>Tạo <code>frontend/src/api/catalogApi.ts</code></strong></p>
                                 <p>Export: ProductSummaryDto, CategoryDto, BrandDto, PaginatedResponse, catalogApi (getProducts, getCategories, getBrands)</p>
                             </div>
                         </li>
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="2">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-3" data-section="2" checked>
                             <div class="task-text">
                                 <p><strong>Tạo <code>frontend/src/api/branchApi.ts</code></strong></p>
                                 <p>Export: BranchDto, branchApi (getBranches)</p>
@@ -357,42 +357,42 @@ npm install react-router-dom</pre>
             <!-- PHẦN 3 -->
             <div class="section" id="section-3">
                 <div class="section-header" onclick="toggleSection(3)">
-                    <div class="section-number" id="section-num-3">3</div>
+                    <div class="section-number done" id="section-num-3">✓</div>
                     <div class="section-title">Tạo Components</div>
                     <div class="section-toggle">▼</div>
                 </div>
                 <div class="section-content">
                     <ul class="task-list">
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="3">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-4" data-section="3" checked>
                             <div class="task-text">
                                 <p><strong>Tạo <code>ProductCard.tsx</code> + <code>ProductCard.css</code></strong></p>
                                 <p>Hiển thị: ảnh, tên, danh mục, thương hiệu, giá, tag tồn kho</p>
                             </div>
                         </li>
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="3">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-5" data-section="3" checked>
                             <div class="task-text">
                                 <p><strong>Tạo <code>FilterSidebar.tsx</code> + <code>FilterSidebar.css</code></strong></p>
                                 <p>Filters: search, category, brand, minPrice, maxPrice. Có nút Reset</p>
                             </div>
                         </li>
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="3">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-6" data-section="3" checked>
                             <div class="task-text">
                                 <p><strong>Tạo <code>ProductGrid.tsx</code> + <code>ProductGrid.css</code></strong></p>
                                 <p>Grid layout, skeleton loading, empty state</p>
                             </div>
                         </li>
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="3">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-7" data-section="3" checked>
                             <div class="task-text">
                                 <p><strong>Tạo <code>Pagination.tsx</code> + <code>Pagination.css</code></strong></p>
                                 <p>Điều hướng trang, hiển thị số sản phẩm</p>
                             </div>
                         </li>
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="3">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-8" data-section="3" checked>
                             <div class="task-text">
                                 <p><strong>Tạo <code>ProductBrowsePage.tsx</code> + <code>ProductBrowsePage.css</code></strong></p>
                                 <p>Page chính: kết hợp FilterSidebar + ProductGrid + Pagination. Dùng useSearchParams</p>
@@ -405,14 +405,14 @@ npm install react-router-dom</pre>
             <!-- PHẦN 4 -->
             <div class="section" id="section-4">
                 <div class="section-header" onclick="toggleSection(4)">
-                    <div class="section-number" id="section-num-4">4</div>
+                    <div class="section-number done" id="section-num-4">✓</div>
                     <div class="section-title">Setup Routing</div>
                     <div class="section-toggle">▼</div>
                 </div>
                 <div class="section-content">
                     <ul class="task-list">
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="4">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-9" data-section="4" checked>
                             <div class="task-text">
                                 <p><strong>Cập nhật <code>App.tsx</code></strong></p>
                                 <p>Thêm BrowserRouter, Routes: /browse, /products, /</p>
@@ -441,22 +441,22 @@ function App() {
             <!-- PHẦN 5 -->
             <div class="section" id="section-5">
                 <div class="section-header" onclick="toggleSection(5)">
-                    <div class="section-number" id="section-num-5">5</div>
+                    <div class="section-number done" id="section-num-5">✓</div>
                     <div class="section-title">Verify & Commit</div>
                     <div class="section-toggle">▼</div>
                 </div>
                 <div class="section-content">
                     <ul class="task-list">
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="5">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-10" data-section="5" checked>
                             <div class="task-text">
                                 <p><strong>Build</strong></p>
                                 <pre>cd frontend
 npm run build</pre>
                             </div>
                         </li>
-                        <li class="task-item">
-                            <input type="checkbox" class="task-checkbox" data-section="5">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-task="task-11" data-section="5" checked>
                             <div class="task-text">
                                 <p><strong>Commit</strong></p>
                                 <pre>git add .
@@ -508,7 +508,14 @@ Closes FR-101, FR-102, FR-103"</pre>
 
         function loadProgress() {
             const saved = localStorage.getItem(STORAGE_KEY);
-            return saved ? JSON.parse(saved) : {};
+            if (saved !== null) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {
+                    return null;
+                }
+            }
+            return null;
         }
 
         function saveProgress(progress) {
@@ -519,17 +526,28 @@ Closes FR-101, FR-102, FR-103"</pre>
             const progress = loadProgress();
             const checkboxes = document.querySelectorAll('.task-checkbox');
             let checkedCount = 0;
-            const sectionProgress = {};
+            const sectionTotal = {};
+            const sectionChecked = {};
 
-            checkboxes.forEach(cb => {
-                const key = cb.dataset.section;
-                if (progress[key]) {
-                    cb.checked = true;
+            checkboxes.forEach((cb, idx) => {
+                const taskId = cb.dataset.task || `task-${idx + 1}`;
+                const section = cb.dataset.section;
+
+                sectionTotal[section] = (sectionTotal[section] || 0) + 1;
+
+                if (progress !== null) {
+                    if (progress[taskId] !== undefined) {
+                        cb.checked = !!progress[taskId];
+                    } else if (progress[section] !== undefined) {
+                        cb.checked = !!progress[section];
+                    }
+                }
+
+                if (cb.checked) {
                     cb.closest('.task-item').classList.add('checked');
                     checkedCount++;
-                    sectionProgress[key] = true;
+                    sectionChecked[section] = (sectionChecked[section] || 0) + 1;
                 } else {
-                    cb.checked = false;
                     cb.closest('.task-item').classList.remove('checked');
                 }
             });
@@ -537,12 +555,15 @@ Closes FR-101, FR-102, FR-103"</pre>
             // Update section numbers
             for (let i = 1; i <= 5; i++) {
                 const sectionNum = document.getElementById(`section-num-${i}`);
-                if (sectionProgress[i]) {
-                    sectionNum.classList.add('done');
-                    sectionNum.textContent = '✓';
-                } else {
-                    sectionNum.classList.remove('done');
-                    sectionNum.textContent = i;
+                if (sectionNum) {
+                    const isSectionDone = sectionChecked[i] > 0 && sectionChecked[i] === sectionTotal[i];
+                    if (isSectionDone) {
+                        sectionNum.classList.add('done');
+                        sectionNum.textContent = '✓';
+                    } else {
+                        sectionNum.classList.remove('done');
+                        sectionNum.textContent = i;
+                    }
                 }
             }
 
@@ -557,22 +578,27 @@ Closes FR-101, FR-102, FR-103"</pre>
 
         function toggleSection(num) {
             const section = document.getElementById(`section-${num}`);
-            section.classList.toggle('collapsed');
+            if (section) section.classList.toggle('collapsed');
         }
 
         function resetAll() {
             if (confirm('Reset tất cả tiến độ?')) {
-                localStorage.removeItem(STORAGE_KEY);
+                const emptyProgress = {};
+                document.querySelectorAll('.task-checkbox').forEach((cb, idx) => {
+                    const taskId = cb.dataset.task || `task-${idx + 1}`;
+                    emptyProgress[taskId] = false;
+                });
+                saveProgress(emptyProgress);
                 updateUI();
             }
         }
 
         // Event listeners
-        document.querySelectorAll('.task-checkbox').forEach(cb => {
+        document.querySelectorAll('.task-checkbox').forEach((cb, idx) => {
             cb.addEventListener('change', function() {
-                const progress = loadProgress();
-                const key = this.dataset.section;
-                progress[key] = this.checked;
+                const progress = loadProgress() || {};
+                const taskId = this.dataset.task || `task-${idx + 1}`;
+                progress[taskId] = this.checked;
                 saveProgress(progress);
                 updateUI();
             });

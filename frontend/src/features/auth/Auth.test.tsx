@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as authApi from '../../api/authApi'
 import { AuthProvider } from './AuthContext'
@@ -147,9 +148,11 @@ describe('Auth Feature', () => {
   describe('UserMenu', () => {
     it('renders guest login/register buttons when not authenticated', async () => {
       render(
-        <AuthProvider>
-          <UserMenu />
-        </AuthProvider>
+        <MemoryRouter>
+          <AuthProvider>
+            <UserMenu />
+          </AuthProvider>
+        </MemoryRouter>
       )
 
       expect(await screen.findByRole('button', { name: 'Đăng nhập' })).toBeInTheDocument()
@@ -166,9 +169,11 @@ describe('Auth Feature', () => {
       })
 
       render(
-        <AuthProvider>
-          <UserMenu />
-        </AuthProvider>
+        <MemoryRouter>
+          <AuthProvider>
+            <UserMenu />
+          </AuthProvider>
+        </MemoryRouter>
       )
 
       expect(await screen.findByText('Admin User')).toBeInTheDocument()

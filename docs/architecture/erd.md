@@ -1,4 +1,4 @@
-# Thiết Kế Cơ Sở Dữ Liệu & ERD Hệ Thống Siêu Thị Trực Tuyến
+# Thiết Kế Cơ Sở Dữ Liệu & ERD Hệ Thống AptechMart
 
 Ngày cập nhật: 2026-08-23  
 Trạng thái: **OFFICIAL (Canonical)**  
@@ -8,7 +8,7 @@ Phạm vi: 16 bảng đã triển khai EF Core Migrations + 7 bảng mở rộng
 
 ## 1. Phạm Vi Mô Hình
 
-ERD này bao phủ toàn bộ kiến trúc dữ liệu của hệ thống Siêu thị điện tử trực tuyến:
+ERD này bao phủ toàn bộ kiến trúc dữ liệu của hệ thống AptechMart - Siêu thị điện tử trực tuyến:
 - **Tài khoản & Định danh (Identity)**: Người dùng, Refresh Token xoay vòng, Token đặt lại mật khẩu.
 - **Sổ địa chỉ & Khách hàng (Customer & Shopping)**: Địa chỉ giao hàng nhận dạng theo User, cờ địa chỉ mặc định transactional.
 - **Danh mục & Đa chi nhánh (Catalog & Multi-Branch)**: Danh mục sản phẩm đa cấp, thương hiệu, sản phẩm và chi nhánh vật lý.

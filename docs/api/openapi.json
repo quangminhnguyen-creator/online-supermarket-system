@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Online Supermarket System API",
-    "description": "RESTful API specification for the Multi-branch Online Supermarket System (.NET 10 Minimal APIs).",
+    "title": "AptechMart API",
+    "description": "RESTful API specification for the Multi-branch AptechMart - Online Electronics Supermarket System (.NET 10 Minimal APIs).",
     "version": "1.0.0"
   },
   "servers": [
@@ -621,7 +621,7 @@
     "/api/branches": {
       "get": {
         "tags": ["Branches"],
-        "summary": "List all active supermarket branches",
+        "summary": "List all active store branches",
         "operationId": "GetBranches",
         "responses": {
           "200": {

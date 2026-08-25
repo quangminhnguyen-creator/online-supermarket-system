@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan: Seed Data - AptechMart Electronics</title>
+    <style>
+        :root {
+            --forest: #0b3d2e;
+            --leaf: #1f7a4d;
+            --mist: #e8f1ed;
+            --paper: #f9fbf4;
+            --label: #f49b45;
+            --ink: #132a23;
+            --danger: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--ink);
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--forest) 0%, var(--leaf) 100%);
+            color: white;
+            padding: 32px;
+        }
+
+        .header h1 { font-size: 24px; margin-bottom: 8px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+
+        .status-bar {
+            background: var(--leaf);
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .progress-container { flex: 1; max-width: 300px; }
+        .progress-bar { height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: white; transition: width 0.3s ease; }
+        .progress-text { font-size: 13px; margin-top: 4px; }
+
+        .content { padding: 32px; }
+
+        .section {
+            margin-bottom: 32px;
+            border: 1px solid var(--mist);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--paper);
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid var(--mist);
+        }
+
+        .section-header:hover { background: var(--mist); }
+
+        .section-number {
+            width: 32px; height: 32px;
+            background: var(--forest);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .section-number.done { background: var(--leaf); }
+        .section-number.done::after { content: '✓'; }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--forest);
+            flex: 1;
+        }
+
+        .section-toggle {
+            font-size: 20px;
+            color: #999;
+            transition: transform 0.2s;
+        }
+
+        .section.collapsed .section-toggle { transform: rotate(-90deg); }
+        .section.collapsed .section-content { display: none; }
+
+        .section-content { padding: 20px; }
+
+        .task-list { list-style: none; }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: var(--paper);
+            border-radius: 8px;
+            border: 1px solid var(--mist);
+            transition: all 0.2s;
+        }
+
+        .task-item:hover { border-color: var(--leaf); }
+        .task-item.checked { opacity: 0.6; background: #f0f0f0; }
+        .task-item.checked .task-text { text-decoration: line-through; }
+
+        .task-checkbox { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; accent-color: var(--leaf); }
+
+        .task-text { flex: 1; }
+        .task-text code { background: var(--mist); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: var(--forest); }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            background: var(--forest);
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        .data-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--mist);
+        }
+
+        .data-table tr:nth-child(even) { background: var(--paper); }
+        .data-table tr:hover { background: var(--mist); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-primary { background: var(--forest); color: white; }
+        .badge-success { background: var(--leaf); color: white; }
+        .badge-warning { background: var(--label); color: white; }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            margin: 12px 0;
+        }
+
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .number { color: #b5cea8; }
+        .code-block .comment { color: #6a9955; }
+
+        .summary {
+            background: var(--mist);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .summary h4 { color: var(--forest); margin-bottom: 12px; }
+        .summary ul { margin-left: 20px; }
+        .summary li { margin: 4px 0; font-size: 14px; }
+
+        .footer {
+            background: var(--mist);
+            padding: 20px 32px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .footer button {
+            background: var(--leaf);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 8px 4px;
+        }
+
+        .footer button:hover { background: var(--forest); }
+        .footer button.reset { background: var(--danger); }
+
+        @media (max-width: 600px) {
+            .status-bar { flex-direction: column; }
+            .progress-container { max-width: 100%; width: 100%; }
+            .data-table { font-size: 11px; }
+            .data-table th, .data-table td { padding: 6px 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Seed Data - AptechMart Electronics</h1>
+            <p>Task: Seed all tables with electronics products | Risk: MEDIUM</p>
+        </div>
+
+        <div class="status-bar">
+            <div>
+                <strong>Tiến độ:</strong> <span id="progress-percent">100%</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 100%"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="checked-count">15</span> / <span id="total-count">15</span> tasks hoàn thành
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- SECTION 1: BRANCHES -->
+            <div class="section" id="section-1">
+                <div class="section-header" onclick="toggleSection(1)">
+                    <div class="section-number done" id="section-num-1">✓</div>
+                    <div class="section-title">Seed Branches (Chi nhánh)</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="1" checked>
+                            <div class="task-text">
+                                <p><strong>Tạo 3 chi nhánh AptechMart</strong></p>
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Address</th>
+                                            <th>Phone</th>
+                                            <th>Coordinates</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>AptechMart Quận 1</td><td>123 Nguyễn Huệ, Quận 1, TP.HCM</td><td>028 3822 1234</td><td>10.7769, 106.7009</td></tr>
+                                        <tr><td>AptechMart Quận 3</td><td>456 Đường 3 Tháng 2, Quận 10, TP.HCM</td><td>028 3862 5678</td><td>10.7791, 106.6801</td></tr>
+                                        <tr><td>AptechMart Bình Thạnh</td><td>789 Nguyễn Xí, Bình Thạnh, TP.HCM</td><td>028 3891 9012</td><td>10.8037, 106.7195</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 2: CATEGORIES -->
+            <div class="section" id="section-2">
+                <div class="section-header" onclick="toggleSection(2)">
+                    <div class="section-number done" id="section-num-2">✓</div>
+                    <div class="section-title">Seed Categories (Danh mục sản phẩm)</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="2" checked>
+                            <div class="task-text">
+                                <p><strong>Tạo 8 danh mục điện tử</strong></p>
+                                <table class="data-table">
+                                    <thead>
+                                        <tr><th>Name</th><th>Slug</th><th>Parent</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>Điện thoại & Tablet</td><td>dien-thoai-tablet</td><td>-</td></tr>
+                                        <tr><td>Laptop & Máy tính</td><td>laptop-may-tinh</td><td>-</td></tr>
+                                        <tr><td>TV & Màn hình</td><td>tv-man-hinh</td><td>-</td></tr>
+                                        <tr><td>Thiết bị gia dụng</td><td>thiet-bi-gia-dung</td><td>-</td></tr>
+                                        <tr><td>Âm thanh & Loa</td><td>am-thanh-loa</td><td>-</td></tr>
+                                        <tr><td>Phụ kiện</td><td>phu-kien</td><td>-</td></tr>
+                                        <tr><td>Game & Gaming</td><td>game-gaming</td><td>-</td></tr>
+                                        <tr><td>Camera & An ninh</td><td>camera-an-ninh</td><td>-</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 3: BRANDS -->
+            <div class="section" id="section-3">
+                <div class="section-header" onclick="toggleSection(3)">
+                    <div class="section-number done" id="section-num-3">✓</div>
+                    <div class="section-title">Seed Brands (Thương hiệu)</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="3" checked>
+                            <div class="task-text">
+                                <p><strong>Tạo 10 thương hiệu điện tử phổ biến</strong></p>
+                                <table class="data-table">
+                                    <thead>
+                                        <tr><th>Name</th><th>Slug</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>Samsung</td><td>samsung</td></tr>
+                                        <tr><td>Apple</td><td>apple</td></tr>
+                                        <tr><td>Sony</td><td>sony</td></tr>
+                                        <tr><td>LG</td><td>lg</td></tr>
+                                        <tr><td>Dell</td><td>dell</td></tr>
+                                        <tr><td>ASUS</td><td>asus</td></tr>
+                                        <tr><td>Xiaomi</td><td>xiaomi</td></tr>
+                                        <tr><td>Panasonic</td><td>panasonic</td></tr>
+                                        <tr><td>JBL</td><td>jbl</td></tr>
+                                        <tr><td>Canon</td><td>canon</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 4: PRODUCTS -->
+            <div class="section" id="section-4">
+                <div class="section-header" onclick="toggleSection(4)">
+                    <div class="section-number done" id="section-num-4">✓</div>
+                    <div class="section-title">Seed Products (Sản phẩm)</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="4" checked>
+                            <div class="task-text">
+                                <p><strong>Tạo 20+ sản phẩm điện tử</strong></p>
+
+                                <h4 style="margin: 12px 0 8px;">📱 Điện thoại & Tablet</h4>
+                                <table class="data-table">
+                                    <thead><tr><th>SKU</th><th>Name</th><th>Brand</th><th>Price</th><th>Unit</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>DT-SAM-001</td><td>Samsung Galaxy S24 Ultra 256GB</td><td>Samsung</td><td>28,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>DT-SAM-002</td><td>Samsung Galaxy Z Fold6</td><td>Samsung</td><td>41,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>DT-APP-001</td><td>iPhone 15 Pro Max 256GB</td><td>Apple</td><td>34,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>DT-APP-002</td><td>iPhone 15 128GB</td><td>Apple</td><td>22,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>DT-XIA-001</td><td>Xiaomi Redmi Note 13 Pro</td><td>Xiaomi</td><td>6,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>DT-SAM-003</td><td>Samsung Galaxy Tab S9 FE</td><td>Samsung</td><td>12,990,000đ</td><td>cái</td></tr>
+                                    </tbody>
+                                </table>
+
+                                <h4 style="margin: 16px 0 8px;">💻 Laptop & Máy tính</h4>
+                                <table class="data-table">
+                                    <thead><tr><th>SKU</th><th>Name</th><th>Brand</th><th>Price</th><th>Unit</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>LT-DEL-001</td><td>Dell XPS 15 9530 (i7, 16GB, 512GB)</td><td>Dell</td><td>35,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>LT-APP-001</td><td>MacBook Pro 14" M3 Pro</td><td>Apple</td><td>45,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>LT-APP-002</td><td>MacBook Air 15" M3</td><td>Apple</td><td>32,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>LT-ASUS-001</td><td>ASUS ROG Strix G16 Gaming</td><td>ASUS</td><td>28,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>LT-ASUS-002</td><td>ASUS ZenBook 14 OLED</td><td>ASUS</td><td>21,990,000đ</td><td>cái</td></tr>
+                                    </tbody>
+                                </table>
+
+                                <h4 style="margin: 16px 0 8px;">📺 TV & Màn hình</h4>
+                                <table class="data-table">
+                                    <thead><tr><th>SKU</th><th>Name</th><th>Brand</th><th>Price</th><th>Unit</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>TV-SAM-001</td><td>Samsung Neo QLED 4K 65 inch QA65QN90C</td><td>Samsung</td><td>45,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>TV-LG-001</td><td>LG OLED evo 4K 55 inch C4</td><td>LG</td><td>32,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>TV-SON-001</td><td>Sony Bravia 4K 55 inch XR-55A80L</td><td>Sony</td><td>28,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>MH-SAM-001</td><td>Samsung M8 Smart Monitor 32"</td><td>Samsung</td><td>14,990,000đ</td><td>cái</td></tr>
+                                    </tbody>
+                                </table>
+
+                                <h4 style="margin: 16px 0 8px;">🏠 Thiết bị gia dụng</h4>
+                                <table class="data-table">
+                                    <thead><tr><th>SKU</th><th>Name</th><th>Brand</th><th>Price</th><th>Unit</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>GD-PAN-001</td><td>Panasonic Inverter 1.5 HP CU/CS-U12XK</td><td>Panasonic</td><td>12,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>GD-LG-001</td><td>LG Inverter 2 HP B19END</td><td>LG</td><td>16,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>GD-LG-002</td><td>LG Door-in-Door 601L InstaView</td><td>LG</td><td>42,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>GD-PAN-002</td><td>Panasonic Giant 8.5kg NA-F85V1</td><td>Panasonic</td><td>14,990,000đ</td><td>cái</td></tr>
+                                    </tbody>
+                                </table>
+
+                                <h4 style="margin: 16px 0 8px;">🔊 Âm thanh & Loa</h4>
+                                <table class="data-table">
+                                    <thead><tr><th>SKU</th><th>Name</th><th>Brand</th><th>Price</th><th>Unit</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>AT-JBL-001</td><td>JBL PartyBox 310</td><td>JBL</td><td>14,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>AT-SON-001</td><td>Sony WH-1000XM5</td><td>Sony</td><td>8,990,000đ</td><td>cái</td></tr>
+                                        <tr><td>AT-JBL-002</td><td>JBL Flip 6</td><td>JBL</td><td>3,490,000đ</td><td>cái</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 5: BRANCH INVENTORIES -->
+            <div class="section" id="section-5">
+                <div class="section-header" onclick="toggleSection(5)">
+                    <div class="section-number done" id="section-num-5">✓</div>
+                    <div class="section-title">Seed Branch Inventories (Tồn kho chi nhánh)</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="5" checked>
+                            <div class="task-text">
+                                <p><strong>Tạo inventory cho mỗi chi nhánh (3 branches x ~20 products)</strong></p>
+                                <p>Mỗi product-branch pair cần:</p>
+                                <ul style="margin: 8px 0 8px 20px;">
+                                    <li><strong>SellingPrice:</strong> Có thể = BasePrice hoặc ±5%</li>
+                                    <li><strong>QuantityOnHand:</strong> Random 5-50 units</li>
+                                    <li><strong>ReservedQuantity:</strong> 0 (hoặc 1-3 cho orders đang xử lý)</li>
+                                    <li><strong>AvailableQuantity:</strong> QuantityOnHand - ReservedQuantity</li>
+                                    <li><strong>ReorderLevel:</strong> 5 units</li>
+                                </ul>
+                                <div class="code-block">
+<span class="comment">// Ví dụ inventory entry</span>
+{
+  branchId: <span class="string">"branch-uuid-1"</span>,
+  productId: <span class="string">"product-uuid-1"</span>,
+  sellingPrice: <span class="number">28990000</span>,
+  quantityOnHand: <span class="number">25</span>,
+  reservedQuantity: <span class="number">2</span>,
+  availableQuantity: <span class="number">23</span>,
+  reorderLevel: <span class="number">5</span>
+}
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 6: USERS (Already done) -->
+            <div class="section" id="section-6">
+                <div class="section-header" onclick="toggleSection(6)">
+                    <div class="section-number done" id="section-num-6">✓</div>
+                    <div class="section-title">Seed Users (Users - Đã hoàn thành)</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="6" checked>
+                            <div class="task-text">
+                                <p><strong>4 test accounts đã có trong Program.cs</strong></p>
+                                <table class="data-table">
+                                    <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Password</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>user1@test.com</td><td>Nguyen Van An</td><td><span class="badge badge-primary">Customer</span></td><td>Test@123</td></tr>
+                                        <tr><td>user2@test.com</td><td>Tran Thi Binh</td><td><span class="badge badge-primary">Customer</span></td><td>Test@123</td></tr>
+                                        <tr><td>user3@test.com</td><td>Le Hoang Cuong</td><td><span class="badge badge-primary">Customer</span></td><td>Test@123</td></tr>
+                                        <tr><td>admin@test.com</td><td>Admin User</td><td><span class="badge badge-warning">Admin</span></td><td>Test@123</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 7: ADDRESSES -->
+            <div class="section" id="section-7">
+                <div class="section-header" onclick="toggleSection(7)">
+                    <div class="section-number done" id="section-num-7">✓</div>
+                    <div class="section-title">Seed Addresses (Địa chỉ giao hàng)</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="7" checked>
+                            <div class="task-text">
+                                <p><strong>Tạo 1-2 địa chỉ cho mỗi user</strong></p>
+                                <table class="data-table">
+                                    <thead><tr><th>User</th><th>Recipient</th><th>Address</th><th>Default</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>user1@test.com</td><td>Nguyen Van An</td><td>45 Lê Lai, Q.1, TP.HCM</td><td><span class="badge badge-success">Yes</span></td></tr>
+                                        <tr><td>user1@test.com</td><td>Nguyen Van An</td><td>78 Nguyễn Trãi, Q.5, TP.HCM</td><td>No</td></tr>
+                                        <tr><td>user2@test.com</td><td>Tran Thi Binh</td><td>123 Pasteur, Q.1, TP.HCM</td><td><span class="badge badge-success">Yes</span></td></tr>
+                                        <tr><td>user3@test.com</td><td>Le Hoang Cuong</td><td>456 Điện Biên Phủ, Bình Thạnh</td><td><span class="badge badge-success">Yes</span></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 8: CARTS -->
+            <div class="section" id="section-8">
+                <div class="section-header" onclick="toggleSection(8)">
+                    <div class="section-number done" id="section-num-8">✓</div>
+                    <div class="section-title">Seed Carts (Giỏ hàng mẫu)</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="8" checked>
+                            <div class="task-text">
+                                <p><strong>Tạo giỏ hàng với items cho user2</strong></p>
+                                <table class="data-table">
+                                    <thead><tr><th>User</th><th>Branch</th><th>Products</th><th>Quantity</th></tr></thead>
+                                    <tbody>
+                                        <tr><td rowspan="3">user2@test.com</td><td rowspan="3">Quận 1</td><td>iPhone 15 Pro Max</td><td>1</td></tr>
+                                        <tr><td>AirPods Pro 2</td><td>1</td></tr>
+                                        <tr><td>iPad Mini</td><td>1</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 9: ORDERS -->
+            <div class="section" id="section-9">
+                <div class="section-header" onclick="toggleSection(9)">
+                    <div class="section-number done" id="section-num-9">✓</div>
+                    <div class="section-title">Seed Orders (Đơn hàng mẫu)</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="9" checked>
+                            <div class="task-text">
+                                <p><strong>Tạo orders ở various statuses cho user1, user2</strong></p>
+                                <table class="data-table">
+                                    <thead><tr><th>User</th><th>Items</th><th>Total</th><th>Status</th><th>Fulfillment</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>user1@test.com</td><td>Samsung Galaxy S24 Ultra, MacBook Air</td><td>73,980,000đ</td><td><span class="badge badge-success">Completed</span></td><td>Delivery</td></tr>
+                                        <tr><td>user1@test.com</td><td>Dell XPS 15</td><td>35,990,000đ</td><td><span class="badge badge-warning">Shipping</span></td><td>Delivery</td></tr>
+                                        <tr><td>user2@test.com</td><td>iPhone 15, JBL Flip 6</td><td>26,480,000đ</td><td><span class="badge badge-primary">Processing</span></td><td>Pickup</td></tr>
+                                        <tr><td>user3@test.com</td><td>LG Tủ lạnh</td><td>42,990,000đ</td><td><span class="badge badge-success">Completed</span></td><td>Delivery</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 10: IMPLEMENTATION CODE -->
+            <div class="section" id="section-10">
+                <div class="section-header" onclick="toggleSection(10)">
+                    <div class="section-number done" id="section-num-10">✓</div>
+                    <div class="section-title">Update Program.cs với đầy đủ Seed Logic</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="10" checked>
+                            <div class="task-text">
+                                <p><strong>Code seed logic mới thay thế user seed hiện tại</strong></p>
+                                <div class="code-block">
+<span class="comment">// Thứ tự seed quan trọng!</span>
+<span class="keyword">await</span> SeedBranches(context);
+<span class="keyword">await</span> SeedCategories(context);
+<span class="keyword">await</span> SeedBrands(context);
+<span class="keyword">await</span> SeedProducts(context);
+<span class="keyword">await</span> SeedBranchInventories(context);
+<span class="keyword">await</span> SeedUsers(context, hasher);
+<span class="keyword">await</span> SeedAddresses(context);
+<span class="keyword">await</span> SeedCarts(context);
+<span class="keyword">await</span> SeedOrders(context);
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 11: VERIFY & TEST -->
+            <div class="section" id="section-11">
+                <div class="section-header" onclick="toggleSection(11)">
+                    <div class="section-number done" id="section-num-11">✓</div>
+                    <div class="section-title">Verify & Test</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <ul class="task-list">
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="11a" checked>
+                            <div class="task-text">
+                                <p><strong>Build Backend</strong></p>
+                                <div class="code-block">dotnet build</div>
+                            </div>
+                        </li>
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="11b" checked>
+                            <div class="task-text">
+                                <p><strong>Chạy Backend & kiểm tra data</strong></p>
+                                <div class="code-block">dotnet run --project backend/src/OnlineSupermarket.Api</div>
+                            </div>
+                        </li>
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="11c" checked>
+                            <div class="task-text">
+                                <p><strong>Test API: GET /api/products</strong></p>
+                                <p>→ Phải trả về danh sách 20+ sản phẩm điện tử</p>
+                            </div>
+                        </li>
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="11d" checked>
+                            <div class="task-text">
+                                <p><strong>Test Login: user1@test.com / Test@123</strong></p>
+                            </div>
+                        </li>
+                        <li class="task-item checked">
+                            <input type="checkbox" class="task-checkbox" data-section="11e" checked>
+                            <div class="task-text">
+                                <p><strong>Test Frontend Browse Page</strong></p>
+                                <p>→ Hiển thị products với images, prices, categories</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="summary">
+                <h4>Tổng kết Seed Data</h4>
+                <ul>
+                    <li><strong>3 Chi nhánh</strong> - Quận 1, Quận 3, Bình Thạnh (TP.HCM)</li>
+                    <li><strong>8 Danh mục</strong> - Điện thoại, Laptop, TV, Gia dụng, Âm thanh, Phụ kiện, Gaming, Camera</li>
+                    <li><strong>10 Thương hiệu</strong> - Samsung, Apple, Sony, LG, Dell, ASUS, Xiaomi, Panasonic, JBL, Canon</li>
+                    <li><strong>20+ Sản phẩm</strong> - Từ điện thoại giá rẻ đến TV OLED cao cấp</li>
+                    <li><strong>60+ Inventory entries</strong> - (3 branches × 20 products)</li>
+                    <li><strong>4 Users</strong> - 3 customer + 1 admin</li>
+                    <li><strong>5 Addresses</strong> - Địa chỉ giao hàng tại TP.HCM</li>
+                    <li><strong>3 Orders</strong> - Various statuses (Completed, Shipping, Processing)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Risk Level:</strong> MEDIUM | <strong>Priority:</strong> HIGH</p>
+            <p style="margin-top: 8px;">Products: Electronics only (Samsung, Apple, Sony, LG, Dell, ASUS, Xiaomi, Panasonic, JBL, Canon)</p>
+            <button onclick="checkAll()">Check All</button>
+            <button class="reset" onclick="resetAll()">Reset Progress</button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'aptchmart-seed-progress';
+
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) return JSON.parse(saved);
+            const initial = {};
+            document.querySelectorAll('.task-checkbox').forEach(cb => {
+                if (cb.checked) {
+                    initial[cb.dataset.section] = true;
+                }
+            });
+            return initial;
+        }
+
+        function saveProgress(progress) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+        }
+
+        function updateUI() {
+            const progress = loadProgress();
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            let checkedCount = 0;
+            const sectionProgress = {};
+
+            checkboxes.forEach(cb => {
+                const key = cb.dataset.section;
+                if (progress[key]) {
+                    cb.checked = true;
+                    cb.closest('.task-item')?.classList.add('checked');
+                    checkedCount++;
+                    sectionProgress[key] = true;
+                } else {
+                    cb.checked = false;
+                    cb.closest('.task-item')?.classList.remove('checked');
+                }
+            });
+
+            // Update section numbers
+            for (let i = 1; i <= 11; i++) {
+                const sectionNum = document.getElementById(`section-num-${i}`);
+                if (sectionNum) {
+                    const sectionHasChecked = Object.keys(progress).some(k => k.startsWith(`${i}`));
+                    if (sectionHasChecked) {
+                        sectionNum.classList.add('done');
+                        sectionNum.textContent = '✓';
+                    } else {
+                        sectionNum.classList.remove('done');
+                        sectionNum.textContent = `${i}`;
+                    }
+                }
+            }
+
+            const totalCount = checkboxes.length;
+            const percent = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+
+            document.getElementById('progress-percent').textContent = `${percent}%`;
+            document.getElementById('progress-fill').style.width = `${percent}%`;
+            document.getElementById('checked-count').textContent = checkedCount;
+            document.getElementById('total-count').textContent = totalCount;
+        }
+
+        function toggleSection(num) {
+            const section = document.getElementById(`section-${num}`);
+            section.classList.toggle('collapsed');
+        }
+
+        function checkAll() {
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            const progress = {};
+            checkboxes.forEach(cb => {
+                cb.checked = true;
+                progress[cb.dataset.section] = true;
+            });
+            saveProgress(progress);
+            updateUI();
+        }
+
+        function resetAll() {
+            if (confirm('Reset tất cả tiến độ?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                const progress = {};
+                document.querySelectorAll('.task-checkbox').forEach(cb => {
+                    cb.checked = false;
+                });
+                saveProgress(progress);
+                updateUI();
+            }
+        }
+
+        document.querySelectorAll('.task-checkbox').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const progress = loadProgress();
+                progress[this.dataset.section] = this.checked;
+                saveProgress(progress);
+                updateUI();
+            });
+        });
+
+        updateUI();
+    </script>
+</body>
+</html>

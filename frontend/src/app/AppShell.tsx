@@ -7,11 +7,11 @@ export function AppShell({ children }: PropsWithChildren) {
   return (
     <div className="site-shell">
       <header className="site-header">
-        <Link className="brand" to="/" aria-label="Online Supermarket — trang chủ">
-          <span className="brand__mark">OS</span>
+        <Link className="brand" to="/" aria-label="AptechMart — trang chủ">
+          <span className="brand__mark">AM</span>
           <span>
-            <strong>Online Supermarket</strong>
-            <small>Tươi đúng chi nhánh</small>
+            <strong>AptechMart</strong>
+            <small>Siêu thị điện tử</small>
           </span>
         </Link>
         <nav className="site-nav" aria-label="Điều hướng chính">

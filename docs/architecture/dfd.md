@@ -1,4 +1,4 @@
-# DFD Hệ thống Siêu thị Điện tử Trực tuyến
+# DFD Hệ thống AptechMart - Siêu thị Điện tử Trực tuyến
 
 Status: **OFFICIAL**  
 Ngày cập nhật: 2026-08-23  
@@ -23,7 +23,7 @@ Cấu trúc: Context → Level 0 → Level 1 (chi tiết)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                   Siêu thị Điện tử Trực tuyến                  │
+│                    AptechMart - Siêu thị Điện tử                 │
 │                                                                  │
 │                         [System]                                │
 │                                                                  │

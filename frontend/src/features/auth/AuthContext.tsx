@@ -18,6 +18,8 @@ interface AuthContextType {
   login: (data: LoginRequest) => Promise<void>
   register: (data: RegisterRequest) => Promise<void>
   logout: () => Promise<void>
+  updateUser: (updatedFields: Partial<UserDto>) => void
+  refreshUser: () => Promise<void>
 }
 
 const ACCESS_TOKEN_KEY = 'os_access_token'
@@ -108,6 +110,22 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   }
 
+  const updateUser = useCallback((updatedFields: Partial<UserDto>) => {
+    setUser((prev) => (prev ? { ...prev, ...updatedFields } : null))
+  }, [])
+
+  const refreshUser = useCallback(async () => {
+    const currentToken = accessToken || localStorage.getItem(ACCESS_TOKEN_KEY)
+    if (currentToken) {
+      try {
+        const userData = await getMeApi(currentToken)
+        setUser(userData)
+      } catch {
+        // ignore
+      }
+    }
+  }, [accessToken])
+
   return (
     <AuthContext.Provider
       value={{
@@ -118,6 +136,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
         login,
         register,
         logout,
+        updateUser,
+        refreshUser,
       }}
     >
       {children}

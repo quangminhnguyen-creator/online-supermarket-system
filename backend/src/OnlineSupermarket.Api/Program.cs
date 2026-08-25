@@ -1,6 +1,11 @@
 using OnlineSupermarket.Api.Contracts;
 using OnlineSupermarket.Api.Endpoints;
 using OnlineSupermarket.Infrastructure;
+using OnlineSupermarket.Infrastructure.Persistence;
+using OnlineSupermarket.Infrastructure.Identity;
+using Microsoft.EntityFrameworkCore;
+using User = OnlineSupermarket.Domain.Identity.User;
+using UserRole = OnlineSupermarket.Domain.Identity.UserRole;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -9,6 +14,17 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    // Apply migrations and seed initial development data
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+
+    if (context.Database.IsRelational())
+    {
+        await context.Database.MigrateAsync();
+    }
+    await DataSeeder.SeedAllAsync(context, hasher);
+
     app.MapOpenApi();
 }
 
