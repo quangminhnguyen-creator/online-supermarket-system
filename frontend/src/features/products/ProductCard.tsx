@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { ProductSummaryDto } from '../../api/catalogApi'
 import './ProductCard.css'
 
 export interface ProductCardProps {
   product: ProductSummaryDto
   branchName?: string
-  onSelect?: (product: ProductSummaryDto) => void
+  branchId?: string
 }
 
 export const formatPrice = (price: number): string => {
@@ -15,23 +16,22 @@ export const formatPrice = (price: number): string => {
   }).format(price)
 }
 
-export function ProductCard({ product, branchName, onSelect }: ProductCardProps) {
+export function ProductCard({ product, branchName, branchId }: ProductCardProps) {
   const [imageError, setImageError] = useState(false)
 
-  const handleCardClick = () => {
-    if (onSelect) {
-      onSelect(product)
-    }
-  }
+  const search = branchId ? `?branchId=${encodeURIComponent(branchId)}` : ''
+  const href = `/product/${product.id}${search}`
 
   return (
-    <article
-      className="product-card"
-      data-testid={`product-card-${product.id}`}
-      onClick={handleCardClick}
-      role={onSelect ? 'button' : undefined}
-      tabIndex={onSelect ? 0 : undefined}
+    <Link
+      className="product-card__link"
+      to={href}
+      aria-label={`Xem ${product.name}`}
     >
+      <article
+        className="product-card"
+        data-testid={`product-card-${product.id}`}
+      >
       <div className="product-card__image-container">
         {product.imageUrl && !imageError ? (
           <img
@@ -78,19 +78,10 @@ export function ProductCard({ product, branchName, onSelect }: ProductCardProps)
               </span>
             )}
           </div>
-          <button
-            type="button"
-            className="product-card__action-btn"
-            onClick={(e) => {
-              e.stopPropagation()
-              if (onSelect) onSelect(product)
-            }}
-            aria-label={`Xem ${product.name}`}
-          >
-            Chi tiết
-          </button>
+          <span className="product-card__action-btn" aria-hidden="true">Chi tiết</span>
         </div>
       </div>
     </article>
+    </Link>
   )
 }

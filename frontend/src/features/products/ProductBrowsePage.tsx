@@ -330,6 +330,7 @@ export function ProductBrowsePage() {
             loading={loading}
             error={error}
             branchName={activeBranch?.name}
+            branchId={currentFilters.branchId}
             onRetry={fetchProducts}
             onResetFilters={handleResetFilters}
           />

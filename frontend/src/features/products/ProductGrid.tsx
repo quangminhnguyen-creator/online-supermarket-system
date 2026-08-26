@@ -8,9 +8,9 @@ export interface ProductGridProps {
   loading: boolean
   error?: string | null
   branchName?: string
+  branchId?: string
   onRetry?: () => void
   onResetFilters?: () => void
-  onSelectProduct?: (product: ProductSummaryDto) => void
 }
 
 export function ProductGrid({
@@ -18,9 +18,9 @@ export function ProductGrid({
   loading,
   error,
   branchName,
+  branchId,
   onRetry,
   onResetFilters,
-  onSelectProduct,
 }: ProductGridProps) {
   if (error) {
     return (
@@ -86,7 +86,7 @@ export function ProductGrid({
           key={product.id}
           product={product}
           branchName={branchName}
-          onSelect={onSelectProduct}
+          branchId={branchId}
         />
       ))}
     </div>

@@ -2,8 +2,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { ProductCard, formatPrice } from './ProductCard'
-import { FilterSidebar } from './FilterSidebar'
 import { ProductGrid } from './ProductGrid'
+import { FilterSidebar } from './FilterSidebar'
 import { Pagination } from './Pagination'
 import { ProductBrowsePage } from './ProductBrowsePage'
 import { catalogApi } from '../../api/catalogApi'
@@ -61,7 +61,11 @@ describe('Product Browse Feature', () => {
 
   describe('ProductCard component', () => {
     it('renders product information properly', () => {
-      render(<ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" />)
+      render(
+        <MemoryRouter>
+          <ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" />
+        </MemoryRouter>
+      )
 
       expect(screen.getByText('Sữa tươi tiệt trùng ít đường 1L')).toBeInTheDocument()
       expect(screen.getByText('Vinamilk')).toBeInTheDocument()
@@ -71,13 +75,26 @@ describe('Product Browse Feature', () => {
       expect(screen.getByText('Chi nhánh Quận 1')).toBeInTheDocument()
     })
 
-    it('triggers onSelect when card or button is clicked', () => {
-      const onSelect = vi.fn()
-      render(<ProductCard product={mockProduct} onSelect={onSelect} />)
+    it('renders a native detail link and preserves branchId', () => {
+      render(
+        <MemoryRouter>
+          <ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" branchId="branch-1" />
+        </MemoryRouter>
+      )
 
-      const detailBtn = screen.getByRole('button', { name: `Xem ${mockProduct.name}` })
-      fireEvent.click(detailBtn)
-      expect(onSelect).toHaveBeenCalledWith(mockProduct)
+      expect(screen.getByRole('link', { name: `Xem ${mockProduct.name}` }))
+        .toHaveAttribute('href', '/product/prod-1?branchId=branch-1')
+    })
+
+    it('omits branchId when no branch is selected', () => {
+      render(
+        <MemoryRouter>
+          <ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" />
+        </MemoryRouter>
+      )
+
+      const linkWithoutBranch = screen.getByRole('link', { name: `Xem ${mockProduct.name}` })
+      expect(linkWithoutBranch).toHaveAttribute('href', '/product/prod-1')
     })
   })
 
@@ -175,7 +192,11 @@ describe('Product Browse Feature', () => {
     })
 
     it('renders list of products when available', () => {
-      render(<ProductGrid products={[mockProduct]} loading={false} />)
+      render(
+        <MemoryRouter>
+          <ProductGrid products={[mockProduct]} loading={false} />
+        </MemoryRouter>
+      )
       expect(screen.getByTestId('product-grid')).toBeInTheDocument()
       expect(screen.getByText('Sữa tươi tiệt trùng ít đường 1L')).toBeInTheDocument()
     })
