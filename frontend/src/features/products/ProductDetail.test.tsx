@@ -1,11 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, useLocation, useNavigate, type NavigateFunction } from 'react-router-dom'
 import { catalogApi, type ProductDetailDto } from '../../api/catalogApi'
 import { branchApi, type BranchDto } from '../../api/branchApi'
 import { ApiError } from '../../api/httpClient'
 
-// ProductDetailPage will be imported after we implement it
 import { ProductDetailPage } from './ProductDetailPage'
 
 const mockDetail: ProductDetailDto = {
@@ -34,16 +33,28 @@ function LocationDisplay() {
   return <div data-testid="detail-location">{location.search}</div>
 }
 
-function renderDetail(entry = '/product/prod-1') {
-  return render(
+// Exposes navigate so tests can change URL programmatically
+interface RenderDetailResult extends ReturnType<typeof render> {
+  navigate: NavigateFunction
+}
+
+function renderDetail(entry = '/product/prod-1'): RenderDetailResult {
+  let navigateRef: NavigateFunction | undefined
+  function CaptureNavigate() {
+    navigateRef = useNavigate()
+    return null
+  }
+  const result = render(
     <MemoryRouter initialEntries={[entry]}>
       <Routes>
         <Route path="/product/:id" element={<ProductDetailPage />} />
         <Route path="/browse" element={<div>Browse</div>} />
       </Routes>
       <LocationDisplay />
+      <CaptureNavigate />
     </MemoryRouter>
   )
+  return { ...result, navigate: navigateRef! }
 }
 
 describe('ProductDetailPage', () => {
@@ -154,5 +165,73 @@ describe('ProductDetailPage', () => {
     expect(await screen.findByRole('navigation', { name: 'Breadcrumb' })).toBeInTheDocument()
     expect(screen.getByLabelText('Kho hàng')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: 'iPhone 15 128GB' })).toBeInTheDocument()
+  })
+
+  describe('Stale-request protection', () => {
+    it('clears branchId from URL when "Chọn kho" is selected', async () => {
+      vi.spyOn(branchApi, 'getBranches').mockResolvedValue(branches)
+      vi.spyOn(catalogApi, 'getProductById').mockResolvedValue({
+        ...mockDetail,
+        branchInventory: { branchId: 'branch-1', sellingPrice: 21990000, availableQuantity: 7, onHand: 9 },
+      })
+      renderDetail('/product/prod-1?branchId=branch-1')
+      await screen.findByText('Còn 7 sản phẩm tại kho')
+
+      const select = screen.getByLabelText('Kho hàng')
+      const { fireEvent } = await import('@testing-library/react')
+      fireEvent.change(select, { target: { value: '' } })
+
+      await waitFor(() => {
+        expect(screen.getByTestId('detail-location')).toHaveTextContent('')
+      })
+      expect(screen.getByText('Chọn kho để xem giá và tồn kho')).toBeInTheDocument()
+    })
+
+    it('normalizes invalid branchId from URL', async () => {
+      vi.spyOn(branchApi, 'getBranches').mockResolvedValue(branches)
+      vi.spyOn(catalogApi, 'getProductById').mockResolvedValue(mockDetail)
+      renderDetail('/product/prod-1?branchId=invalid-branch')
+      await screen.findByText('Chọn kho để xem giá và tồn kho')
+      expect(screen.getByTestId('detail-location')).toHaveTextContent('')
+    })
+
+    it('aborts stale product request when branchId changes before response', async () => {
+      vi.spyOn(branchApi, 'getBranches').mockResolvedValue(branches)
+
+      // First request resolves slowly; second request resolves quickly
+      let resolveFirst: (value: ProductDetailDto) => void
+      const slowPromise = new Promise<ProductDetailDto>((resolve) => { resolveFirst = resolve })
+
+      const detailSpy = vi.spyOn(catalogApi, 'getProductById')
+        .mockReturnValueOnce(slowPromise as Promise<ProductDetailDto>)
+        .mockResolvedValueOnce({
+          ...mockDetail,
+          branchInventory: { branchId: 'branch-2', sellingPrice: 20990000, availableQuantity: 3, onHand: 3 },
+        })
+
+      const { navigate } = renderDetail('/product/prod-1?branchId=branch-1')
+
+      // Wait for first request to be in flight
+      await waitFor(() => {
+        expect(detailSpy).toHaveBeenCalledWith('prod-1', 'branch-1', expect.any(AbortSignal))
+      })
+      const firstSignal = detailSpy.mock.calls[0][2] as AbortSignal
+
+      // Navigate to a different branch — this must abort the first request
+      await act(async () => {
+        navigate('/product/prod-1?branchId=branch-2')
+      })
+
+      // First signal must be aborted so stale response cannot overwrite current state
+      expect(firstSignal.aborted).toBe(true)
+
+      // Resolve the now-stale first response — it must NOT update the UI
+      resolveFirst!({ ...mockDetail, branchInventory: { branchId: 'branch-1', sellingPrice: 999, availableQuantity: 99, onHand: 99 } })
+
+      // The second (current) request completes and is the visible state
+      await waitFor(() => {
+        expect(screen.getByText('Còn 3 sản phẩm tại kho')).toBeInTheDocument()
+      })
+    })
   })
 })

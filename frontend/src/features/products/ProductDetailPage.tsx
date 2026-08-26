@@ -65,8 +65,8 @@ export function ProductDetailPage() {
     return () => controller.abort()
   }, [branchRetryKey])
 
-  useEffect(() => { fetchProduct() }, [fetchProduct])
-  useEffect(() => { fetchBranches() }, [fetchBranches])
+  useEffect(() => { return fetchProduct() }, [fetchProduct])
+  useEffect(() => { return fetchBranches() }, [fetchBranches])
 
   // Normalize invalid branchId
   useEffect(() => {
