@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan: Frontend - Chi Tiết Sản Phẩm &amp; Đổi Kho</title>
+    <style>
+        :root {
+            --forest: #0b3d2e;
+            --leaf: #1f7a4d;
+            --mist: #e8f1ed;
+            --paper: #f9fbf4;
+            --label: #f49b45;
+            --ink: #132a23;
+            --danger: #b9382a;
+            --blue: #245f8f;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--ink);
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, .08);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--forest), var(--leaf));
+            color: white;
+            padding: 32px;
+        }
+        .header h1 { font-size: 26px; margin-bottom: 8px; }
+        .header p { opacity: .92; font-size: 14px; }
+        .status-bar {
+            background: var(--leaf);
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .progress-container { flex: 1; max-width: 340px; }
+        .progress-bar { height: 8px; background: rgba(255, 255, 255, .3); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0; background: white; transition: width .3s ease; }
+        .progress-text { font-size: 13px; margin-top: 4px; }
+        .content { padding: 32px; }
+        .overview {
+            background: var(--paper);
+            border: 1px solid var(--mist);
+            border-left: 5px solid var(--label);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+        .overview h2 { color: var(--forest); font-size: 19px; margin-bottom: 10px; }
+        .overview p, .overview li { font-size: 14px; }
+        .overview ul { margin: 8px 0 0 22px; }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 24px;
+            margin-top: 14px;
+            font-size: 13px;
+        }
+        code {
+            background: var(--mist);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--forest);
+            font-size: 13px;
+        }
+        .section {
+            margin-bottom: 28px;
+            border: 1px solid var(--mist);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--paper);
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid var(--mist);
+        }
+        .section-header:hover { background: var(--mist); }
+        .section-number {
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            background: var(--forest);
+            color: white;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .section-number.done { background: var(--leaf); }
+        .section-title { font-size: 17px; font-weight: 650; color: var(--forest); flex: 1; }
+        .section-toggle { font-size: 20px; color: #777; transition: transform .2s; }
+        .section.collapsed .section-toggle { transform: rotate(-90deg); }
+        .section.collapsed .section-content { display: none; }
+        .section-content { padding: 20px; }
+        .interfaces {
+            background: #f6faf8;
+            border: 1px dashed rgba(11, 61, 46, .3);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            font-size: 13px;
+        }
+        .interfaces p + p { margin-top: 4px; }
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            margin-bottom: 9px;
+            background: var(--paper);
+            border-radius: 8px;
+            border: 1px solid var(--mist);
+        }
+        .task-item:hover { border-color: var(--leaf); }
+        .task-item.checked { opacity: .58; background: #f0f0f0; }
+        .task-item.checked .task-text > p:first-child { text-decoration: line-through; }
+        .task-checkbox { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; accent-color: var(--leaf); }
+        .task-text { flex: 1; min-width: 0; }
+        .task-text p { margin: 3px 0; }
+        .task-text ul { margin: 8px 0 0 22px; }
+        pre {
+            background: #1a1a2e;
+            color: #d5edf0;
+            padding: 14px 16px;
+            border-radius: 7px;
+            overflow-x: auto;
+            font: 12px/1.55 "Cascadia Code", Consolas, monospace;
+            margin: 9px 0;
+            white-space: pre;
+        }
+        .expected { color: var(--blue); font-size: 13px; font-weight: 650; }
+        .data-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+        .data-table th { background: var(--forest); color: white; padding: 9px 11px; text-align: left; }
+        .data-table td { padding: 8px 11px; border-bottom: 1px solid var(--mist); vertical-align: top; }
+        .data-table tr:nth-child(even) { background: var(--paper); }
+        .files-summary { background: var(--mist); padding: 18px; border-radius: 8px; margin-top: 20px; }
+        .files-summary h3 { color: var(--forest); font-size: 16px; margin-bottom: 9px; }
+        .files-summary ul { list-style: none; font-size: 13px; }
+        .files-summary li { padding: 4px 0; }
+        .files-summary li::before { display: inline-block; width: 24px; }
+        .files-summary li.new::before { content: "✨"; }
+        .files-summary li.edit::before { content: "✏️"; }
+        .files-summary li.test::before { content: "🧪"; }
+        .files-summary li.read::before { content: "🔎"; }
+        .footer { background: var(--mist); padding: 22px 32px; text-align: center; font-size: 13px; color: #596963; }
+        .footer button {
+            border: 0;
+            border-radius: 6px;
+            background: var(--leaf);
+            color: white;
+            padding: 10px 22px;
+            margin: 12px 4px 0;
+            cursor: pointer;
+            font-weight: 650;
+        }
+        .footer button.reset { background: var(--danger); }
+        @media (max-width: 700px) {
+            body { padding: 16px 10px; }
+            .content, .header, .status-bar { padding-left: 18px; padding-right: 18px; }
+            .status-bar { flex-direction: column; align-items: stretch; }
+            .progress-container { max-width: none; }
+            .meta-grid { grid-template-columns: 1fr; }
+            .section-content { padding: 14px; }
+            .task-item { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Frontend - Chi Tiết Sản Phẩm &amp; Đổi Kho</h1>
+            <p>Route: /product/:id?branchId= | API: GET /api/products/{id}?branchId= | FR-102, FR-103</p>
+        </header>
+        <div class="status-bar">
+            <div><strong>Tiến độ:</strong> <span id="progress-percent">0%</span></div>
+            <div class="progress-container">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                <div class="progress-text"><span id="checked-count">0</span> / <span id="total-count">0</span> bước hoàn thành</div>
+            </div>
+        </div>
+        <main class="content">
+            <section class="overview">
+                <h2>Product Detail &amp; Branch Switching Implementation Plan</h2>
+                <p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: dùng <code>superpowers:subagent-driven-development</code> (khuyến nghị) hoặc <code>superpowers:executing-plans</code> để thực thi từng task. Checkbox trong file này là nguồn theo dõi tiến độ.</p>
+                <div class="meta-grid">
+                    <p><strong>Goal:</strong> Tạo trang chi tiết sản phẩm frontend-only, giữ kho trong URL và tải đúng giá/tồn kho từ backend hiện tại.</p>
+                    <p><strong>Spec:</strong> <code>docs/superpowers/specs/2026-08-26-product-detail-branch-switching-design.md</code></p>
+                    <p><strong>Architecture:</strong> URL <code>branchId</code> là source of truth; card dùng native <code>Link</code>; detail refetch theo route/query.</p>
+                    <p><strong>Tech stack:</strong> React 19.2.8, TypeScript 5.9.3, React Router 7.18.2, Vite 7.3.6, Vitest 4.1.10, Testing Library 16.3.2.</p>
+                </div>
+                <h3 style="margin-top: 16px; color: var(--forest); font-size: 15px;">Global Constraints</h3>
+                <ul>
+                    <li>Frontend-only; không sửa backend, database hoặc API contract.</li>
+                    <li>Dùng sẵn <code>catalogApi.getProductById(id, branchId, options)</code> và <code>branchApi.getBranches(options)</code>; không tạo client trùng lặp.</li>
+                    <li>Dùng runtime contract <code>ProductDetailDto.branchInventory</code> và <code>BranchInventoryDto.onHand</code>.</li>
+                    <li>Không thêm dependency, global branch context, localStorage cho lựa chọn kho, cart, compare, gallery hoặc structured specs.</li>
+                    <li>Copy giao diện bằng tiếng Việt; responsive từ 320 px; trạng thái loading/error/not-found phải accessible.</li>
+                    <li>Mỗi task thực hiện theo RED → GREEN → REFACTOR → COMMIT và không gom thay đổi ngoài scope.</li>
+                </ul>
+            </section>
+
+            <section class="section" id="section-1">
+                <div class="section-header" onclick="toggleSection(1)">
+                    <div class="section-number" id="section-num-1">1</div>
+                    <div class="section-title">Task 1 — Native Link từ ProductCard và giữ branchId</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Modify <code>ProductCard.tsx:1-96</code>, <code>ProductCard.css:1-179</code>, <code>ProductGrid.tsx:6-91</code>, <code>ProductBrowsePage.tsx:328-335</code>; Test <code>ProductBrowse.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> <code>ProductSummaryDto</code>, <code>currentFilters.branchId</code>, <code>activeBranch?.name</code>.</p>
+                        <p><strong>Produces:</strong> <code>ProductCardProps { product; branchName?: string; branchId?: string }</code> và href canonical <code>/product/{id}?branchId={encoded}</code>.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-1" data-section="1"><div class="task-text">
+                            <p><strong>Step 1: Viết test fail cho native link và URL giữ kho</strong></p>
+                            <pre>it('renders a native detail link and preserves branchId', () =&gt; {
+  render(
+    &lt;MemoryRouter&gt;
+      &lt;ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" branchId="branch-1" /&gt;
+    &lt;/MemoryRouter&gt;
+  )
+
+  expect(screen.getByRole('link', { name: `Xem ${mockProduct.name}` }))
+    .toHaveAttribute('href', '/product/prod-1?branchId=branch-1')
+})
+
+it('omits branchId when no branch is selected', () =&gt; {
+  render(&lt;MemoryRouter&gt;&lt;ProductCard product={mockProduct} /&gt;&lt;/MemoryRouter&gt;)
+  expect(screen.getByRole('link', { name: `Xem ${mockProduct.name}` }))
+    .toHaveAttribute('href', '/product/prod-1')
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-2" data-section="1"><div class="task-text">
+                            <p><strong>Step 2: Chạy test để xác nhận RED</strong></p>
+                            <pre>Set-Location frontend
+npm.cmd test -- --run src/features/products/ProductBrowse.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì ProductCard chưa render role="link" và chưa nhận branchId.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-3" data-section="1"><div class="task-text">
+                            <p><strong>Step 3: Thay callback bằng Link và truyền branchId xuyên suốt</strong></p>
+                            <pre>import { Link } from 'react-router-dom'
+
+export interface ProductCardProps {
+  product: ProductSummaryDto
+  branchName?: string
+  branchId?: string
+}
+
+export function ProductCard({ product, branchName, branchId }: ProductCardProps) {
+  const search = branchId ? `?branchId=${encodeURIComponent(branchId)}` : ''
+  return (
+    &lt;Link className="product-card__link" to={`/product/${product.id}${search}`}
+      aria-label={`Xem ${product.name}`}&gt;
+      &lt;article className="product-card" data-testid={`product-card-${product.id}`}&gt;
+        {/* Giữ nguyên image, meta, name và price markup hiện tại. */}
+        &lt;span className="product-card__action-btn" aria-hidden="true"&gt;Chi tiết&lt;/span&gt;
+      &lt;/article&gt;
+    &lt;/Link&gt;
+  )
+}</pre>
+                            <p>Xóa <code>onSelect</code>, <code>handleCardClick</code>, role button, tabIndex và button lồng trong card. Thêm <code>branchId?: string</code> vào <code>ProductGridProps</code>, forward xuống card, rồi truyền <code>branchId={currentFilters.branchId}</code> từ browse page.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-4" data-section="1"><div class="task-text">
+                            <p><strong>Step 4: Thêm style link/focus và chạy GREEN</strong></p>
+                            <pre>.product-card__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 12px;
+}
+.product-card__link:focus-visible {
+  outline: 3px solid var(--label);
+  outline-offset: 4px;
+}</pre>
+                            <pre>npm.cmd test -- --run src/features/products/ProductBrowse.test.tsx</pre>
+                            <p class="expected">Expected: PASS toàn bộ ProductBrowse tests.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-5" data-section="1"><div class="task-text">
+                            <p><strong>Step 5: Commit deliverable navigation</strong></p>
+                            <pre>git add frontend/src/features/products/ProductCard.tsx frontend/src/features/products/ProductCard.css frontend/src/features/products/ProductGrid.tsx frontend/src/features/products/ProductBrowsePage.tsx frontend/src/features/products/ProductBrowse.test.tsx
+git commit -m "feat(frontend): link product cards to detail pages"</pre>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-2">
+                <div class="section-header" onclick="toggleSection(2)">
+                    <div class="section-number" id="section-num-2">2</div>
+                    <div class="section-title">Task 2 — API characterization và base detail route</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Create <code>frontend/src/api/catalogApi.test.ts</code>, <code>ProductDetailPage.tsx</code>, <code>ProductDetailPage.css</code>, <code>ProductDetail.test.tsx</code>; Modify <code>App.tsx:1-26</code>.</p>
+                        <p><strong>Consumes:</strong> Existing <code>catalogApi.getProductById(id: string, branchId?: string, options?: RequestOptions | AbortSignal): Promise&lt;ProductDetailDto&gt;</code>.</p>
+                        <p><strong>Produces:</strong> Public route <code>/product/:id</code>, base product loading, <code>ProductDetailPage</code>.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-1" data-section="2"><div class="task-text">
+                            <p><strong>Step 1: Viết characterization tests cho API client đã tồn tại</strong></p>
+                            <pre>import { afterEach, expect, it, vi } from 'vitest'
+import { catalogApi } from './catalogApi'
+
+const detailResponse = {
+  id: 'prod-1', name: 'iPhone 15', slug: 'iphone-15', sku: 'DT-APP-002',
+  description: 'Điện thoại Apple', basePrice: 22990000, unit: 'cái',
+  imageUrl: null, categoryId: 'cat-1', categoryName: 'Điện thoại',
+  brandId: 'brand-1', brandName: 'Apple', branchInventory: null,
+}
+
+afterEach(() =&gt; vi.unstubAllGlobals())
+
+it.each([
+  [undefined, '/api/products/prod-1'],
+  ['branch 1', '/api/products/prod-1?branchId=branch%201'],
+])('builds the detail URL for branch %s', async (branchId, expectedUrl) =&gt; {
+  const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(detailResponse), {
+    status: 200, headers: { 'Content-Type': 'application/json' },
+  }))
+  vi.stubGlobal('fetch', fetchMock)
+  await catalogApi.getProductById('prod-1', branchId)
+  expect(fetchMock).toHaveBeenCalledWith(expectedUrl, expect.objectContaining({
+    headers: { Accept: 'application/json' },
+  }))
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-2" data-section="2"><div class="task-text">
+                            <p><strong>Step 2: Chạy characterization test</strong></p>
+                            <pre>npm.cmd test -- --run src/api/catalogApi.test.ts</pre>
+                            <p class="expected">Expected: PASS vì <code>getProductById</code> đã có sẵn tại <code>catalogApi.ts:105</code>. Không sửa production client.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-3" data-section="2"><div class="task-text">
+                            <p><strong>Step 3: Viết test fail cho route base và nội dung DTO</strong></p>
+                            <pre>const mockDetail = {
+  id: 'prod-1', name: 'iPhone 15 128GB', slug: 'iphone-15-128gb',
+  sku: 'DT-APP-002', description: 'Màn hình Super Retina XDR.',
+  basePrice: 22990000, unit: 'cái', imageUrl: null,
+  categoryId: 'cat-1', categoryName: 'Điện thoại &amp; Tablet',
+  brandId: 'brand-1', brandName: 'Apple', branchInventory: null,
+}
+
+function renderDetail(entry = '/product/prod-1') {
+  return render(
+    &lt;MemoryRouter initialEntries={[entry]}&gt;
+      &lt;Routes&gt;&lt;Route path="/product/:id" element={&lt;ProductDetailPage /&gt;} /&gt;&lt;/Routes&gt;
+    &lt;/MemoryRouter&gt;
+  )
+}
+
+it('loads and renders base product detail without a branch', async () =&gt; {
+  vi.spyOn(branchApi, 'getBranches').mockResolvedValue([])
+  vi.spyOn(catalogApi, 'getProductById').mockResolvedValue(mockDetail)
+  renderDetail()
+  expect(screen.getByLabelText('Đang tải chi tiết sản phẩm')).toHaveAttribute('aria-busy', 'true')
+  expect(await screen.findByRole('heading', { name: 'iPhone 15 128GB' })).toBeInTheDocument()
+  expect(screen.getByText('Màn hình Super Retina XDR.')).toBeInTheDocument()
+  expect(screen.getByText(/22\.990\.000/)).toBeInTheDocument()
+  expect(screen.getByText('Chọn kho để xem giá và tồn kho')).toBeInTheDocument()
+  expect(catalogApi.getProductById).toHaveBeenCalledWith('prod-1', undefined, expect.any(AbortSignal))
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-4" data-section="2"><div class="task-text">
+                            <p><strong>Step 4: Chạy test để xác nhận RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/products/ProductDetail.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì module <code>ProductDetailPage</code> và route chưa tồn tại.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-5" data-section="2"><div class="task-text">
+                            <p><strong>Step 5: Tạo state model và fetch tối thiểu</strong></p>
+                            <pre>type ProductState =
+  | { kind: 'loading' }
+  | { kind: 'ready'; data: ProductDetailDto }
+  | { kind: 'not-found' }
+  | { kind: 'error'; message: string }
+
+export function ProductDetailPage() {
+  const { id } = useParams&lt;{ id: string }&gt;()
+  const [searchParams] = useSearchParams()
+  const branchId = searchParams.get('branchId') || undefined
+  const [productState, setProductState] = useState&lt;ProductState&gt;({ kind: 'loading' })
+
+  useEffect(() =&gt; {
+    const controller = new AbortController()
+    if (!id) { setProductState({ kind: 'not-found' }); return () =&gt; controller.abort() }
+    setProductState({ kind: 'loading' })
+    catalogApi.getProductById(id, branchId, controller.signal)
+      .then((data) =&gt; setProductState({ kind: 'ready', data }))
+      .catch((error: unknown) =&gt; {
+        if (controller.signal.aborted) return
+        if (error instanceof ApiError &amp;&amp; error.status === 404) {
+          setProductState({ kind: 'not-found' }); return
+        }
+        setProductState({ kind: 'error', message: 'Không thể tải chi tiết sản phẩm.' })
+      })
+    return () =&gt; controller.abort()
+  }, [id, branchId])
+}</pre>
+                            <p>Ready markup hiển thị breadcrumb, image/placeholder, H1, brand, category, SKU, unit, description, <code>formatPrice(data.basePrice)</code> và lời nhắc chọn kho.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-6" data-section="2"><div class="task-text">
+                            <p><strong>Step 6: Đăng ký route và chạy GREEN</strong></p>
+                            <pre>import { ProductDetailPage } from './features/products/ProductDetailPage'
+&lt;Route path="/product/:id" element={&lt;ProductDetailPage /&gt;} /&gt;</pre>
+                            <pre>npm.cmd test -- --run src/api/catalogApi.test.ts src/features/products/ProductDetail.test.tsx</pre>
+                            <p class="expected">Expected: PASS API characterization và base detail page.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-7" data-section="2"><div class="task-text">
+                            <p><strong>Step 7: Commit base detail route</strong></p>
+                            <pre>git add frontend/src/api/catalogApi.test.ts frontend/src/features/products/ProductDetailPage.tsx frontend/src/features/products/ProductDetailPage.css frontend/src/features/products/ProductDetail.test.tsx frontend/src/App.tsx
+git commit -m "feat(frontend): add base product detail route"</pre>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-3">
+                <div class="section-header" onclick="toggleSection(3)">
+                    <div class="section-number" id="section-num-3">3</div>
+                    <div class="section-title">Task 3 — Branch selector, deep link và refetch</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Modify <code>ProductDetailPage.tsx</code>; Test <code>ProductDetail.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> <code>branchApi.getBranches(AbortSignal)</code>, URL <code>branchId</code>, <code>BranchDto[]</code>.</p>
+                        <p><strong>Produces:</strong> Labeled select <code>Kho hàng</code>, URL update giữ query khác, refetch theo kho, invalid-branch normalization.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-1" data-section="3"><div class="task-text">
+                            <p><strong>Step 1: Viết test fail cho branch deep link</strong></p>
+                            <pre>const branches = [
+  { id: 'branch-1', name: 'AptechMart Quận 1', address: '123 Nguyễn Huệ', phone: null, latitude: null, longitude: null, isActive: true },
+  { id: 'branch-2', name: 'AptechMart Quận 3', address: '456 Đường 3 Tháng 2', phone: null, latitude: null, longitude: null, isActive: true },
+]
+
+it('loads the branch from a deep link', async () =&gt; {
+  vi.spyOn(branchApi, 'getBranches').mockResolvedValue(branches)
+  vi.spyOn(catalogApi, 'getProductById').mockResolvedValue({
+    ...mockDetail,
+    branchInventory: { branchId: 'branch-1', sellingPrice: 21990000, availableQuantity: 7, onHand: 9 },
+  })
+  renderDetail('/product/prod-1?branchId=branch-1')
+  expect(await screen.findByLabelText('Kho hàng')).toHaveValue('branch-1')
+  expect(catalogApi.getProductById).toHaveBeenCalledWith('prod-1', 'branch-1', expect.any(AbortSignal))
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-2" data-section="3"><div class="task-text">
+                            <p><strong>Step 2: Viết test fail cho đổi kho và giữ query khác</strong></p>
+                            <pre>it('updates branchId, preserves query keys, and refetches detail', async () =&gt; {
+  vi.spyOn(branchApi, 'getBranches').mockResolvedValue(branches)
+  const detailSpy = vi.spyOn(catalogApi, 'getProductById').mockResolvedValue(mockDetail)
+  renderDetail('/product/prod-1?ref=browse')
+  fireEvent.change(await screen.findByLabelText('Kho hàng'), {
+    target: { value: 'branch-2' },
+  })
+  await waitFor(() =&gt; expect(detailSpy).toHaveBeenLastCalledWith(
+    'prod-1', 'branch-2', expect.any(AbortSignal)
+  ))
+  expect(screen.getByTestId('detail-location')).toHaveTextContent('?ref=browse&amp;branchId=branch-2')
+})</pre>
+                            <p>Trong test wrapper, render helper dùng <code>useLocation()</code> với <code>data-testid="detail-location"</code> để quan sát URL.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-3" data-section="3"><div class="task-text">
+                            <p><strong>Step 3: Chạy RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/products/ProductDetail.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì chưa tải branch list, chưa có select và chưa cập nhật URL.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-4" data-section="3"><div class="task-text">
+                            <p><strong>Step 4: Cài đặt branch state, selector và URL update</strong></p>
+                            <pre>type BranchState =
+  | { kind: 'loading' }
+  | { kind: 'ready'; data: BranchDto[] }
+  | { kind: 'error' }
+
+const [searchParams, setSearchParams] = useSearchParams()
+const [branchState, setBranchState] = useState&lt;BranchState&gt;({ kind: 'loading' })
+
+function handleBranchChange(event: ChangeEvent&lt;HTMLSelectElement&gt;) {
+  const next = new URLSearchParams(searchParams)
+  const nextBranchId = event.target.value
+  if (nextBranchId) next.set('branchId', nextBranchId)
+  else next.delete('branchId')
+  setSearchParams(next)
+}
+
+&lt;label htmlFor="product-detail-branch"&gt;Kho hàng&lt;/label&gt;
+&lt;select id="product-detail-branch" value={branchId ?? ''}
+  onChange={handleBranchChange}
+  disabled={branchState.kind !== 'ready' || productState.kind === 'loading'}&gt;
+  &lt;option value=""&gt;Chọn kho&lt;/option&gt;
+  {branchState.kind === 'ready' &amp;&amp; branchState.data.map((branch) =&gt; (
+    &lt;option key={branch.id} value={branch.id}&gt;{branch.name}&lt;/option&gt;
+  ))}
+&lt;/select&gt;</pre>
+                            <p>Tạo effect riêng gọi <code>branchApi.getBranches(controller.signal)</code> và abort khi unmount. Không dùng endpoint inventory toàn kho.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-5" data-section="3"><div class="task-text">
+                            <p><strong>Step 5: Normalize branchId không active và chạy GREEN</strong></p>
+                            <pre>useEffect(() =&gt; {
+  if (!branchId || branchState.kind !== 'ready') return
+  if (branchState.data.some((branch) =&gt; branch.id === branchId)) return
+  const next = new URLSearchParams(searchParams)
+  next.delete('branchId')
+  setSearchParams(next, { replace: true })
+}, [branchId, branchState, searchParams, setSearchParams])</pre>
+                            <pre>npm.cmd test -- --run src/features/products/ProductDetail.test.tsx</pre>
+                            <p class="expected">Expected: PASS deep link, đổi kho, bỏ chọn kho và invalid branch tests.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-6" data-section="3"><div class="task-text">
+                            <p><strong>Step 6: Commit branch switching</strong></p>
+                            <pre>git add frontend/src/features/products/ProductDetailPage.tsx frontend/src/features/products/ProductDetail.test.tsx
+git commit -m "feat(frontend): switch product inventory by branch"</pre>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-4">
+                <div class="section-header" onclick="toggleSection(4)">
+                    <div class="section-number" id="section-num-4">4</div>
+                    <div class="section-title">Task 4 — Price, inventory và image states</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Modify <code>ProductDetailPage.tsx</code>; Test <code>ProductDetail.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> <code>basePrice</code>, optional <code>branchInventory.sellingPrice</code>, <code>availableQuantity</code>, <code>imageUrl</code>.</p>
+                        <p><strong>Produces:</strong> Bốn exact price/availability states và deterministic image fallback.</p>
+                    </div>
+                    <table class="data-table">
+                        <thead><tr><th>Input</th><th>Price</th><th>Copy</th></tr></thead>
+                        <tbody>
+                            <tr><td>No branch</td><td>basePrice</td><td>Chọn kho để xem giá và tồn kho</td></tr>
+                            <tr><td>Inventory, quantity &gt; 0</td><td>sellingPrice</td><td>Còn {n} sản phẩm tại kho</td></tr>
+                            <tr><td>Inventory, quantity = 0</td><td>sellingPrice</td><td>Tạm hết hàng tại kho này</td></tr>
+                            <tr><td>Selected branch, inventory null</td><td>basePrice</td><td>Sản phẩm không có tại kho này</td></tr>
+                        </tbody>
+                    </table>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-1" data-section="4"><div class="task-text">
+                            <p><strong>Step 1: Viết parameterized tests fail cho inventory states</strong></p>
+                            <pre>it.each([
+  [undefined, null, 'Chọn kho để xem giá và tồn kho', /22\.990\.000/],
+  ['branch-1', { branchId: 'branch-1', sellingPrice: 21990000, availableQuantity: 7, onHand: 9 }, 'Còn 7 sản phẩm tại kho', /21\.990\.000/],
+  ['branch-1', { branchId: 'branch-1', sellingPrice: 21990000, availableQuantity: 0, onHand: 2 }, 'Tạm hết hàng tại kho này', /21\.990\.000/],
+  ['branch-1', null, 'Sản phẩm không có tại kho này', /22\.990\.000/],
+])('renders price and inventory for branch %s', async (branchId, inventory, message, price) =&gt; {
+  vi.spyOn(branchApi, 'getBranches').mockResolvedValue(branches)
+  vi.spyOn(catalogApi, 'getProductById').mockResolvedValue({ ...mockDetail, branchInventory: inventory })
+  renderDetail(`/product/prod-1${branchId ? `?branchId=${branchId}` : ''}`)
+  expect(await screen.findByText(message)).toBeInTheDocument()
+  expect(screen.getByText(price)).toBeInTheDocument()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-2" data-section="4"><div class="task-text">
+                            <p><strong>Step 2: Viết test fail cho image fallback</strong></p>
+                            <pre>it('falls back when the product image cannot load', async () =&gt; {
+  vi.spyOn(branchApi, 'getBranches').mockResolvedValue([])
+  vi.spyOn(catalogApi, 'getProductById').mockResolvedValue({
+    ...mockDetail, imageUrl: 'https://example.com/broken.jpg',
+  })
+  renderDetail()
+  fireEvent.error(await screen.findByRole('img', { name: 'iPhone 15 128GB' }))
+  expect(screen.getByText('Hình ảnh sản phẩm')).toBeInTheDocument()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-3" data-section="4"><div class="task-text">
+                            <p><strong>Step 3: Chạy RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/products/ProductDetail.test.tsx</pre>
+                            <p class="expected">Expected: FAIL ở branch selling price, inventory messages hoặc fallback image.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-4" data-section="4"><div class="task-text">
+                            <p><strong>Step 4: Cài đặt deterministic availability view</strong></p>
+                            <pre>function getAvailabilityView(product: ProductDetailDto, branchId?: string) {
+  if (!branchId) {
+    return { price: product.basePrice, tone: 'neutral', message: 'Chọn kho để xem giá và tồn kho' }
+  }
+  if (!product.branchInventory) {
+    return { price: product.basePrice, tone: 'unavailable', message: 'Sản phẩm không có tại kho này' }
+  }
+  if (product.branchInventory.availableQuantity === 0) {
+    return { price: product.branchInventory.sellingPrice, tone: 'unavailable', message: 'Tạm hết hàng tại kho này' }
+  }
+  return {
+    price: product.branchInventory.sellingPrice,
+    tone: 'available',
+    message: `Còn ${product.branchInventory.availableQuantity} sản phẩm tại kho`,
+  }
+}</pre>
+                            <p>Dùng <code>imageFailed</code> state; reset false khi <code>product.imageUrl</code> đổi; render placeholder nếu URL null hoặc <code>onError</code> chạy.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-5" data-section="4"><div class="task-text">
+                            <p><strong>Step 5: Chạy GREEN và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/features/products/ProductDetail.test.tsx
+git add frontend/src/features/products/ProductDetailPage.tsx frontend/src/features/products/ProductDetail.test.tsx
+git commit -m "feat(frontend): show branch price and inventory states"</pre>
+                            <p class="expected">Expected: PASS; không tạo low-stock threshold vì DTO không có reorderLevel.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-5">
+                <div class="section-header" onclick="toggleSection(5)">
+                    <div class="section-number" id="section-num-5">5</div>
+                    <div class="section-title">Task 5 — Loading, not-found và retry độc lập</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Modify <code>ProductDetailPage.tsx</code>; Test <code>ProductDetail.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> <code>ApiError.status</code>, product/branch retry counters, AbortSignal.</p>
+                        <p><strong>Produces:</strong> Skeleton, dedicated 404, product retry, inline branch retry, stale-request protection.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-1" data-section="5"><div class="task-text">
+                            <p><strong>Step 1: Viết tests fail cho 404 và product retry</strong></p>
+                            <pre>it('renders a dedicated 404 state', async () =&gt; {
+  vi.spyOn(branchApi, 'getBranches').mockResolvedValue([])
+  vi.spyOn(catalogApi, 'getProductById').mockRejectedValue(new ApiError(404))
+  renderDetail()
+  expect(await screen.findByRole('heading', { name: 'Không tìm thấy sản phẩm' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Quay lại danh sách sản phẩm' }))
+    .toHaveAttribute('href', '/browse')
+})
+
+it('retries a generic product error', async () =&gt; {
+  vi.spyOn(branchApi, 'getBranches').mockResolvedValue([])
+  const detailSpy = vi.spyOn(catalogApi, 'getProductById')
+    .mockRejectedValueOnce(new ApiError(500))
+    .mockResolvedValueOnce(mockDetail)
+  renderDetail()
+  fireEvent.click(await screen.findByRole('button', { name: 'Thử lại' }))
+  expect(await screen.findByRole('heading', { name: 'iPhone 15 128GB' })).toBeInTheDocument()
+  expect(detailSpy).toHaveBeenCalledTimes(2)
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-2" data-section="5"><div class="task-text">
+                            <p><strong>Step 2: Viết test fail cho branch error không che product</strong></p>
+                            <pre>it('keeps product usable when branches fail and retries branches', async () =&gt; {
+  const branchSpy = vi.spyOn(branchApi, 'getBranches')
+    .mockRejectedValueOnce(new ApiError(500))
+    .mockResolvedValueOnce(branches)
+  vi.spyOn(catalogApi, 'getProductById').mockResolvedValue(mockDetail)
+  renderDetail()
+  expect(await screen.findByRole('heading', { name: 'iPhone 15 128GB' })).toBeInTheDocument()
+  expect(screen.getByRole('alert')).toHaveTextContent('Không thể tải danh sách kho')
+  fireEvent.click(screen.getByRole('button', { name: 'Tải lại danh sách kho' }))
+  expect(await screen.findByLabelText('Kho hàng')).toBeEnabled()
+  expect(branchSpy).toHaveBeenCalledTimes(2)
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-3" data-section="5"><div class="task-text">
+                            <p><strong>Step 3: Chạy RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/products/ProductDetail.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì chưa có retry counters và error branches hoàn chỉnh.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-4" data-section="5"><div class="task-text">
+                            <p><strong>Step 4: Cài đặt recovery paths chính xác</strong></p>
+                            <pre>const [productRetryKey, setProductRetryKey] = useState(0)
+const [branchRetryKey, setBranchRetryKey] = useState(0)
+
+// Product effect dependencies: [id, branchId, productRetryKey]
+// Branch effect dependencies: [branchRetryKey]
+
+&lt;button type="button" onClick={() =&gt; setProductRetryKey((value) =&gt; value + 1)}&gt;
+  Thử lại
+&lt;/button&gt;
+
+&lt;div role="alert" className="product-detail__branch-error"&gt;
+  &lt;span&gt;Không thể tải danh sách kho.&lt;/span&gt;
+  &lt;button type="button" onClick={() =&gt; setBranchRetryKey((value) =&gt; value + 1)}&gt;
+    Tải lại danh sách kho
+  &lt;/button&gt;
+&lt;/div&gt;</pre>
+                            <p>Trong mỗi <code>catch</code>, return ngay nếu signal đã abort. Không dùng mock data khi live API lỗi.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-5" data-section="5"><div class="task-text">
+                            <p><strong>Step 5: Chạy GREEN và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/features/products/ProductDetail.test.tsx
+git add frontend/src/features/products/ProductDetailPage.tsx frontend/src/features/products/ProductDetail.test.tsx
+git commit -m "feat(frontend): handle product detail loading and errors"</pre>
+                            <p class="expected">Expected: PASS 404, generic retry, branch retry và loading semantics.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-6">
+                <div class="section-header" onclick="toggleSection(6)">
+                    <div class="section-number" id="section-num-6">6</div>
+                    <div class="section-title">Task 6 — Responsive UI, accessibility và nghiệm thu đầy đủ</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Modify <code>ProductDetailPage.css</code>, refine <code>ProductDetailPage.tsx</code> nếu semantic test yêu cầu; Test all frontend files.</p>
+                        <p><strong>Consumes:</strong> Existing global tokens <code>--forest</code>, <code>--leaf</code>, <code>--mist</code>, <code>--paper</code>, <code>--label</code>, <code>--ink</code>.</p>
+                        <p><strong>Produces:</strong> Two-column desktop, one-column mobile tại 320 px, visible focus, passing suite/build.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-1" data-section="6"><div class="task-text">
+                            <p><strong>Step 1: Thêm semantic/accessibility assertions trước CSS</strong></p>
+                            <pre>it('exposes accessible detail semantics', async () =&gt; {
+  vi.spyOn(branchApi, 'getBranches').mockResolvedValue(branches)
+  vi.spyOn(catalogApi, 'getProductById').mockResolvedValue(mockDetail)
+  renderDetail()
+  expect(await screen.findByRole('navigation', { name: 'Breadcrumb' })).toBeInTheDocument()
+  expect(screen.getByLabelText('Kho hàng')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { level: 1, name: 'iPhone 15 128GB' })).toBeInTheDocument()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-2" data-section="6"><div class="task-text">
+                            <p><strong>Step 2: Chạy focused tests; sửa semantic markup nếu RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/products/ProductDetail.test.tsx src/features/products/ProductBrowse.test.tsx</pre>
+                            <p class="expected">Expected: PASS khi breadcrumb có aria-label, H1 duy nhất, select có label và alerts có role.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-3" data-section="6"><div class="task-text">
+                            <p><strong>Step 3: Hoàn thiện CSS responsive bằng token hiện tại</strong></p>
+                            <pre>.product-detail-page { width: min(1180px, calc(100% - 40px)); margin: 0 auto 64px; }
+.product-detail__layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .9fr); gap: 48px; }
+.product-detail__image-frame { aspect-ratio: 1 / 1; background: var(--paper); overflow: hidden; }
+.product-detail__image { width: 100%; height: 100%; object-fit: contain; }
+.product-detail__purchase-panel { border: 1px solid rgba(11, 61, 46, .2); background: var(--paper); padding: 20px; }
+.product-detail__availability--available { color: var(--leaf); }
+.product-detail__availability--unavailable { color: #b9382a; }
+
+@media (max-width: 760px) {
+  .product-detail-page { width: min(100% - 24px, 640px); }
+  .product-detail__layout { grid-template-columns: 1fr; gap: 24px; }
+}</pre>
+                            <p>Thêm skeleton shimmer có <code>prefers-reduced-motion: reduce</code>, focus-visible cho link/button/select và không tạo horizontal overflow.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-4" data-section="6"><div class="task-text">
+                            <p><strong>Step 4: Chạy toàn bộ frontend test suite</strong></p>
+                            <pre>npm.cmd test -- --run</pre>
+                            <p class="expected">Expected: tất cả Vitest tests PASS, gồm Auth, Account, ProductBrowse, ProductDetail và API contract.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-5" data-section="6"><div class="task-text">
+                            <p><strong>Step 5: Chạy TypeScript và production build</strong></p>
+                            <pre>npm.cmd run build</pre>
+                            <p class="expected">Expected: <code>tsc --noEmit</code> và <code>vite build</code> exit code 0; không có type mismatch.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-6" data-section="6"><div class="task-text">
+                            <p><strong>Step 6: Kiểm tra GUI thủ công theo acceptance matrix</strong></p>
+                            <table class="data-table">
+                                <thead><tr><th>Scenario</th><th>Expected</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Browse không chọn kho → mở card</td><td>URL không branchId; base price + prompt chọn kho.</td></tr>
+                                    <tr><td>Browse chọn kho → middle-click card</td><td>Tab mới giữ branchId và tải selling price/stock.</td></tr>
+                                    <tr><td>Đổi kho trên detail</td><td>URL đổi không reload document; giá/số lượng refetch.</td></tr>
+                                    <tr><td>Back/forward/refresh/copy URL</td><td>Khôi phục đúng kho từ query.</td></tr>
+                                    <tr><td>Inventory null / quantity zero</td><td>Phân biệt “không có tại kho” và “tạm hết hàng”.</td></tr>
+                                    <tr><td>Viewport 320 px và desktop</td><td>Không overflow; single/two-column đúng breakpoint.</td></tr>
+                                    <tr><td>Keyboard-only</td><td>Card link, breadcrumb, select và retry có focus rõ.</td></tr>
+                                </tbody>
+                            </table>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-7" data-section="6"><div class="task-text">
+                            <p><strong>Step 7: Commit hoàn thiện feature</strong></p>
+                            <pre>git add frontend/src/App.tsx frontend/src/api/catalogApi.test.ts frontend/src/features/products/ProductCard.tsx frontend/src/features/products/ProductCard.css frontend/src/features/products/ProductGrid.tsx frontend/src/features/products/ProductBrowsePage.tsx frontend/src/features/products/ProductBrowse.test.tsx frontend/src/features/products/ProductDetailPage.tsx frontend/src/features/products/ProductDetailPage.css frontend/src/features/products/ProductDetail.test.tsx
+git commit -m "feat(frontend): complete product detail branch experience"</pre>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="files-summary">
+                <h3>File map đã khóa</h3>
+                <ul>
+                    <li class="new"><code>frontend/src/features/products/ProductDetailPage.tsx</code> — route page, fetch orchestration, URL branch state và render states.</li>
+                    <li class="new"><code>frontend/src/features/products/ProductDetailPage.css</code> — responsive layout và state styling.</li>
+                    <li class="test"><code>frontend/src/features/products/ProductDetail.test.tsx</code> — route, branch switching, inventory, errors, image và accessibility.</li>
+                    <li class="test"><code>frontend/src/api/catalogApi.test.ts</code> — characterization contract cho detail URL.</li>
+                    <li class="edit"><code>frontend/src/App.tsx</code> — thêm route <code>/product/:id</code>.</li>
+                    <li class="edit"><code>frontend/src/features/products/ProductCard.tsx</code> — native Link và prop branchId.</li>
+                    <li class="edit"><code>frontend/src/features/products/ProductCard.css</code> — link/focus presentation.</li>
+                    <li class="edit"><code>frontend/src/features/products/ProductGrid.tsx</code> — forward branchId, bỏ callback navigation.</li>
+                    <li class="edit"><code>frontend/src/features/products/ProductBrowsePage.tsx</code> — truyền selected branchId.</li>
+                    <li class="test"><code>frontend/src/features/products/ProductBrowse.test.tsx</code> — link semantics và branch preservation.</li>
+                    <li class="read"><code>frontend/src/api/catalogApi.ts</code> — dùng sẵn getProductById; không sửa trừ khi characterization test chứng minh contract lệch.</li>
+                </ul>
+            </section>
+        </main>
+        <footer class="footer">
+            <p><strong>Risk Level:</strong> MEDIUM | <strong>Priority:</strong> HIGH | <strong>Scope:</strong> Frontend-only</p>
+            <p>Definition of Done: native navigation + branch deep link + 4 inventory states + recovery paths + responsive UI + full tests/build pass.</p>
+            <button onclick="checkAll()">Check All</button>
+            <button class="reset" onclick="resetAll()">Reset Progress</button>
+        </footer>
+    </div>
+    <script>
+        const STORAGE_KEY = 'product-detail-branch-switching-progress';
+        const SECTION_COUNT = 6;
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return {};
+            try { return JSON.parse(saved); } catch { return {}; }
+        }
+        function saveProgress(progress) { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }
+        function updateUI() {
+            const progress = loadProgress();
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            const sectionTotal = {};
+            const sectionChecked = {};
+            let checkedCount = 0;
+            checkboxes.forEach((checkbox) => {
+                const taskId = checkbox.dataset.task;
+                const section = checkbox.dataset.section;
+                sectionTotal[section] = (sectionTotal[section] || 0) + 1;
+                checkbox.checked = Boolean(progress[taskId]);
+                const item = checkbox.closest('.task-item');
+                if (checkbox.checked) {
+                    checkedCount += 1;
+                    sectionChecked[section] = (sectionChecked[section] || 0) + 1;
+                    item?.classList.add('checked');
+                } else {
+                    item?.classList.remove('checked');
+                }
+            });
+            for (let section = 1; section <= SECTION_COUNT; section += 1) {
+                const number = document.getElementById(`section-num-${section}`);
+                const done = sectionTotal[section] > 0 && sectionChecked[section] === sectionTotal[section];
+                number?.classList.toggle('done', done);
+                if (number) number.textContent = done ? '✓' : String(section);
+            }
+            const total = checkboxes.length;
+            const percent = total ? Math.round((checkedCount / total) * 100) : 0;
+            document.getElementById('progress-percent').textContent = `${percent}%`;
+            document.getElementById('progress-fill').style.width = `${percent}%`;
+            document.getElementById('checked-count').textContent = String(checkedCount);
+            document.getElementById('total-count').textContent = String(total);
+        }
+        function toggleSection(section) { document.getElementById(`section-${section}`)?.classList.toggle('collapsed'); }
+        function checkAll() {
+            const progress = {};
+            document.querySelectorAll('.task-checkbox').forEach((checkbox) => { progress[checkbox.dataset.task] = true; });
+            saveProgress(progress);
+            updateUI();
+        }
+        function resetAll() {
+            if (!confirm('Reset tất cả tiến độ?')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            updateUI();
+        }
+        document.querySelectorAll('.task-checkbox').forEach((checkbox) => {
+            checkbox.addEventListener('change', function () {
+                const progress = loadProgress();
+                progress[this.dataset.task] = this.checked;
+                saveProgress(progress);
+                updateUI();
+            });
+        });
+        updateUI();
+    </script>
+</body>
+</html>
