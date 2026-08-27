@@ -2,6 +2,7 @@ import type { PropsWithChildren } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiStatus } from '../features/system/ApiStatus'
 import { UserMenu } from '../features/auth/UserMenu'
+import { CartHeaderLink } from '../features/cart/CartHeaderLink'
 
 export function AppShell({ children }: PropsWithChildren) {
   return (
@@ -20,6 +21,7 @@ export function AppShell({ children }: PropsWithChildren) {
           <a href="#roadmap">Lộ trình</a>
         </nav>
         <div className="header-actions">
+          <CartHeaderLink />
           <UserMenu />
           <ApiStatus />
         </div>
