@@ -121,8 +121,9 @@ export interface CartContextValue {
 - While authentication is initializing, the cart remains `idle` and does not request data.
 - After a user is authenticated and an access token exists, the provider loads `GET /api/cart`.
 - Guests never request protected cart endpoints.
-- If the token or user changes, or the provider unmounts, its current `AbortController` is aborted before another load starts.
-- On logout, the in-flight load is aborted and all cart state, locks, flags, and errors are reset.
+- If the token or user changes, or the provider unmounts, the current load controller and every in-flight mutation controller are aborted.
+- On logout, all request controllers are aborted; the detached write queue is reset for the next session; and all cart state, locks, flags, and errors are reset.
+- A monotonically increasing auth-session version guards state writes so a mock or transport that resolves after abort cannot restore a previous user's cart.
 - A failed load renders an explicit retry state; it does not fabricate an empty cart.
 - Mutation failures retain the last successfully displayed cart.
 
@@ -194,7 +195,7 @@ The order summary uses `cart.subtotal` directly. `Tiến hành thanh toán` is a
 - `404` product, item, cart, or branch failures use an action-specific Vietnamese message and offer cart reload when the local snapshot may be stale.
 - `409 INSUFFICIENT_STOCK` includes the response's `availableQuantity`.
 - Generic network or server errors use a safe Vietnamese message and an explicit retry where the failed action is repeatable.
-- Aborted requests never produce visible errors.
+- Aborted load and mutation requests never produce visible errors or stale state writes.
 - Duplicate actions on a mutating row are blocked.
 - All write calls are serialized, and a failure does not prevent later queued calls from running.
 - The UI never rolls a confirmed branch change back after a later add failure.
@@ -252,14 +253,14 @@ Tests use Vitest, Testing Library, and `MemoryRouter`, following the current fro
 
 1. Guests do not load a cart.
 2. Authentication triggers one cart load.
-3. Logout, token change, and unmount abort the current load and prevent stale state writes.
+3. Logout, token change, and unmount abort the current load and every in-flight mutation, reset the detached queue, and prevent stale state writes.
 4. Successful responses replace the current cart.
 5. Load and mutation failures do not fabricate or wipe a previously displayed cart.
 6. Write requests are serialized and full-cart responses cannot overwrite state out of order.
 7. `mutatingItemIds` disables the affected row's decrement, increment, input, and remove controls while the item is mutating.
 8. A row's controls are re-enabled after mutation success.
 9. A row's controls are re-enabled after mutation failure.
-10. All flags and locks reset on logout.
+10. All flags and locks reset on logout, even when an aborted transport resolves later.
 
 ### Product detail integration
 

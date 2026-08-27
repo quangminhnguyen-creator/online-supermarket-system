@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan: Frontend - Giỏ Hàng Mua Sắm</title>
+    <style>
+        :root {
+            --forest: #0b3d2e;
+            --leaf: #1f7a4d;
+            --mist: #e8f1ed;
+            --paper: #f9fbf4;
+            --label: #f49b45;
+            --ink: #132a23;
+            --danger: #b9382a;
+            --blue: #245f8f;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--ink);
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, .08);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--forest), var(--leaf));
+            color: white;
+            padding: 32px;
+        }
+        .header h1 { font-size: 26px; margin-bottom: 8px; }
+        .header p { opacity: .92; font-size: 14px; }
+        .status-bar {
+            background: var(--leaf);
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .progress-container { flex: 1; max-width: 340px; }
+        .progress-bar { height: 8px; background: rgba(255, 255, 255, .3); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0; background: white; transition: width .3s ease; }
+        .progress-text { font-size: 13px; margin-top: 4px; }
+        .content { padding: 32px; }
+        .overview {
+            background: var(--paper);
+            border: 1px solid var(--mist);
+            border-left: 5px solid var(--label);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+        .overview h2 { color: var(--forest); font-size: 19px; margin-bottom: 10px; }
+        .overview h3 { margin-top: 16px; color: var(--forest); font-size: 15px; }
+        .overview p, .overview li { font-size: 14px; }
+        .overview ul { margin: 8px 0 0 22px; }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 24px;
+            margin-top: 14px;
+            font-size: 13px;
+        }
+        code {
+            background: var(--mist);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--forest);
+            font-size: 13px;
+        }
+        .section {
+            margin-bottom: 28px;
+            border: 1px solid var(--mist);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--paper);
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid var(--mist);
+        }
+        .section-header:hover { background: var(--mist); }
+        .section-number {
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            background: var(--forest);
+            color: white;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .section-number.done { background: var(--leaf); }
+        .section-title { font-size: 17px; font-weight: 650; color: var(--forest); flex: 1; }
+        .section-toggle { font-size: 20px; color: #777; transition: transform .2s; }
+        .section.collapsed .section-toggle { transform: rotate(-90deg); }
+        .section.collapsed .section-content { display: none; }
+        .section-content { padding: 20px; }
+        .interfaces {
+            background: #f6faf8;
+            border: 1px dashed rgba(11, 61, 46, .3);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            font-size: 13px;
+        }
+        .interfaces p + p { margin-top: 4px; }
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            margin-bottom: 9px;
+            background: var(--paper);
+            border-radius: 8px;
+            border: 1px solid var(--mist);
+        }
+        .task-item:hover { border-color: var(--leaf); }
+        .task-item.checked { opacity: .58; background: #f0f0f0; }
+        .task-item.checked .task-text > p:first-child { text-decoration: line-through; }
+        .task-checkbox { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; accent-color: var(--leaf); }
+        .task-text { flex: 1; min-width: 0; }
+        .task-text p { margin: 3px 0; }
+        .task-text ul { margin: 8px 0 0 22px; }
+        pre {
+            background: #1a1a2e;
+            color: #d5edf0;
+            padding: 14px 16px;
+            border-radius: 7px;
+            overflow-x: auto;
+            font: 12px/1.55 "Cascadia Code", Consolas, monospace;
+            margin: 9px 0;
+            white-space: pre;
+        }
+        .expected { color: var(--blue); font-size: 13px; font-weight: 650; }
+        .warning { color: var(--danger); font-size: 13px; font-weight: 650; }
+        .data-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+        .data-table th { background: var(--forest); color: white; padding: 9px 11px; text-align: left; }
+        .data-table td { padding: 8px 11px; border-bottom: 1px solid var(--mist); vertical-align: top; }
+        .data-table tr:nth-child(even) { background: var(--paper); }
+        .files-summary { background: var(--mist); padding: 18px; border-radius: 8px; margin-top: 20px; }
+        .files-summary h3 { color: var(--forest); font-size: 16px; margin-bottom: 9px; }
+        .files-summary ul { list-style: none; font-size: 13px; }
+        .files-summary li { padding: 4px 0; }
+        .files-summary li::before { display: inline-block; width: 24px; }
+        .files-summary li.new::before { content: "✨"; }
+        .files-summary li.edit::before { content: "✏️"; }
+        .files-summary li.test::before { content: "🧪"; }
+        .files-summary li.read::before { content: "🔎"; }
+        .footer { background: var(--mist); padding: 22px 32px; text-align: center; font-size: 13px; color: #596963; }
+        .footer button {
+            border: 0;
+            border-radius: 6px;
+            background: var(--leaf);
+            color: white;
+            padding: 10px 22px;
+            margin: 12px 4px 0;
+            cursor: pointer;
+            font-weight: 650;
+        }
+        .footer button.reset { background: var(--danger); }
+        @media (max-width: 700px) {
+            body { padding: 16px 10px; }
+            .content, .header, .status-bar { padding-left: 18px; padding-right: 18px; }
+            .meta-grid { grid-template-columns: 1fr; }
+            .section-header { align-items: flex-start; }
+            .task-item { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Frontend - Giỏ Hàng Mua Sắm</h1>
+            <p>Route: /shopping/cart | API: /api/cart, /api/cart/items, /api/cart/change-branch | FR-107</p>
+        </header>
+        <div class="status-bar">
+            <div><strong>Tiến độ:</strong> <span id="progress-percent">0%</span></div>
+            <div class="progress-container">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                <div class="progress-text"><span id="checked-count">0</span> / <span id="total-count">0</span> bước hoàn thành</div>
+            </div>
+        </div>
+        <main class="content">
+            <section class="overview">
+                <h2>Shopping Cart Frontend Implementation Plan</h2>
+                <p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: dùng <code>superpowers:subagent-driven-development</code> (khuyến nghị) hoặc <code>superpowers:executing-plans</code> để thực thi từng task. Checkbox trong file này là nguồn theo dõi tiến độ.</p>
+                <div class="meta-grid">
+                    <p><strong>Goal:</strong> Tạo giỏ hàng frontend-only, đồng bộ server, có badge header, thêm từ Product Detail, đổi kho an toàn và quản lý đầy đủ item.</p>
+                    <p><strong>Spec:</strong> <code>docs/superpowers/specs/2026-08-27-shopping-cart-frontend-design.md</code></p>
+                    <p><strong>Architecture:</strong> <code>CartProvider</code> là owner duy nhất của cart state; backend là source of truth; mọi write được serialize.</p>
+                    <p><strong>Tech stack:</strong> React 19.2.8, TypeScript 5.9.3, React Router 7.18.2, Vite 7.3.6, Vitest 4.1.10, Testing Library 16.3.2.</p>
+                </div>
+                <h3>Global Constraints</h3>
+                <ul>
+                    <li>Frontend-only; không sửa backend, database, DTO hoặc endpoint hiện tại.</li>
+                    <li>Tất cả cart request gửi Bearer JWT; guest không gọi API cart và không có anonymous/localStorage cart.</li>
+                    <li>Không thêm dependency, optimistic update, N+1 product-detail request, checkout, promotion, shipping hoặc payment.</li>
+                    <li>Cart response từ backend thay toàn bộ cart state; mutation lỗi phải giữ snapshot thành công gần nhất.</li>
+                    <li><code>changeBranch</code> và <code>addItem</code> luôn là hai request tuần tự; không rollback kho khi add thất bại.</li>
+                    <li>Write request phải serialize; request load cũ phải abort khi token/user đổi, logout hoặc unmount.</li>
+                    <li>Copy giao diện bằng tiếng Việt; responsive từ 320 px; dialog, loading, error và quantity controls phải accessible.</li>
+                    <li>Mỗi task thực hiện RED → GREEN → REFACTOR → COMMIT và không stage thay đổi ngoài scope.</li>
+                </ul>
+                <h3>API Contract Đã Xác Nhận</h3>
+                <table class="data-table">
+                    <thead><tr><th>Action</th><th>Request</th><th>Success</th></tr></thead>
+                    <tbody>
+                        <tr><td>Load</td><td>GET /api/cart</td><td>200 CartDto</td></tr>
+                        <tr><td>Add</td><td>POST /api/cart/items { productId, quantity }</td><td>200 CartDto</td></tr>
+                        <tr><td>Update</td><td>PUT /api/cart/items/{itemId} { quantity }</td><td>200 CartDto</td></tr>
+                        <tr><td>Remove</td><td>DELETE /api/cart/items/{itemId}</td><td>200 CartDto</td></tr>
+                        <tr><td>Change branch</td><td>POST /api/cart/change-branch { branchId }</td><td>200 CartDto</td></tr>
+                        <tr><td>Clear</td><td>DELETE /api/cart</td><td>204 No Content</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="section" id="section-1">
+                <div class="section-header" onclick="toggleSection(1)">
+                    <div class="section-number" id="section-num-1">1</div>
+                    <div class="section-title">Task 1 — Cart API client và contract tests</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Create <code>frontend/src/api/cartApi.ts</code>, <code>frontend/src/api/cartApi.test.ts</code>.</p>
+                        <p><strong>Consumes:</strong> <code>getJson</code>, <code>postJson</code>, <code>putJson</code>, <code>deleteJson</code> từ <code>httpClient.ts</code>.</p>
+                        <p><strong>Produces:</strong> Exact DTO/request types và <code>cartApi.getCart/addItem/updateItem/removeItem/changeBranch/clearCart</code>.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-1" data-section="1"><div class="task-text">
+                            <p><strong>Step 1: Viết failing tests cho method, URL, token và body</strong></p>
+                            <pre>function jsonResponse(data: unknown) {
+  return new Response(JSON.stringify(data), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+const token = 'jwt-token'
+const cartResponse: CartDto = {
+  id: 'cart-1', userId: 'user-1', branchId: 'branch-1',
+  items: [], totalItems: 0, subtotal: 0,
+}
+
+it('adds an item with bearer token and exact body', async () =&gt; {
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse(cartResponse))
+  vi.stubGlobal('fetch', fetchMock)
+
+  await cartApi.addItem({ productId: 'prod-1', quantity: 2 }, token)
+
+  expect(fetchMock).toHaveBeenCalledWith('/api/cart/items', expect.objectContaining({
+    method: 'POST',
+    headers: expect.objectContaining({ Authorization: 'Bearer jwt-token' }),
+    body: JSON.stringify({ productId: 'prod-1', quantity: 2 }),
+  }))
+})
+
+it('loads the current cart with GET', async () =&gt; {
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse(cartResponse))
+  vi.stubGlobal('fetch', fetchMock)
+  await cartApi.getCart(token)
+  expect(fetchMock).toHaveBeenCalledWith('/api/cart', expect.objectContaining({
+    headers: expect.objectContaining({ Authorization: 'Bearer jwt-token' }),
+  }))
+})
+
+it('removes an item with DELETE', async () =&gt; {
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse(cartResponse))
+  vi.stubGlobal('fetch', fetchMock)
+  await cartApi.removeItem('item-1', token)
+  expect(fetchMock).toHaveBeenCalledWith('/api/cart/items/item-1', expect.objectContaining({
+    method: 'DELETE',
+    headers: expect.objectContaining({ Authorization: 'Bearer jwt-token' }),
+  }))
+})</pre>
+                            <p class="expected">Expected RED: module <code>cartApi</code> chưa tồn tại.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-2" data-section="1"><div class="task-text">
+                            <p><strong>Step 2: Chạy test để xác nhận RED</strong></p>
+                            <pre>Set-Location frontend
+npm.cmd test -- --run src/api/cartApi.test.ts</pre>
+                            <p class="expected">Expected: FAIL vì không resolve được <code>./cartApi</code>.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-3" data-section="1"><div class="task-text">
+                            <p><strong>Step 3: Khai báo exact contract và sáu API functions</strong></p>
+                            <pre>export interface CartDto {
+  id: string
+  userId: string
+  branchId: string
+  items: CartItemDto[]
+  totalItems: number
+  subtotal: number
+}
+
+export interface CartItemDto {
+  id: string
+  productId: string
+  productName: string
+  sku: string
+  unitPrice: number
+  quantity: number
+  lineTotal: number
+  availableQuantity: number
+}
+
+export interface AddCartItemRequest { productId: string; quantity: number }
+export interface UpdateCartItemRequest { quantity: number }
+export interface ChangeCartBranchRequest { branchId: string }
+
+export const cartApi = {
+  getCart: (token: string, signal?: AbortSignal) =&gt;
+    getJson&lt;CartDto&gt;('/cart', { token, signal }),
+  addItem: (data: AddCartItemRequest, token: string, signal?: AbortSignal) =&gt;
+    postJson&lt;CartDto&gt;('/cart/items', data, { token, signal }),
+  updateItem: (itemId: string, data: UpdateCartItemRequest, token: string, signal?: AbortSignal) =&gt;
+    putJson&lt;CartDto&gt;('/cart/items/' + encodeURIComponent(itemId), data, { token, signal }),
+  removeItem: (itemId: string, token: string, signal?: AbortSignal) =&gt;
+    deleteJson&lt;CartDto&gt;('/cart/items/' + encodeURIComponent(itemId), { token, signal }),
+  changeBranch: (data: ChangeCartBranchRequest, token: string, signal?: AbortSignal) =&gt;
+    postJson&lt;CartDto&gt;('/cart/change-branch', data, { token, signal }),
+  clearCart: async (token: string, signal?: AbortSignal): Promise&lt;void&gt; =&gt; {
+    await deleteJson&lt;Record&lt;string, never&gt;&gt;('/cart', { token, signal })
+  },
+}</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-4" data-section="1"><div class="task-text">
+                            <p><strong>Step 4: Bổ sung contract cases còn lại và response 204</strong></p>
+                            <pre>it('updates quantity with PUT', async () =&gt; {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(cartResponse)))
+  await cartApi.updateItem('item-1', { quantity: 3 }, token)
+  expect(fetch).toHaveBeenCalledWith('/api/cart/items/item-1', expect.objectContaining({
+    method: 'PUT',
+    body: JSON.stringify({ quantity: 3 }),
+  }))
+})
+
+it('changes branch with POST', async () =&gt; {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(cartResponse)))
+  await cartApi.changeBranch({ branchId: 'branch-2' }, token)
+  expect(fetch).toHaveBeenCalledWith('/api/cart/change-branch', expect.objectContaining({
+    method: 'POST',
+    body: JSON.stringify({ branchId: 'branch-2' }),
+  }))
+})
+
+it('accepts empty 204 when clearing cart', async () =&gt; {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })))
+  await expect(cartApi.clearCart(token)).resolves.toBeUndefined()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-5" data-section="1"><div class="task-text">
+                            <p><strong>Step 5: Chạy GREEN, build type-check và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/api/cartApi.test.ts
+npm.cmd run build
+git add frontend/src/api/cartApi.ts frontend/src/api/cartApi.test.ts
+git commit -m "feat(frontend): add cart API client"</pre>
+                            <p class="expected">Expected: contract tests PASS; TypeScript interfaces khớp backend; production build PASS.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-2">
+                <div class="section-header" onclick="toggleSection(2)">
+                    <div class="section-number" id="section-num-2">2</div>
+                    <div class="section-title">Task 2 — CartProvider lifecycle, auth và stale-request protection</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Create <code>frontend/src/features/cart/CartContext.tsx</code>, <code>frontend/src/features/cart/CartContext.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> <code>useAuth().user/accessToken/isAuthenticated/isLoading</code>, <code>cartApi.getCart(token, signal)</code>.</p>
+                        <p><strong>Produces:</strong> <code>CartProvider</code>, <code>useCart()</code>, <code>CartStatus</code>, <code>CartContextValue</code> với load/retry/reset lifecycle.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-1" data-section="2"><div class="task-text">
+                            <p><strong>Step 1: Viết test harness và failing lifecycle tests</strong></p>
+                            <pre>vi.mock('../auth/AuthContext', () =&gt; ({ useAuth: vi.fn() }))
+vi.mock('../../api/cartApi', async (importOriginal) =&gt; {
+  const actual = await importOriginal&lt;typeof import('../../api/cartApi')&gt;()
+  return {
+    ...actual,
+    cartApi: {
+      getCart: vi.fn(), addItem: vi.fn(), updateItem: vi.fn(),
+      removeItem: vi.fn(), changeBranch: vi.fn(), clearCart: vi.fn(),
+    },
+  }
+})
+
+const useAuthMock = vi.mocked(useAuth)
+const guestAuth: ReturnType&lt;typeof useAuth&gt; = {
+  user: null, accessToken: null, isAuthenticated: false, isLoading: false,
+  login: vi.fn(), register: vi.fn(), logout: vi.fn(),
+  updateUser: vi.fn(), refreshUser: vi.fn(),
+}
+const authenticatedAuth: ReturnType&lt;typeof useAuth&gt; = {
+  ...guestAuth,
+  user: {
+    id: 'user-1', email: 'user@example.com',
+    fullName: 'Người mua', role: 'Customer',
+  },
+  accessToken: 'jwt-token',
+  isAuthenticated: true,
+}
+const cartItem1: CartItemDto = {
+  id: 'item-1', productId: 'prod-1', productName: 'Sản phẩm 1',
+  sku: 'SKU-1', unitPrice: 100, quantity: 1,
+  lineTotal: 100, availableQuantity: 10,
+}
+const cartItem2: CartItemDto = {
+  id: 'item-2', productId: 'prod-2', productName: 'Sản phẩm 2',
+  sku: 'SKU-2', unitPrice: 200, quantity: 1,
+  lineTotal: 200, availableQuantity: 10,
+}
+const cartResponse: CartDto = {
+  id: 'cart-1', userId: 'user-1', branchId: 'branch-1',
+  items: [cartItem1, cartItem2], totalItems: 2, subtotal: 300,
+}
+const cartWithItem1Updated: CartDto = {
+  ...cartResponse,
+  items: [{ ...cartItem1, quantity: 2, lineTotal: 200 }, cartItem2],
+  totalItems: 3,
+  subtotal: 400,
+}
+const cartWithBothItemsUpdated: CartDto = {
+  ...cartResponse,
+  items: [
+    { ...cartItem1, quantity: 2, lineTotal: 200 },
+    { ...cartItem2, quantity: 3, lineTotal: 600 },
+  ],
+  totalItems: 5,
+  subtotal: 800,
+}
+const updatedCart = cartWithItem1Updated
+
+function deferred&lt;T&gt;() {
+  let resolve!: (value: T) =&gt; void
+  let reject!: (reason?: unknown) =&gt; void
+  const promise = new Promise&lt;T&gt;((res, rej) =&gt; {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
+}
+
+function CartProbe() {
+  const { status, cart, errorMessage, reloadCart } = useCart()
+  return (
+    &lt;&gt;
+      &lt;output data-testid="status"&gt;{status}&lt;/output&gt;
+      &lt;output data-testid="total"&gt;{cart?.totalItems ?? 'none'}&lt;/output&gt;
+      &lt;output data-testid="error"&gt;{errorMessage ?? ''}&lt;/output&gt;
+      &lt;button onClick={() =&gt; void reloadCart()}&gt;reload&lt;/button&gt;
+    &lt;/&gt;
+  )
+}
+
+it('does not load cart for a guest', () =&gt; {
+  useAuthMock.mockReturnValue(guestAuth)
+  render(&lt;CartProvider&gt;&lt;CartProbe /&gt;&lt;/CartProvider&gt;)
+  expect(cartApi.getCart).not.toHaveBeenCalled()
+  expect(screen.getByTestId('status')).toHaveTextContent('idle')
+})
+
+it('loads cart once after authentication', async () =&gt; {
+  useAuthMock.mockReturnValue(authenticatedAuth)
+  vi.mocked(cartApi.getCart).mockResolvedValue(cartResponse)
+  render(&lt;CartProvider&gt;&lt;CartProbe /&gt;&lt;/CartProvider&gt;)
+  expect(await screen.findByTestId('total')).toHaveTextContent('0')
+  expect(cartApi.getCart).toHaveBeenCalledWith('jwt-token', expect.any(AbortSignal))
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-2" data-section="2"><div class="task-text">
+                            <p><strong>Step 2: Chạy RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/cart/CartContext.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì <code>CartContext.tsx</code> chưa tồn tại.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-3" data-section="2"><div class="task-text">
+                            <p><strong>Step 3: Tạo state contract, provider và authenticated load</strong></p>
+                            <pre>export type CartStatus = 'idle' | 'loading' | 'ready' | 'error'
+
+export interface CartContextValue {
+  status: CartStatus
+  cart: CartDto | null
+  errorMessage: string | null
+  reloadCart: () =&gt; Promise&lt;void&gt;
+}
+
+const [status, setStatus] = useState&lt;CartStatus&gt;('idle')
+const [cart, setCart] = useState&lt;CartDto | null&gt;(null)
+const [errorMessage, setErrorMessage] = useState&lt;string | null&gt;(null)
+const loadAbortRef = useRef&lt;AbortController | null&gt;(null)
+const loadVersionRef = useRef(0)
+
+const resetCartState = useCallback(() =&gt; {
+  setStatus('idle')
+  setCart(null)
+  setErrorMessage(null)
+}, [])
+
+const startLoad = useCallback(async (token: string) =&gt; {
+  const controller = new AbortController()
+  const requestVersion = ++loadVersionRef.current
+  loadAbortRef.current?.abort()
+  loadAbortRef.current = controller
+  setStatus('loading')
+  setErrorMessage(null)
+  try {
+    const data = await cartApi.getCart(token, controller.signal)
+    if (!controller.signal.aborted &amp;&amp; requestVersion === loadVersionRef.current) {
+      setCart(data)
+      setStatus('ready')
+    }
+  } catch (error) {
+    if (!controller.signal.aborted &amp;&amp; requestVersion === loadVersionRef.current) {
+      setErrorMessage('Không thể tải giỏ hàng.')
+      setStatus('error')
+    }
+  }
+}, [])
+
+const reloadCart = useCallback(async () =&gt; {
+  if (accessToken) await startLoad(accessToken)
+}, [accessToken, startLoad])
+
+useEffect(() =&gt; {
+  if (isLoading) return
+  if (!isAuthenticated || !user || !accessToken) {
+    loadVersionRef.current += 1
+    loadAbortRef.current?.abort()
+    resetCartState()
+    return
+  }
+  void startLoad(accessToken)
+  return () =&gt; loadAbortRef.current?.abort()
+}, [
+  accessToken, isAuthenticated, isLoading,
+  resetCartState, startLoad, user?.id,
+])</pre>
+                            <p>Task này chỉ xuất load state và <code>reloadCart</code>. Task 3 mở rộng cùng interface bằng mutation state/actions sau khi đã có RED tests tương ứng.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-4" data-section="2"><div class="task-text">
+                            <p><strong>Step 4: Thêm abort/logout/error/retry regression tests</strong></p>
+                            <pre>it('aborts an in-flight load on logout and ignores its result', async () =&gt; {
+  const deferredCart = deferred&lt;CartDto&gt;()
+  let capturedSignal: AbortSignal | undefined
+  vi.mocked(cartApi.getCart).mockImplementation((_token, signal) =&gt; {
+    capturedSignal = signal
+    return deferredCart.promise
+  })
+  useAuthMock.mockReturnValue(authenticatedAuth)
+  const view = render(&lt;CartProvider&gt;&lt;CartProbe /&gt;&lt;/CartProvider&gt;)
+  await waitFor(() =&gt; expect(capturedSignal).toBeDefined())
+
+  useAuthMock.mockReturnValue(guestAuth)
+  view.rerender(&lt;CartProvider&gt;&lt;CartProbe /&gt;&lt;/CartProvider&gt;)
+
+  expect(capturedSignal?.aborted).toBe(true)
+  expect(screen.getByTestId('status')).toHaveTextContent('idle')
+  deferredCart.resolve(cartResponse)
+  await waitFor(() =&gt; expect(screen.getByTestId('status')).toHaveTextContent('idle'))
+})
+
+it('keeps an explicit error state and retries load', async () =&gt; {
+  vi.mocked(cartApi.getCart)
+    .mockRejectedValueOnce(new ApiError(500))
+    .mockResolvedValueOnce(cartResponse)
+  render(&lt;CartProvider&gt;&lt;CartProbe /&gt;&lt;/CartProvider&gt;)
+  expect(await screen.findByTestId('status')).toHaveTextContent('error')
+  fireEvent.click(screen.getByRole('button', { name: 'reload' }))
+  expect(await screen.findByTestId('status')).toHaveTextContent('ready')
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-5" data-section="2"><div class="task-text">
+                            <p><strong>Step 5: Chạy GREEN và commit lifecycle provider</strong></p>
+                            <pre>npm.cmd test -- --run src/features/cart/CartContext.test.tsx
+git add frontend/src/features/cart/CartContext.tsx frontend/src/features/cart/CartContext.test.tsx
+git commit -m "feat(frontend): add authenticated cart provider"</pre>
+                            <p class="expected">Expected: guest/auth/load/error/retry/abort/logout tests PASS; aborted request không tạo visible error.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-3">
+                <div class="section-header" onclick="toggleSection(3)">
+                    <div class="section-number" id="section-num-3">3</div>
+                    <div class="section-title">Task 3 — Serialized mutations và per-item locks</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Modify <code>CartContext.tsx</code>; Test <code>CartContext.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> Cart API functions từ Task 1 và authenticated token/lifecycle từ Task 2.</p>
+                        <p><strong>Produces:</strong> Năm mutation actions server-authoritative, FIFO write queue, immutable <code>ReadonlySet</code>, failure-safe flags.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-1" data-section="3"><div class="task-text">
+                            <p><strong>Step 1: Viết failing tests cho response replacement và FIFO queue</strong></p>
+                            <pre>function MutationProbe() {
+  const cartContext = useCart()
+  return (
+    &lt;&gt;
+      &lt;output data-testid="total"&gt;{cartContext.cart?.totalItems ?? 'none'}&lt;/output&gt;
+      &lt;output data-testid="locked-item-1"&gt;
+        {String(cartContext.mutatingItemIds.has('item-1'))}
+      &lt;/output&gt;
+      &lt;output data-testid="adding"&gt;{String(cartContext.isAddingItem)}&lt;/output&gt;
+      &lt;button onClick={() =&gt;
+        void cartContext.updateItemQuantity('item-1', 2).catch(() =&gt; undefined)}&gt;
+        update-item-1
+      &lt;/button&gt;
+      &lt;button onClick={() =&gt;
+        void cartContext.updateItemQuantity('item-2', 3).catch(() =&gt; undefined)}&gt;
+        update-item-2
+      &lt;/button&gt;
+      &lt;button onClick={() =&gt;
+        void cartContext.removeItem('item-1').catch(() =&gt; undefined)}&gt;
+        remove-item-1
+      &lt;/button&gt;
+      &lt;button onClick={() =&gt;
+        void cartContext.addItem('prod-1', 1).catch(() =&gt; undefined)}&gt;
+        add-prod-1
+      &lt;/button&gt;
+    &lt;/&gt;
+  )
+}
+
+async function renderAuthenticatedMutationProbe() {
+  useAuthMock.mockReturnValue(authenticatedAuth)
+  vi.mocked(cartApi.getCart).mockResolvedValue(cartResponse)
+  const view = render(&lt;CartProvider&gt;&lt;MutationProbe /&gt;&lt;/CartProvider&gt;)
+  await waitFor(() =&gt;
+    expect(screen.getByTestId('total')).not.toHaveTextContent('none'))
+  return view
+}
+
+it('serializes writes and applies responses in request order', async () =&gt; {
+  const first = deferred&lt;CartDto&gt;()
+  const second = deferred&lt;CartDto&gt;()
+  vi.mocked(cartApi.updateItem)
+    .mockReturnValueOnce(first.promise)
+    .mockReturnValueOnce(second.promise)
+
+  await renderAuthenticatedMutationProbe()
+  fireEvent.click(screen.getByRole('button', { name: 'update-item-1' }))
+  fireEvent.click(screen.getByRole('button', { name: 'update-item-2' }))
+  expect(cartApi.updateItem).toHaveBeenCalledTimes(1)
+
+  first.resolve(cartWithItem1Updated)
+  await waitFor(() =&gt; expect(cartApi.updateItem).toHaveBeenCalledTimes(2))
+  second.resolve(cartWithBothItemsUpdated)
+  expect(await screen.findByTestId('total')).toHaveTextContent('5')
+})
+
+it('preserves the last cart when a mutation fails', async () =&gt; {
+  vi.mocked(cartApi.removeItem).mockRejectedValue(new ApiError(500))
+  await renderAuthenticatedMutationProbe()
+  fireEvent.click(screen.getByRole('button', { name: 'remove-item-1' }))
+  expect(await screen.findByTestId('total')).toHaveTextContent('2')
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-2" data-section="3"><div class="task-text">
+                            <p><strong>Step 2: Chạy RED cho mutation suite</strong></p>
+                            <pre>npm.cmd test -- --run src/features/cart/CartContext.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì actions chưa gọi API/serialize và locks chưa chuyển trạng thái.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-3" data-section="3"><div class="task-text">
+                            <p><strong>Step 3: Cài mutation queue và helper lock bất biến</strong></p>
+                            <pre>export interface CartContextValue {
+  status: CartStatus
+  cart: CartDto | null
+  errorMessage: string | null
+  mutatingItemIds: ReadonlySet&lt;string&gt;
+  isAddingItem: boolean
+  isChangingBranch: boolean
+  isClearing: boolean
+  reloadCart: () =&gt; Promise&lt;void&gt;
+  addItem: (productId: string, quantity: number) =&gt; Promise&lt;CartDto&gt;
+  updateItemQuantity: (itemId: string, quantity: number) =&gt; Promise&lt;CartDto&gt;
+  removeItem: (itemId: string) =&gt; Promise&lt;CartDto&gt;
+  changeBranch: (branchId: string) =&gt; Promise&lt;CartDto&gt;
+  clearCart: () =&gt; Promise&lt;void&gt;
+}
+
+const mutationQueueRef = useRef&lt;Promise&lt;void&gt;&gt;(Promise.resolve())
+const mutationControllersRef = useRef(new Set&lt;AbortController&gt;())
+const sessionVersionRef = useRef(0)
+
+function requireAccessToken() {
+  if (!accessToken) {
+    throw new ApiError(401, { message: 'AUTH_REQUIRED' }, 'Authentication required')
+  }
+  return accessToken
+}
+
+function enqueueMutation&lt;T&gt;(operation: () =&gt; Promise&lt;T&gt;): Promise&lt;T&gt; {
+  const run = mutationQueueRef.current.then(operation, operation)
+  mutationQueueRef.current = run.then(() =&gt; undefined, () =&gt; undefined)
+  return run
+}
+
+function setItemMutating(itemId: string, active: boolean) {
+  setMutatingItemIds((current) =&gt; {
+    const next = new Set(current)
+    if (active) next.add(itemId)
+    else next.delete(itemId)
+    return next
+  })
+}
+
+async function runItemMutation(
+  itemId: string,
+  request: (token: string, signal: AbortSignal) =&gt; Promise&lt;CartDto&gt;
+): Promise&lt;CartDto&gt; {
+  const token = requireAccessToken()
+  const controller = new AbortController()
+  const requestVersion = sessionVersionRef.current
+  mutationControllersRef.current.add(controller)
+  setItemMutating(itemId, true)
+  try {
+    const next = await enqueueMutation(() =&gt; request(token, controller.signal))
+    if (!controller.signal.aborted &amp;&amp; requestVersion === sessionVersionRef.current) {
+      setCart(next)
+    }
+    return next
+  } finally {
+    mutationControllersRef.current.delete(controller)
+    setItemMutating(itemId, false)
+  }
+}
+
+async function runGlobalMutation(
+  setFlag: React.Dispatch&lt;React.SetStateAction&lt;boolean&gt;&gt;,
+  request: (token: string, signal: AbortSignal) =&gt; Promise&lt;CartDto&gt;
+): Promise&lt;CartDto&gt; {
+  const token = requireAccessToken()
+  const controller = new AbortController()
+  const requestVersion = sessionVersionRef.current
+  mutationControllersRef.current.add(controller)
+  setFlag(true)
+  try {
+    const next = await enqueueMutation(() =&gt; request(token, controller.signal))
+    if (!controller.signal.aborted &amp;&amp; requestVersion === sessionVersionRef.current) {
+      setCart(next)
+    }
+    return next
+  } finally {
+    mutationControllersRef.current.delete(controller)
+    setFlag(false)
+  }
+}</pre>
+                            <p>Khi logout/user/token đổi: tăng <code>sessionVersionRef</code>, abort load controller và toàn bộ <code>mutationControllersRef</code>, clear controller set, reset queue về <code>Promise.resolve()</code>, rồi reset cart/locks/flags. Guard version ngăn mock hoặc transport không tuân thủ abort ghi state cũ.</p>
+                            <pre>useEffect(() =&gt; {
+  const abortSessionMutations = () =&gt; {
+    sessionVersionRef.current += 1
+    mutationControllersRef.current.forEach((controller) =&gt; controller.abort())
+    mutationControllersRef.current.clear()
+    mutationQueueRef.current = Promise.resolve()
+  }
+
+  abortSessionMutations()
+  setMutatingItemIds(new Set())
+  setIsAddingItem(false)
+  setIsChangingBranch(false)
+  setIsClearing(false)
+
+  return abortSessionMutations
+}, [accessToken, isAuthenticated, user?.id])</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-4" data-section="3"><div class="task-text">
+                            <p><strong>Step 4: Cài năm actions và clear từ response 204</strong></p>
+                            <pre>const updateItemQuantity = (itemId: string, quantity: number) =&gt;
+  runItemMutation(itemId, (token, signal) =&gt;
+    cartApi.updateItem(itemId, { quantity }, token, signal))
+
+const removeItem = (itemId: string) =&gt;
+  runItemMutation(itemId, (token, signal) =&gt;
+    cartApi.removeItem(itemId, token, signal))
+
+const addItem = (productId: string, quantity: number) =&gt;
+  runGlobalMutation(setIsAddingItem, (token, signal) =&gt;
+    cartApi.addItem({ productId, quantity }, token, signal))
+
+const changeBranch = (branchId: string) =&gt;
+  runGlobalMutation(setIsChangingBranch, (token, signal) =&gt;
+    cartApi.changeBranch({ branchId }, token, signal))
+
+const clearCart = async () =&gt; {
+  const current = cart
+  if (!current) return
+  await runGlobalMutation(setIsClearing, async (token, signal) =&gt; {
+    await cartApi.clearCart(token, signal)
+    return { ...current, items: [], totalItems: 0, subtotal: 0 }
+  })
+}</pre>
+                            <p>Mọi helper phải đặt flag trước khi enqueue, dùng <code>finally</code> để reset, và không gọi <code>setCart</code> trong nhánh catch.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-5" data-section="3"><div class="task-text">
+                            <p><strong>Step 5: Bổ sung lock success/failure/logout tests</strong></p>
+                            <pre>it('adds and removes an item id from mutatingItemIds on success', async () =&gt; {
+  const deferredUpdate = deferred&lt;CartDto&gt;()
+  vi.mocked(cartApi.updateItem).mockReturnValue(deferredUpdate.promise)
+  await renderAuthenticatedMutationProbe()
+  fireEvent.click(screen.getByRole('button', { name: 'update-item-1' }))
+  expect(await screen.findByTestId('locked-item-1')).toHaveTextContent('true')
+  deferredUpdate.resolve(updatedCart)
+  expect(await screen.findByTestId('locked-item-1')).toHaveTextContent('false')
+})
+
+it('removes an item id from mutatingItemIds on failure', async () =&gt; {
+  vi.mocked(cartApi.updateItem).mockRejectedValue(new ApiError(409, {
+    message: 'INSUFFICIENT_STOCK', availableQuantity: 1,
+  }))
+  await renderAuthenticatedMutationProbe()
+  fireEvent.click(screen.getByRole('button', { name: 'update-item-1' }))
+  expect(await screen.findByTestId('locked-item-1')).toHaveTextContent('false')
+})
+
+it('resets locks and mutation flags on logout', async () =&gt; {
+  const pending = deferred&lt;CartDto&gt;()
+  let mutationSignal: AbortSignal | undefined
+  vi.mocked(cartApi.updateItem).mockImplementation(
+    (_itemId, _data, _token, signal) =&gt; {
+      mutationSignal = signal
+      return pending.promise
+    }
+  )
+  const view = await renderAuthenticatedMutationProbe()
+  fireEvent.click(screen.getByRole('button', { name: 'update-item-1' }))
+  expect(await screen.findByTestId('locked-item-1')).toHaveTextContent('true')
+  await waitFor(() =&gt; expect(mutationSignal).toBeDefined())
+
+  useAuthMock.mockReturnValue(guestAuth)
+  view.rerender(&lt;CartProvider&gt;&lt;MutationProbe /&gt;&lt;/CartProvider&gt;)
+  expect(screen.getByTestId('locked-item-1')).toHaveTextContent('false')
+  expect(screen.getByTestId('total')).toHaveTextContent('none')
+  expect(mutationSignal?.aborted).toBe(true)
+  pending.resolve(updatedCart)
+  await waitFor(() =&gt; expect(screen.getByTestId('total')).toHaveTextContent('none'))
+})
+
+it('resets a global mutation flag on logout', async () =&gt; {
+  const pending = deferred&lt;CartDto&gt;()
+  vi.mocked(cartApi.addItem).mockReturnValue(pending.promise)
+  const view = await renderAuthenticatedMutationProbe()
+  fireEvent.click(screen.getByRole('button', { name: 'add-prod-1' }))
+  expect(await screen.findByTestId('adding')).toHaveTextContent('true')
+
+  useAuthMock.mockReturnValue(guestAuth)
+  view.rerender(&lt;CartProvider&gt;&lt;MutationProbe /&gt;&lt;/CartProvider&gt;)
+  expect(screen.getByTestId('adding')).toHaveTextContent('false')
+  pending.resolve(updatedCart)
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-6" data-section="3"><div class="task-text">
+                            <p><strong>Step 6: Chạy GREEN, API regression và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/features/cart/CartContext.test.tsx src/api/cartApi.test.ts
+git add frontend/src/features/cart/CartContext.tsx frontend/src/features/cart/CartContext.test.tsx
+git commit -m "feat(frontend): serialize cart mutations"</pre>
+                            <p class="expected">Expected: FIFO, cart preservation, all flags và immutable item lock tests PASS.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-4">
+                <div class="section-header" onclick="toggleSection(4)">
+                    <div class="section-number" id="section-num-4">4</div>
+                    <div class="section-title">Task 4 — Provider wiring, route, header badge và guest states</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Create <code>CartHeaderLink.tsx</code>, <code>CartHeaderLink.css</code>, <code>CartPage.tsx</code>, <code>CartPage.css</code>; Modify <code>App.tsx</code>, <code>AppShell.tsx</code>; Test <code>CartPage.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> <code>CartProvider/useCart</code>, <code>useAuth</code>, existing <code>AuthModal</code>.</p>
+                        <p><strong>Produces:</strong> Route <code>/shopping/cart</code>, native header link, quantity badge, guest/login/loading/error/empty page shell.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-1" data-section="4"><div class="task-text">
+                            <p><strong>Step 1: Viết failing tests cho header badge và route states</strong></p>
+                            <pre>vi.mock('./CartContext', () =&gt; ({ useCart: vi.fn() }))
+vi.mock('../auth/AuthContext', () =&gt; ({ useAuth: vi.fn() }))
+vi.mock('../../api/branchApi', () =&gt; ({
+  branchApi: { getBranches: vi.fn() },
+}))
+const useCartMock = vi.mocked(useCart)
+const useAuthMock = vi.mocked(useAuth)
+const cartResponse: CartDto = {
+  id: 'cart-1', userId: 'user-1', branchId: 'branch-1',
+  items: [], totalItems: 0, subtotal: 0,
+}
+const guestAuth: ReturnType&lt;typeof useAuth&gt; = {
+  user: null, accessToken: null, isAuthenticated: false, isLoading: false,
+  login: vi.fn(), register: vi.fn(), logout: vi.fn(),
+  updateUser: vi.fn(), refreshUser: vi.fn(),
+}
+const authenticatedAuth: ReturnType&lt;typeof useAuth&gt; = {
+  ...guestAuth,
+  user: {
+    id: 'user-1', email: 'user@example.com',
+    fullName: 'Người mua', role: 'Customer',
+  },
+  accessToken: 'jwt-token',
+  isAuthenticated: true,
+}
+const branches: BranchDto[] = [
+  {
+    id: 'branch-1', name: 'Kho Quận 1', address: '123 Nguyễn Huệ',
+    phone: null, latitude: null, longitude: null, isActive: true,
+  },
+  {
+    id: 'branch-2', name: 'Kho Quận 3', address: '456 Võ Văn Tần',
+    phone: null, latitude: null, longitude: null, isActive: true,
+  },
+]
+const reloadCart = vi.fn()
+const addItem = vi.fn()
+const updateItemQuantity = vi.fn()
+const removeItem = vi.fn()
+const changeBranch = vi.fn()
+const clearCart = vi.fn()
+
+const readyCartContext: CartContextValue = {
+  status: 'ready', cart: cartResponse, errorMessage: null,
+  mutatingItemIds: new Set(), isAddingItem: false,
+  isChangingBranch: false, isClearing: false,
+  reloadCart, addItem, updateItemQuantity,
+  removeItem, changeBranch, clearCart,
+}
+
+function LocationDisplay() {
+  return &lt;output data-testid="location"&gt;{useLocation().pathname}&lt;/output&gt;
+}
+
+function renderCartRoute(entry: string, auth: ReturnType&lt;typeof useAuth&gt;) {
+  useAuthMock.mockReturnValue(auth)
+  useCartMock.mockReturnValue(readyCartContext)
+  return render(
+    &lt;MemoryRouter initialEntries={[entry]}&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/shopping/cart" element={&lt;CartPage /&gt;} /&gt;
+      &lt;/Routes&gt;
+      &lt;LocationDisplay /&gt;
+    &lt;/MemoryRouter&gt;
+  )
+}
+
+it('shows total quantity rather than row count in the header', () =&gt; {
+  useCartMock.mockReturnValue({
+    ...readyCartContext,
+    cart: { ...cartResponse, items: [], totalItems: 5 },
+  })
+  render(&lt;MemoryRouter&gt;&lt;CartHeaderLink /&gt;&lt;/MemoryRouter&gt;)
+  expect(screen.getByRole('link', { name: /Giỏ hàng/ }))
+    .toHaveAttribute('href', '/shopping/cart')
+  expect(screen.getByLabelText('5 sản phẩm trong giỏ')).toHaveTextContent('5')
+})
+
+it('removes the badge immediately when cart context resets on logout', () =&gt; {
+  useCartMock.mockReturnValue({
+    ...readyCartContext,
+    cart: { ...cartResponse, totalItems: 3 },
+  })
+  const view = render(&lt;MemoryRouter&gt;&lt;CartHeaderLink /&gt;&lt;/MemoryRouter&gt;)
+  expect(screen.getByLabelText('3 sản phẩm trong giỏ')).toBeInTheDocument()
+
+  useCartMock.mockReturnValue({ ...readyCartContext, status: 'idle', cart: null })
+  view.rerender(&lt;MemoryRouter&gt;&lt;CartHeaderLink /&gt;&lt;/MemoryRouter&gt;)
+  expect(screen.queryByLabelText(/sản phẩm trong giỏ/)).not.toBeInTheDocument()
+})
+
+it('keeps a guest on the cart route and opens login', () =&gt; {
+  renderCartRoute('/shopping/cart', guestAuth)
+  expect(screen.getByRole('heading', { name: 'Đăng nhập để xem giỏ hàng' })).toBeInTheDocument()
+  expect(screen.getByTestId('location')).toHaveTextContent('/shopping/cart')
+  fireEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }))
+  expect(screen.getByRole('dialog')).toBeInTheDocument()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-2" data-section="4"><div class="task-text">
+                            <p><strong>Step 2: Chạy RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/cart/CartPage.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì header link, route và CartPage chưa tồn tại.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-3" data-section="4"><div class="task-text">
+                            <p><strong>Step 3: Wire provider và route trong App</strong></p>
+                            <pre>&lt;BrowserRouter&gt;
+  &lt;AuthProvider&gt;
+    &lt;CartProvider&gt;
+      &lt;AppShell&gt;
+        &lt;Routes&gt;
+          &lt;Route path="/" element={&lt;ProductBrowsePage /&gt;} /&gt;
+          &lt;Route path="/browse" element={&lt;ProductBrowsePage /&gt;} /&gt;
+          &lt;Route path="/products" element={&lt;ProductBrowsePage /&gt;} /&gt;
+          &lt;Route path="/product/:id" element={&lt;ProductDetailPage /&gt;} /&gt;
+          &lt;Route path="/account/profile" element={&lt;ProfilePage /&gt;} /&gt;
+          &lt;Route path="/profile" element={&lt;ProfilePage /&gt;} /&gt;
+          &lt;Route path="/account/addresses" element={&lt;AddressListPage /&gt;} /&gt;
+          &lt;Route path="/addresses" element={&lt;AddressListPage /&gt;} /&gt;
+          &lt;Route path="/shopping/cart" element={&lt;CartPage /&gt;} /&gt;
+        &lt;/Routes&gt;
+      &lt;/AppShell&gt;
+    &lt;/CartProvider&gt;
+  &lt;/AuthProvider&gt;
+&lt;/BrowserRouter&gt;</pre>
+                            <p class="warning">Không đổi thứ tự: <code>CartProvider</code> phải nằm dưới <code>AuthProvider</code> và trên <code>AppShell</code>.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-4" data-section="4"><div class="task-text">
+                            <p><strong>Step 4: Tạo CartHeaderLink và gắn vào AppShell</strong></p>
+                            <pre>export function CartHeaderLink() {
+  const { status, cart } = useCart()
+  const count = status === 'ready' ? cart?.totalItems ?? 0 : 0
+  return (
+    &lt;Link to="/shopping/cart" className="cart-header-link"&gt;
+      &lt;span aria-hidden="true"&gt;🛒&lt;/span&gt;
+      &lt;span&gt;Giỏ hàng&lt;/span&gt;
+      {count &gt; 0 &amp;&amp; (
+        &lt;span className="cart-header-link__badge" aria-label={count + ' sản phẩm trong giỏ'}&gt;
+          {count}
+        &lt;/span&gt;
+      )}
+    &lt;/Link&gt;
+  )
+}</pre>
+                            <p>Đặt <code>CartHeaderLink</code> trong <code>.header-actions</code> trước <code>UserMenu</code>; badge ẩn khi guest/loading/error/empty.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-5" data-section="4"><div class="task-text">
+                            <p><strong>Step 5: Tạo CartPage state shell và AuthModal cục bộ</strong></p>
+                            <pre>function CartLoadingSkeleton() {
+  return (
+    &lt;section className="cart-page" aria-busy="true" aria-label="Đang tải giỏ hàng"&gt;
+      &lt;div className="cart-page__skeleton" /&gt;
+    &lt;/section&gt;
+  )
+}
+
+function CartLoadError({ onRetry }: { onRetry: () =&gt; void }) {
+  return (
+    &lt;section className="cart-page"&gt;
+      &lt;div role="alert"&gt;
+        &lt;p&gt;Không thể tải giỏ hàng.&lt;/p&gt;
+        &lt;button type="button" onClick={onRetry}&gt;Thử lại&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  )
+}
+
+function EmptyCart({ branchId }: { branchId?: string }) {
+  const browseUrl = branchId
+    ? '/browse?branchId=' + encodeURIComponent(branchId)
+    : '/browse'
+  return (
+    &lt;div className="cart-page__empty"&gt;
+      &lt;h2&gt;Giỏ hàng của bạn đang trống&lt;/h2&gt;
+      &lt;Link to={browseUrl}&gt;Tiếp tục mua sắm&lt;/Link&gt;
+    &lt;/div&gt;
+  )
+}
+
+if (isLoading) return &lt;CartLoadingSkeleton /&gt;
+if (!isAuthenticated) {
+  return (
+    &lt;section className="cart-page cart-page--auth-required"&gt;
+      &lt;h1&gt;Đăng nhập để xem giỏ hàng&lt;/h1&gt;
+      &lt;button type="button" onClick={() =&gt; setLoginOpen(true)}&gt;Đăng nhập&lt;/button&gt;
+      &lt;AuthModal isOpen={loginOpen} initialMode="login" onClose={() =&gt; setLoginOpen(false)} /&gt;
+    &lt;/section&gt;
+  )
+}
+if (status === 'loading' || status === 'idle') return &lt;CartLoadingSkeleton /&gt;
+if (status === 'error') return &lt;CartLoadError onRetry={() =&gt; void reloadCart()} /&gt;
+if (!cart) return &lt;CartLoadError onRetry={() =&gt; void reloadCart()} /&gt;
+return (
+  &lt;section className="cart-page"&gt;
+    &lt;h1&gt;Giỏ hàng của bạn&lt;/h1&gt;
+    {cart.items.length === 0
+      ? &lt;EmptyCart branchId={cart.branchId} /&gt;
+      : &lt;p&gt;Giỏ hàng có {cart.items.length} dòng sản phẩm.&lt;/p&gt;}
+  &lt;/section&gt;
+)</pre>
+                            <p>Empty state có native <code>Link</code> tên “Tiếp tục mua sắm” đến <code>/browse</code>. Task 5 mở rộng ready section bằng branch selector và item/summary UI; branch selector vẫn hiển thị khi cart rỗng để hỗ trợ đổi kho không cần confirmation.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-6" data-section="4"><div class="task-text">
+                            <p><strong>Step 6: Chạy GREEN, existing App regression và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/features/cart/CartPage.test.tsx src/features/auth/Auth.test.tsx
+npm.cmd run build
+git add frontend/src/App.tsx frontend/src/app/AppShell.tsx frontend/src/features/cart/CartHeaderLink.tsx frontend/src/features/cart/CartHeaderLink.css frontend/src/features/cart/CartPage.tsx frontend/src/features/cart/CartPage.css frontend/src/features/cart/CartPage.test.tsx
+git commit -m "feat(frontend): add cart route and header badge"</pre>
+                            <p class="expected">Expected: header badge dùng <code>totalItems</code>; guest không rời URL; loading/error/empty states PASS.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-5">
+                <div class="section-header" onclick="toggleSection(5)">
+                    <div class="section-number" id="section-num-5">5</div>
+                    <div class="section-title">Task 5 — Cart items, quantity, đổi kho và xóa giỏ</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Create <code>CartItemRow.tsx</code>, <code>BranchChangeConfirmDialog.tsx</code>; Modify <code>CartPage.tsx</code>, <code>CartPage.css</code>; Test <code>CartPage.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> Cart actions/flags/locks từ Task 3, <code>branchApi.getBranches(signal)</code>, <code>formatPrice</code>.</p>
+                        <p><strong>Produces:</strong> Server-backed row management, row errors, cart branch dropdown, destructive dialogs, subtotal và disabled checkout.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-1" data-section="5"><div class="task-text">
+                            <p><strong>Step 1: Viết failing tests cho ready cart và row actions</strong></p>
+                            <pre>const cartItem: CartItemDto = {
+  id: 'item-1', productId: 'prod-1', productName: 'Điện thoại A',
+  sku: 'SKU-A', unitPrice: 1000000, quantity: 2,
+  lineTotal: 2000000, availableQuantity: 5,
+}
+const readyCart: CartDto = {
+  ...cartResponse,
+  items: [cartItem],
+  totalItems: 2,
+  subtotal: 2000000,
+}
+
+function renderReadyCart(
+  overrides: Partial&lt;CartContextValue&gt; = {},
+  branchRequest: Promise&lt;BranchDto[]&gt; = Promise.resolve(branches)
+) {
+  vi.mocked(branchApi.getBranches).mockReturnValue(branchRequest)
+  useAuthMock.mockReturnValue(authenticatedAuth)
+  useCartMock.mockReturnValue({
+    ...readyCartContext,
+    cart: readyCart,
+    ...overrides,
+  })
+  return render(&lt;MemoryRouter&gt;&lt;CartPage /&gt;&lt;/MemoryRouter&gt;)
+}
+
+it('renders server totals and a product placeholder without product fetches', () =&gt; {
+  const productFetch = vi.spyOn(catalogApi, 'getProductById')
+  renderReadyCart()
+  expect(screen.getByText('Điện thoại A')).toBeInTheDocument()
+  expect(screen.getByText('SKU-A')).toBeInTheDocument()
+  expect(screen.getByText(/2\.000\.000/)).toBeInTheDocument()
+  expect(screen.getByLabelText('Ảnh thay thế cho Điện thoại A')).toBeInTheDocument()
+  expect(productFetch).not.toHaveBeenCalled()
+})
+
+it('submits increment, decrement and direct quantity updates', async () =&gt; {
+  renderReadyCart()
+  fireEvent.click(screen.getByRole('button', { name: 'Tăng số lượng Điện thoại A' }))
+  expect(updateItemQuantity).toHaveBeenCalledWith('item-1', 3)
+  fireEvent.change(screen.getByLabelText('Số lượng Điện thoại A'), { target: { value: '4' } })
+  fireEvent.blur(screen.getByLabelText('Số lượng Điện thoại A'))
+  expect(updateItemQuantity).toHaveBeenCalledWith('item-1', 4)
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-2" data-section="5"><div class="task-text">
+                            <p><strong>Step 2: Viết ba regression tests cho mutatingItemIds UI lock</strong></p>
+                            <pre>it('disables +/- buttons while item is mutating', () =&gt; {
+  renderReadyCart({ mutatingItemIds: new Set(['item-1']) })
+  expect(screen.getByRole('button', { name: 'Giảm số lượng Điện thoại A' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Tăng số lượng Điện thoại A' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Xóa Điện thoại A' })).toBeDisabled()
+})
+
+it('re-enables buttons after mutation succeeds', () =&gt; {
+  const view = render(
+    &lt;CartItemRow
+      item={cartItem} isMutating={true}
+      onUpdate={updateItemQuantity} onRemove={removeItem}
+    /&gt;
+  )
+  expect(screen.getByRole('button', { name: 'Tăng số lượng Điện thoại A' })).toBeDisabled()
+  view.rerender(
+    &lt;CartItemRow
+      item={{ ...cartItem, quantity: 3 }} isMutating={false}
+      onUpdate={updateItemQuantity} onRemove={removeItem}
+    /&gt;
+  )
+  expect(screen.getByRole('button', { name: 'Tăng số lượng Điện thoại A' })).toBeEnabled()
+})
+
+it('re-enables buttons after mutation fails', () =&gt; {
+  const view = render(
+    &lt;CartItemRow
+      item={cartItem} isMutating={true}
+      onUpdate={updateItemQuantity} onRemove={removeItem}
+    /&gt;
+  )
+  view.rerender(
+    &lt;CartItemRow
+      item={cartItem} isMutating={false}
+      errorMessage="Không thể cập nhật số lượng"
+      onUpdate={updateItemQuantity} onRemove={removeItem}
+    /&gt;
+  )
+  expect(screen.getByRole('button', { name: 'Tăng số lượng Điện thoại A' })).toBeEnabled()
+  expect(screen.getByRole('alert')).toHaveTextContent('Không thể cập nhật số lượng')
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-3" data-section="5"><div class="task-text">
+                            <p><strong>Step 3: Chạy RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/cart/CartPage.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì ready rows, controls và dialogs chưa được implement.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-4" data-section="5"><div class="task-text">
+                            <p><strong>Step 4: Cài CartItemRow với local draft và row-associated error</strong></p>
+                            <pre>export interface CartItemRowProps {
+  item: CartItemDto
+  isMutating: boolean
+  errorMessage?: string
+  onUpdate: (itemId: string, quantity: number) =&gt; Promise&lt;CartDto&gt;
+  onRemove: (itemId: string) =&gt; Promise&lt;CartDto&gt;
+}
+
+const submitQuantity = async (nextQuantity: number) =&gt; {
+  if (!Number.isInteger(nextQuantity) || nextQuantity &lt; 1) {
+    setDraftQuantity(String(item.quantity))
+    return
+  }
+  try {
+    await onUpdate(item.id, nextQuantity)
+  } catch {
+    setDraftQuantity(String(item.quantity))
+  }
+}
+
+const atStockLimit = item.availableQuantity &lt;= item.quantity
+return (
+  &lt;article className="cart-item"&gt;
+    &lt;div
+      className="cart-item__placeholder"
+      role="img"
+      aria-label={'Ảnh thay thế cho ' + item.productName}
+    &gt;SP&lt;/div&gt;
+    &lt;div className="cart-item__details"&gt;
+      &lt;h2&gt;{item.productName}&lt;/h2&gt;
+      &lt;p&gt;{item.sku}&lt;/p&gt;
+      &lt;p&gt;Đơn giá: {formatPrice(item.unitPrice)}&lt;/p&gt;
+      &lt;p&gt;Còn {item.availableQuantity} sản phẩm tại kho&lt;/p&gt;
+      &lt;strong&gt;Thành tiền: {formatPrice(item.lineTotal)}&lt;/strong&gt;
+    &lt;/div&gt;
+    &lt;button
+      aria-label={'Giảm số lượng ' + item.productName}
+      disabled={isMutating || item.quantity &lt;= 1}
+      onClick={() =&gt; void submitQuantity(item.quantity - 1)}
+    &gt;−&lt;/button&gt;
+    &lt;input
+      aria-label={'Số lượng ' + item.productName}
+      inputMode="numeric"
+      value={draftQuantity}
+      disabled={isMutating}
+      onChange={(event) =&gt; setDraftQuantity(event.target.value)}
+      onBlur={() =&gt; void submitQuantity(Number(draftQuantity))}
+    /&gt;
+    &lt;button
+      aria-label={'Tăng số lượng ' + item.productName}
+      disabled={isMutating || atStockLimit}
+      onClick={() =&gt; void submitQuantity(item.quantity + 1)}
+    &gt;+&lt;/button&gt;
+    &lt;button
+      aria-label={'Xóa ' + item.productName}
+      disabled={isMutating}
+      onClick={() =&gt; void onRemove(item.id).catch(() =&gt; undefined)}
+    &gt;Xóa&lt;/button&gt;
+    {isMutating &amp;&amp; &lt;span role="status"&gt;Đang cập nhật {item.productName}&lt;/span&gt;}
+    {errorMessage &amp;&amp; &lt;p role="alert"&gt;{errorMessage}&lt;/p&gt;}
+  &lt;/article&gt;
+)</pre>
+                            <pre>const [itemErrors, setItemErrors] = useState&lt;Record&lt;string, string&gt;&gt;({})
+
+function isAbortError(error: unknown) {
+  return error instanceof Error &amp;&amp; error.name === 'AbortError'
+}
+
+function toItemError(error: unknown) {
+  if (error instanceof ApiError &amp;&amp;
+      error.status === 409 &amp;&amp;
+      error.data?.message === 'INSUFFICIENT_STOCK') {
+    return 'Chỉ còn ' + Number(error.data.availableQuantity) + ' sản phẩm'
+  }
+  if (error instanceof ApiError &amp;&amp; error.status === 404) {
+    return 'Sản phẩm trong giỏ không còn tồn tại. Hãy tải lại giỏ hàng.'
+  }
+  return 'Không thể cập nhật số lượng. Vui lòng thử lại.'
+}
+
+async function handleUpdate(itemId: string, quantity: number) {
+  setItemErrors((current) =&gt; ({ ...current, [itemId]: '' }))
+  try {
+    return await updateItemQuantity(itemId, quantity)
+  } catch (error) {
+    if (!isAbortError(error)) {
+      setItemErrors((current) =&gt; ({
+        ...current,
+        [itemId]: toItemError(error),
+      }))
+    }
+    throw error
+  }
+}
+
+async function handleRemove(itemId: string) {
+  setItemErrors((current) =&gt; ({ ...current, [itemId]: '' }))
+  try {
+    return await removeItem(itemId)
+  } catch (error) {
+    if (!isAbortError(error)) {
+      setItemErrors((current) =&gt; ({
+        ...current,
+        [itemId]: 'Không thể xóa sản phẩm. Vui lòng thử lại.',
+      }))
+    }
+    throw error
+  }
+}
+
+{cart.items.map((item) =&gt; (
+  &lt;CartItemRow
+    key={item.id}
+    item={item}
+    isMutating={mutatingItemIds.has(item.id)}
+    errorMessage={itemErrors[item.id]}
+    onUpdate={handleUpdate}
+    onRemove={handleRemove}
+  /&gt;
+))}</pre>
+                            <p>Sync draft khi <code>item.quantity</code> đổi sau server response. Nếu <code>availableQuantity === 0</code>, giữ remove action để người dùng dọn item.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-5" data-section="5"><div class="task-text">
+                            <p><strong>Step 5: Cài active-branch selector và confirmation behavior</strong></p>
+                            <pre>export interface BranchChangeConfirmDialogProps {
+  isOpen: boolean
+  isBusy?: boolean
+  returnFocusRef?: React.RefObject&lt;HTMLElement | null&gt;
+  onCancel: () =&gt; void
+  onConfirm: () =&gt; void | Promise&lt;void&gt;
+}
+
+export function BranchChangeConfirmDialog(props: BranchChangeConfirmDialogProps) {
+  const cancelRef = useRef&lt;HTMLButtonElement&gt;(null)
+  useEffect(() =&gt; {
+    if (!props.isOpen) return
+    cancelRef.current?.focus()
+    const onKeyDown = (event: KeyboardEvent) =&gt; {
+      if (event.key === 'Escape' &amp;&amp; !props.isBusy) props.onCancel()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () =&gt; {
+      window.removeEventListener('keydown', onKeyDown)
+      props.returnFocusRef?.current?.focus()
+    }
+  }, [props.isBusy, props.isOpen, props.onCancel, props.returnFocusRef])
+
+  if (!props.isOpen) return null
+  return (
+    &lt;div className="cart-dialog-overlay"&gt;
+      &lt;section
+        role="dialog" aria-modal="true"
+        aria-labelledby="branch-dialog-title"
+        aria-describedby="branch-dialog-description"
+      &gt;
+        &lt;h2 id="branch-dialog-title"&gt;Đổi kho và xóa giỏ hiện tại?&lt;/h2&gt;
+        &lt;p id="branch-dialog-description"&gt;
+          Đổi kho sẽ xóa toàn bộ sản phẩm đang có trong giỏ.
+        &lt;/p&gt;
+        &lt;button ref={cancelRef} disabled={props.isBusy} onClick={props.onCancel}&gt;
+          Giữ giỏ hiện tại
+        &lt;/button&gt;
+        &lt;button disabled={props.isBusy} onClick={() =&gt; void props.onConfirm()}&gt;
+          Đổi kho và xóa giỏ
+        &lt;/button&gt;
+      &lt;/section&gt;
+    &lt;/div&gt;
+  )
+}</pre>
+                            <pre>const [branches, setBranches] = useState&lt;BranchDto[]&gt;([])
+const [branchLoadError, setBranchLoadError] = useState(false)
+const [branchRetryKey, setBranchRetryKey] = useState(0)
+const [pendingBranchId, setPendingBranchId] = useState&lt;string | null&gt;(null)
+const [branchChangeError, setBranchChangeError] = useState&lt;string | null&gt;(null)
+const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
+const [clearError, setClearError] = useState&lt;string | null&gt;(null)
+const clearTriggerRef = useRef&lt;HTMLButtonElement&gt;(null)
+const clearCancelRef = useRef&lt;HTMLButtonElement&gt;(null)
+const branchSelectorRef = useRef&lt;HTMLSelectElement&gt;(null)
+
+useEffect(() =&gt; {
+  const controller = new AbortController()
+  branchApi.getBranches(controller.signal)
+    .then((data) =&gt; {
+      setBranches(data)
+      setBranchLoadError(false)
+    })
+    .catch((error: unknown) =&gt; {
+      if (!isAbortError(error)) setBranchLoadError(true)
+    })
+  return () =&gt; controller.abort()
+}, [branchRetryKey])
+
+const onBranchSelection = (branchId: string) =&gt; {
+  if (!cart || branchId === cart.branchId) return
+  if (cart.items.length === 0) {
+    void changeBranch(branchId)
+    return
+  }
+  setPendingBranchId(branchId)
+}
+
+async function confirmBranchChange() {
+  const branchId = pendingBranchId
+  if (!branchId) return
+  setBranchChangeError(null)
+  try {
+    await changeBranch(branchId)
+    setPendingBranchId(null)
+  } catch (error) {
+    if (!isAbortError(error)) {
+      setBranchChangeError('Không thể đổi kho của giỏ hàng.')
+    }
+  }
+}
+
+&lt;label htmlFor="cart-branch"&gt;Kho của giỏ hàng&lt;/label&gt;
+&lt;select
+  ref={branchSelectorRef}
+  id="cart-branch"
+  value={cart.branchId}
+  disabled={isChangingBranch || branchLoadError}
+  onChange={(event) =&gt; onBranchSelection(event.target.value)}
+&gt;
+  {branches.map((branch) =&gt; (
+    &lt;option key={branch.id} value={branch.id}&gt;{branch.name}&lt;/option&gt;
+  ))}
+&lt;/select&gt;
+
+&lt;BranchChangeConfirmDialog
+  isOpen={pendingBranchId !== null}
+  isBusy={isChangingBranch}
+  returnFocusRef={branchSelectorRef}
+  onCancel={() =&gt; setPendingBranchId(null)}
+  onConfirm={confirmBranchChange}
+/&gt;
+{branchLoadError &amp;&amp; (
+  &lt;p role="alert"&gt;
+    Không thể tải danh sách kho.
+    &lt;button onClick={() =&gt; setBranchRetryKey((key) =&gt; key + 1)}&gt;
+      Tải lại danh sách kho
+    &lt;/button&gt;
+  &lt;/p&gt;
+)}
+{branchChangeError &amp;&amp; &lt;p role="alert"&gt;{branchChangeError}&lt;/p&gt;}</pre>
+                            <p>Dialog có <code>role="dialog"</code>, <code>aria-modal</code>, title/description IDs, Escape, initial focus vào Cancel và trả focus về selector. Cancel không gọi API.</p>
+                            <pre>useEffect(() =&gt; {
+  if (!clearConfirmOpen) return
+  clearCancelRef.current?.focus()
+  const onKeyDown = (event: KeyboardEvent) =&gt; {
+    if (event.key === 'Escape' &amp;&amp; !isClearing) setClearConfirmOpen(false)
+  }
+  window.addEventListener('keydown', onKeyDown)
+  return () =&gt; {
+    window.removeEventListener('keydown', onKeyDown)
+    clearTriggerRef.current?.focus()
+  }
+}, [clearConfirmOpen, isClearing])
+
+&lt;button
+  ref={clearTriggerRef}
+  type="button"
+  disabled={isClearing}
+  onClick={() =&gt; setClearConfirmOpen(true)}
+&gt;Xóa toàn bộ giỏ hàng&lt;/button&gt;
+
+{clearConfirmOpen &amp;&amp; (
+  &lt;div className="cart-dialog-overlay"&gt;
+    &lt;section
+      role="dialog" aria-modal="true"
+      aria-labelledby="clear-cart-title"
+      aria-describedby="clear-cart-description"
+    &gt;
+      &lt;h2 id="clear-cart-title"&gt;Xóa toàn bộ giỏ hàng?&lt;/h2&gt;
+      &lt;p id="clear-cart-description"&gt;Thao tác này sẽ xóa tất cả sản phẩm trong giỏ.&lt;/p&gt;
+      &lt;button
+        ref={clearCancelRef}
+        disabled={isClearing}
+        onClick={() =&gt; setClearConfirmOpen(false)}
+      &gt;Hủy&lt;/button&gt;
+      &lt;button
+        disabled={isClearing}
+        onClick={async () =&gt; {
+          try {
+            await clearCart()
+            setClearConfirmOpen(false)
+          } catch (error) {
+            if (!isAbortError(error)) setClearError('Không thể xóa giỏ hàng.')
+          }
+        }}
+      &gt;Xác nhận xóa&lt;/button&gt;
+    &lt;/section&gt;
+  &lt;/div&gt;
+)}
+{clearError &amp;&amp; &lt;p role="alert"&gt;{clearError}&lt;/p&gt;}</pre>
+                            <pre>&lt;aside className="cart-summary" aria-label="Tóm tắt giỏ hàng"&gt;
+  &lt;div&gt;
+    &lt;span&gt;Tổng số lượng&lt;/span&gt;
+    &lt;strong&gt;{cart.totalItems}&lt;/strong&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;span&gt;Tạm tính&lt;/span&gt;
+    &lt;strong&gt;{formatPrice(cart.subtotal)}&lt;/strong&gt;
+  &lt;/div&gt;
+  &lt;button type="button" disabled&gt;
+    Tiến hành thanh toán &lt;span&gt;Sắp có&lt;/span&gt;
+  &lt;/button&gt;
+&lt;/aside&gt;</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-6" data-section="5"><div class="task-text">
+                            <p><strong>Step 6: Thêm remove/clear/conflict và summary tests</strong></p>
+                            <pre>it('shows server stock on a 409 and keeps the displayed item', async () =&gt; {
+  updateItemQuantity.mockRejectedValue(new ApiError(409, {
+    message: 'INSUFFICIENT_STOCK', availableQuantity: 1,
+  }))
+  renderReadyCart()
+  fireEvent.click(screen.getByRole('button', { name: 'Tăng số lượng Điện thoại A' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Chỉ còn 1 sản phẩm')
+  expect(screen.getByText('Điện thoại A')).toBeInTheDocument()
+})
+
+it('keeps cart items visible when branches fail and retries branches', async () =&gt; {
+  renderReadyCart({}, Promise.reject(new ApiError(500)))
+  expect(await screen.findByText('Điện thoại A')).toBeInTheDocument()
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Không thể tải danh sách kho.'
+  )
+  vi.mocked(branchApi.getBranches).mockResolvedValue(branches)
+  fireEvent.click(screen.getByRole('button', { name: 'Tải lại danh sách kho' }))
+  await waitFor(() =&gt; expect(branchApi.getBranches).toHaveBeenCalledTimes(2))
+  expect(screen.getByLabelText('Kho của giỏ hàng')).toBeEnabled()
+})
+
+it('requires confirmation before clearing the cart', async () =&gt; {
+  renderReadyCart()
+  fireEvent.click(screen.getByRole('button', { name: 'Xóa toàn bộ giỏ hàng' }))
+  expect(screen.getByRole('dialog', { name: 'Xóa toàn bộ giỏ hàng?' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Xác nhận xóa' }))
+  expect(clearCart).toHaveBeenCalledTimes(1)
+})
+
+it('changes branch immediately when the cart is empty', async () =&gt; {
+  renderReadyCart({
+    cart: { ...readyCart, items: [], totalItems: 0, subtotal: 0 },
+  })
+  fireEvent.change(screen.getByLabelText('Kho của giỏ hàng'), {
+    target: { value: 'branch-2' },
+  })
+  expect(changeBranch).toHaveBeenCalledWith('branch-2')
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+})
+
+it('requires confirmation to change a non-empty cart branch', async () =&gt; {
+  renderReadyCart()
+  fireEvent.change(screen.getByLabelText('Kho của giỏ hàng'), {
+    target: { value: 'branch-2' },
+  })
+  expect(screen.getByRole('dialog', {
+    name: 'Đổi kho và xóa giỏ hiện tại?',
+  })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Giữ giỏ hiện tại' }))
+  expect(changeBranch).not.toHaveBeenCalled()
+})
+
+it('keeps checkout disabled for the next dashboard task', () =&gt; {
+  renderReadyCart()
+  expect(screen.getByRole('button', { name: /Tiến hành thanh toán/ })).toBeDisabled()
+  expect(screen.getByText('Sắp có')).toBeInTheDocument()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-7" data-section="5"><div class="task-text">
+                            <p><strong>Step 7: Chạy GREEN, provider regression và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/features/cart/CartPage.test.tsx src/features/cart/CartContext.test.tsx
+git add frontend/src/features/cart/CartItemRow.tsx frontend/src/features/cart/BranchChangeConfirmDialog.tsx frontend/src/features/cart/CartPage.tsx frontend/src/features/cart/CartPage.css frontend/src/features/cart/CartPage.test.tsx
+git commit -m "feat(frontend): add cart item management"</pre>
+                            <p class="expected">Expected: row actions, 3 lock regressions, branch/clear dialogs, stock error và disabled checkout PASS.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-6">
+                <div class="section-header" onclick="toggleSection(6)">
+                    <div class="section-number" id="section-num-6">6</div>
+                    <div class="section-title">Task 6 — Thêm vào giỏ từ ProductDetailPage</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Modify <code>ProductDetailPage.tsx</code>, <code>ProductDetailPage.css</code>, <code>ProductDetail.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> Existing <code>branchId</code>/<code>branchInventory</code>, <code>useAuth</code>, <code>AuthModal</code>, <code>useCart</code>, <code>BranchChangeConfirmDialog</code>.</p>
+                        <p><strong>Produces:</strong> Quantity control, same-branch add, confirmed branch switch then add, server stock feedback và add-only retry.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-1" data-section="6"><div class="task-text">
+                            <p><strong>Step 1: Viết failing tests cho disabled rules, quantity và guest login</strong></p>
+                            <pre>vi.mock('../auth/AuthContext', () =&gt; ({ useAuth: vi.fn() }))
+vi.mock('../cart/CartContext', () =&gt; ({ useCart: vi.fn() }))
+vi.mock('../auth/AuthModal', () =&gt; ({
+  AuthModal: ({ isOpen, onClose }: { isOpen: boolean; onClose: () =&gt; void }) =&gt;
+    isOpen ? (
+      &lt;div role="dialog" aria-label="Đăng nhập"&gt;
+        &lt;button onClick={onClose}&gt;Hoàn tất đăng nhập&lt;/button&gt;
+      &lt;/div&gt;
+    ) : null,
+}))
+
+const useAuthMock = vi.mocked(useAuth)
+const useCartMock = vi.mocked(useCart)
+const addItem = vi.fn()
+const changeBranch = vi.fn()
+const guestAuth: ReturnType&lt;typeof useAuth&gt; = {
+  user: null, accessToken: null, isAuthenticated: false, isLoading: false,
+  login: vi.fn(), register: vi.fn(), logout: vi.fn(),
+  updateUser: vi.fn(), refreshUser: vi.fn(),
+}
+const authenticatedAuth: ReturnType&lt;typeof useAuth&gt; = {
+  ...guestAuth,
+  user: {
+    id: 'user-1', email: 'user@example.com',
+    fullName: 'Người mua', role: 'Customer',
+  },
+  accessToken: 'jwt-token',
+  isAuthenticated: true,
+}
+const existingItem: CartItemDto = {
+  id: 'item-existing', productId: 'prod-existing',
+  productName: 'Sản phẩm cũ', sku: 'SKU-OLD',
+  unitPrice: 100000, quantity: 1, lineTotal: 100000,
+  availableQuantity: 3,
+}
+const baseCart: CartDto = {
+  id: 'cart-1', userId: 'user-1', branchId: 'branch-2',
+  items: [existingItem], totalItems: 1, subtotal: 100000,
+}
+const newBranchCart: CartDto = {
+  ...baseCart, branchId: 'branch-1', items: [], totalItems: 0, subtotal: 0,
+}
+const cartWithProduct: CartDto = {
+  ...newBranchCart,
+  items: [{
+    id: 'item-new', productId: 'prod-1', productName: mockDetail.name,
+    sku: mockDetail.sku, unitPrice: 21990000, quantity: 1,
+    lineTotal: 21990000, availableQuantity: 7,
+  }],
+  totalItems: 1,
+  subtotal: 21990000,
+}
+
+function mockProductDetail(overrides: Partial&lt;ProductDetailDto&gt; = {}) {
+  vi.spyOn(branchApi, 'getBranches').mockResolvedValue(branches)
+  vi.spyOn(catalogApi, 'getProductById').mockResolvedValue({
+    ...mockDetail,
+    ...overrides,
+  })
+}
+
+function mockInStockProduct() {
+  mockProductDetail({
+    branchInventory: {
+      branchId: 'branch-1', sellingPrice: 21990000,
+      availableQuantity: 7, onHand: 9,
+    },
+  })
+}
+
+function mockCart(cart: CartDto | null) {
+  useCartMock.mockReturnValue({
+    status: cart ? 'ready' : 'idle',
+    cart,
+    errorMessage: null,
+    mutatingItemIds: new Set(),
+    isAddingItem: false,
+    isChangingBranch: false,
+    isClearing: false,
+    reloadCart: vi.fn(),
+    addItem,
+    updateItemQuantity: vi.fn(),
+    removeItem: vi.fn(),
+    changeBranch,
+    clearCart: vi.fn(),
+  })
+}
+
+function renderBranchMismatchDetail({ cartItems }: { cartItems: CartItemDto[] }) {
+  useAuthMock.mockReturnValue(authenticatedAuth)
+  mockCart({
+    ...baseCart,
+    items: cartItems,
+    totalItems: cartItems.reduce((sum, item) =&gt; sum + item.quantity, 0),
+    subtotal: cartItems.reduce((sum, item) =&gt; sum + item.lineTotal, 0),
+  })
+  mockInStockProduct()
+  return renderDetail('/product/prod-1?branchId=branch-1')
+}
+
+function renderSameBranchDetail() {
+  useAuthMock.mockReturnValue(authenticatedAuth)
+  mockCart(newBranchCart)
+  mockInStockProduct()
+  return renderDetail('/product/prod-1?branchId=branch-1')
+}
+
+function renderGuestDetail() {
+  useAuthMock.mockReturnValue(guestAuth)
+  mockCart(null)
+  mockInStockProduct()
+  return renderDetail('/product/prod-1?branchId=branch-1')
+}
+
+it.each([
+  ['/product/prod-1', null],
+  ['/product/prod-1?branchId=branch-1', null],
+  ['/product/prod-1?branchId=branch-1', { branchId: 'branch-1', sellingPrice: 10, availableQuantity: 0, onHand: 0 }],
+])('disables add when branch inventory is not purchasable', async (entry, inventory) =&gt; {
+  mockProductDetail({ branchInventory: inventory })
+  renderDetail(entry)
+  expect(await screen.findByRole('button', { name: 'Thêm vào giỏ' })).toBeDisabled()
+})
+
+it('opens login for a guest without adding', async () =&gt; {
+  renderGuestDetail()
+  fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+  expect(screen.getByRole('dialog')).toBeInTheDocument()
+  expect(addItem).not.toHaveBeenCalled()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-2" data-section="6"><div class="task-text">
+                            <p><strong>Step 2: Viết sequencing, failure và exact retry regressions</strong></p>
+                            <pre>it('changes branch then adds after confirmation', async () =&gt; {
+  const calls: string[] = []
+  changeBranch.mockImplementation(async () =&gt; { calls.push('change'); return newBranchCart })
+  addItem.mockImplementation(async () =&gt; { calls.push('add'); return cartWithProduct })
+  renderBranchMismatchDetail({ cartItems: [existingItem] })
+  fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Đổi kho và xóa giỏ' }))
+  await waitFor(() =&gt; expect(calls).toEqual(['change', 'add']))
+})
+
+it('retry after changeBranch→addItem fails calls only addItem, not changeBranch again', async () =&gt; {
+  changeBranch.mockResolvedValue(newBranchCart)
+  addItem
+    .mockRejectedValueOnce(new ApiError(500))
+    .mockResolvedValueOnce(cartWithProduct)
+  renderBranchMismatchDetail({ cartItems: [existingItem] })
+  fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Đổi kho và xóa giỏ' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Thử lại thêm vào giỏ' }))
+  await waitFor(() =&gt; expect(addItem).toHaveBeenCalledTimes(2))
+  expect(changeBranch).toHaveBeenCalledTimes(1)
+})
+
+it('stops before add when branch change fails', async () =&gt; {
+  changeBranch.mockRejectedValue(new ApiError(500))
+  renderBranchMismatchDetail({ cartItems: [existingItem] })
+  fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Đổi kho và xóa giỏ' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Không thể đổi kho của giỏ hàng.'
+  )
+  expect(addItem).not.toHaveBeenCalled()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-3" data-section="6"><div class="task-text">
+                            <p><strong>Step 3: Chạy RED trên ProductDetail</strong></p>
+                            <pre>npm.cmd test -- --run src/features/products/ProductDetail.test.tsx</pre>
+                            <p class="expected">Expected: existing 15 tests vẫn chạy; add-to-cart cases FAIL vì UI/flow chưa có.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-4" data-section="6"><div class="task-text">
+                            <p><strong>Step 4: Thêm quantity state và purchasability rules</strong></p>
+                            <pre>const [quantity, setQuantity] = useState(1)
+const [loginOpen, setLoginOpen] = useState(false)
+const [confirmBranchChange, setConfirmBranchChange] = useState(false)
+const [addError, setAddError] = useState&lt;string | null&gt;(null)
+const [retryAdd, setRetryAdd] = useState&lt;{ productId: string; quantity: number } | null&gt;(null)
+const addButtonRef = useRef&lt;HTMLButtonElement&gt;(null)
+
+const available = product.branchInventory?.availableQuantity ?? 0
+const cartReadyForCurrentVisitor = !isAuthenticated || cartStatus === 'ready'
+const canAdd = Boolean(
+  branchId &amp;&amp;
+  product.branchInventory &amp;&amp;
+  available &gt; 0 &amp;&amp;
+  quantity &gt; 0 &amp;&amp;
+  quantity &lt;= available &amp;&amp;
+  cartReadyForCurrentVisitor &amp;&amp;
+  !isAddingItem &amp;&amp;
+  !isChangingBranch
+)
+
+&lt;label htmlFor="product-quantity"&gt;Số lượng&lt;/label&gt;
+&lt;input
+  id="product-quantity"
+  type="number"
+  min={1}
+  max={available || 1}
+  value={quantity}
+  disabled={!product.branchInventory || available === 0}
+  onChange={(event) =&gt; setQuantity(Number(event.target.value))}
+/&gt;
+&lt;button ref={addButtonRef} type="button" disabled={!canAdd} onClick={handleAddClick}&gt;
+  {isAddingItem || isChangingBranch ? 'Đang xử lý…' : 'Thêm vào giỏ'}
+&lt;/button&gt;
+{addError &amp;&amp; &lt;p role="alert"&gt;{addError}&lt;/p&gt;}
+{retryAdd &amp;&amp; (
+  &lt;button
+    type="button"
+    onClick={() =&gt; void performAdd(retryAdd.productId, retryAdd.quantity)}
+  &gt;Thử lại thêm vào giỏ&lt;/button&gt;
+)}
+&lt;AuthModal
+  isOpen={loginOpen}
+  initialMode="login"
+  onClose={() =&gt; setLoginOpen(false)}
+/&gt;
+&lt;BranchChangeConfirmDialog
+  isOpen={confirmBranchChange}
+  isBusy={isChangingBranch}
+  returnFocusRef={addButtonRef}
+  onCancel={() =&gt; setConfirmBranchChange(false)}
+  onConfirm={async () =&gt; {
+    setConfirmBranchChange(false)
+    await continueAddAfterBranchCheck()
+  }}
+/&gt;</pre>
+                            <p>Destructure <code>status: cartStatus</code> từ <code>useCart()</code>. Reset quantity về 1 và clear add feedback khi product ID hoặc branch ID đổi. Quantity input dùng min 1, max từ displayed availability nhưng vẫn xử lý server 409.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-5" data-section="6"><div class="task-text">
+                            <p><strong>Step 5: Cài exact add orchestration và retry riêng bước add</strong></p>
+                            <pre>function isAbortError(error: unknown) {
+  return error instanceof Error &amp;&amp; error.name === 'AbortError'
+}
+
+function toCartActionMessage(error: unknown, fallback: string) {
+  if (error instanceof ApiError &amp;&amp;
+      error.status === 409 &amp;&amp;
+      error.data?.message === 'INSUFFICIENT_STOCK') {
+    return 'Chỉ còn ' + Number(error.data.availableQuantity) + ' sản phẩm'
+  }
+  if (error instanceof ApiError &amp;&amp; error.status === 404) {
+    return 'Sản phẩm hoặc kho không còn khả dụng.'
+  }
+  return fallback
+}
+
+async function performAdd(productId: string, requestedQuantity: number) {
+  try {
+    await addItem(productId, requestedQuantity)
+    setAddError(null)
+    setRetryAdd(null)
+  } catch (error) {
+    if (isAbortError(error)) return
+    setAddError(toCartActionMessage(error, 'Không thể thêm sản phẩm vào giỏ.'))
+    setRetryAdd({ productId, quantity: requestedQuantity })
+  }
+}
+
+async function continueAddAfterBranchCheck() {
+  if (!branchId || !id || !cart) return
+  try {
+    if (cart.branchId !== branchId) {
+      await changeBranch(branchId)
+    }
+  } catch (error) {
+    if (isAbortError(error)) return
+    setAddError(toCartActionMessage(error, 'Không thể đổi kho của giỏ hàng.'))
+    setRetryAdd(null)
+    return
+  }
+  await performAdd(id, quantity)
+}
+
+function handleAddClick() {
+  if (!isAuthenticated) {
+    setLoginOpen(true)
+    return
+  }
+  if (!cart || !branchId || !id) return
+  if (cart.branchId !== branchId &amp;&amp; cart.items.length &gt; 0) {
+    setConfirmBranchChange(true)
+    return
+  }
+  void continueAddAfterBranchCheck()
+}</pre>
+                            <p>Confirmation success gọi <code>continueAddAfterBranchCheck</code>. Retry button gọi trực tiếp <code>performAdd(retryAdd.productId, retryAdd.quantity)</code>, tuyệt đối không gọi helper đổi kho.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-6" data-section="6"><div class="task-text">
+                            <p><strong>Step 6: Thêm 409, login-no-replay và cancel tests</strong></p>
+                            <pre>it('shows authoritative stock from a 409 response', async () =&gt; {
+  addItem.mockRejectedValue(new ApiError(409, {
+    message: 'INSUFFICIENT_STOCK', availableQuantity: 2,
+  }))
+  renderSameBranchDetail()
+  fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Chỉ còn 2 sản phẩm')
+})
+
+it('does not replay add after login succeeds', async () =&gt; {
+  renderGuestDetail()
+  fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Hoàn tất đăng nhập' }))
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(addItem).not.toHaveBeenCalled()
+})
+
+it('cancels branch change without a cart mutation', async () =&gt; {
+  renderBranchMismatchDetail({ cartItems: [existingItem] })
+  fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Giữ giỏ hiện tại' }))
+  expect(changeBranch).not.toHaveBeenCalled()
+  expect(addItem).not.toHaveBeenCalled()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-7" data-section="6"><div class="task-text">
+                            <p><strong>Step 7: Chạy GREEN, cart regressions và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/features/products/ProductDetail.test.tsx src/features/cart/CartContext.test.tsx src/features/cart/CartPage.test.tsx
+git add frontend/src/features/products/ProductDetailPage.tsx frontend/src/features/products/ProductDetailPage.css frontend/src/features/products/ProductDetail.test.tsx
+git commit -m "feat(frontend): add products to branch cart"</pre>
+                            <p class="expected">Expected: add rules, guest, same/mismatch branch, exact sequence, add-only retry và 409 tests PASS.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-7">
+                <div class="section-header" onclick="toggleSection(7)">
+                    <div class="section-number" id="section-num-7">7</div>
+                    <div class="section-title">Task 7 — Responsive UI, accessibility và nghiệm thu đầy đủ</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Refine cart/product CSS và semantic markup khi test yêu cầu; Test toàn bộ frontend.</p>
+                        <p><strong>Consumes:</strong> Toàn bộ feature từ Tasks 1–6 và global color tokens hiện tại.</p>
+                        <p><strong>Produces:</strong> Keyboard-accessible responsive cart, verified full suite/build và manual acceptance matrix.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-1" data-section="7"><div class="task-text">
+                            <p><strong>Step 1: Thêm accessibility assertions trước CSS polish</strong></p>
+                            <pre>it('exposes accessible cart controls and progress', () =&gt; {
+  renderReadyCart({ mutatingItemIds: new Set(['item-1']) })
+  expect(screen.getByRole('heading', { level: 1, name: 'Giỏ hàng của bạn' })).toBeInTheDocument()
+  expect(screen.getByLabelText('Số lượng Điện thoại A')).toBeDisabled()
+  expect(screen.getByRole('status')).toHaveTextContent('Đang cập nhật Điện thoại A')
+})
+
+it('exposes a labelled modal branch warning', () =&gt; {
+  render(
+    &lt;BranchChangeConfirmDialog
+      isOpen={true}
+      onCancel={vi.fn()}
+      onConfirm={vi.fn()}
+    /&gt;
+  )
+  const dialog = screen.getByRole('dialog', { name: 'Đổi kho và xóa giỏ hiện tại?' })
+  expect(dialog).toHaveAttribute('aria-modal', 'true')
+  expect(dialog).toHaveAccessibleDescription(/toàn bộ sản phẩm/)
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-2" data-section="7"><div class="task-text">
+                            <p><strong>Step 2: Hoàn thiện responsive CSS bằng tokens hiện tại</strong></p>
+                            <pre>.cart-page { width: min(1180px, calc(100% - 40px)); margin: 0 auto 64px; }
+.cart-page__layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); gap: 28px; }
+.cart-item { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 16px; }
+.cart-item__placeholder { aspect-ratio: 1; background: var(--mist); border-radius: 10px; }
+.cart-summary { position: sticky; top: 20px; align-self: start; background: var(--paper); }
+
+@media (max-width: 760px) {
+  .cart-page { width: min(100% - 24px, 640px); }
+  .cart-page__layout { grid-template-columns: 1fr; }
+  .cart-item { grid-template-columns: 56px minmax(0, 1fr); }
+  .cart-summary { position: static; }
+}</pre>
+                            <p>Thêm <code>:focus-visible</code>, reduced motion, disabled contrast, dialog overlay và header badge responsive; không tạo horizontal overflow ở 320 px.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-3" data-section="7"><div class="task-text">
+                            <p><strong>Step 3: Chạy toàn bộ focused cart/product suite</strong></p>
+                            <pre>npm.cmd test -- --run src/api/cartApi.test.ts
+npm.cmd test -- --run src/features/cart/CartContext.test.tsx
+npm.cmd test -- --run src/features/cart/CartPage.test.tsx
+npm.cmd test -- --run src/features/products/ProductDetail.test.tsx</pre>
+                            <p class="expected">Expected: mọi cart API/provider/page/add regression PASS độc lập.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-4" data-section="7"><div class="task-text">
+                            <p><strong>Step 4: Chạy full frontend test suite</strong></p>
+                            <pre>npm.cmd test -- --run</pre>
+                            <p class="expected">Expected: toàn bộ Auth, Account, Browse, ProductDetail, Cart và system tests PASS.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-5" data-section="7"><div class="task-text">
+                            <p><strong>Step 5: Chạy TypeScript và production build</strong></p>
+                            <pre>npm.cmd run build</pre>
+                            <p class="expected">Expected: <code>tsc --noEmit</code> và <code>vite build</code> exit code 0; không có type mismatch.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-6" data-section="7"><div class="task-text">
+                            <p><strong>Step 6: Kiểm tra GUI thủ công theo acceptance matrix</strong></p>
+                            <table class="data-table">
+                                <thead><tr><th>Scenario</th><th>Expected</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Guest mở /shopping/cart</td><td>Giữ URL, hiển thị login; login xong cart load tại chỗ.</td></tr>
+                                    <tr><td>Guest bấm Thêm vào giỏ</td><td>Mở modal; login không tự add.</td></tr>
+                                    <tr><td>Header badge</td><td>Hiển thị tổng quantity server; reset ngay sau logout.</td></tr>
+                                    <tr><td>Cùng kho</td><td>Chỉ POST /cart/items, badge/summary cập nhật theo response.</td></tr>
+                                    <tr><td>Khác kho, giỏ có hàng</td><td>Cancel không request; confirm đổi kho rồi add đúng thứ tự.</td></tr>
+                                    <tr><td>Đổi kho thành công, add lỗi</td><td>Giữ kho mới; retry chỉ add; không đổi kho lần hai.</td></tr>
+                                    <tr><td>Update/remove đang chạy</td><td>Chỉ row tương ứng khóa và có progress; unlock cả success/failure.</td></tr>
+                                    <tr><td>409 stock</td><td>Hiện số lượng server và giữ cart snapshot.</td></tr>
+                                    <tr><td>Clear cart</td><td>Cần confirm; cập nhật empty chỉ sau 204.</td></tr>
+                                    <tr><td>Viewport 320 px và keyboard-only</td><td>Không overflow; focus rõ; dialogs giữ/trả focus đúng.</td></tr>
+                                </tbody>
+                            </table>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-7" data-section="7"><div class="task-text">
+                            <p><strong>Step 7: Commit nghiệm thu feature</strong></p>
+                            <pre>git add frontend/src/App.tsx frontend/src/app/AppShell.tsx frontend/src/api/cartApi.ts frontend/src/api/cartApi.test.ts frontend/src/features/cart frontend/src/features/products/ProductDetailPage.tsx frontend/src/features/products/ProductDetailPage.css frontend/src/features/products/ProductDetail.test.tsx
+git commit -m "feat(frontend): complete shopping cart experience"</pre>
+                            <p>Chỉ tạo commit này khi còn refinement chưa nằm trong commits trước; nếu worktree sạch thì ghi nhận verification thay vì tạo empty commit.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="files-summary">
+                <h3>File map đã khóa</h3>
+                <ul>
+                    <li class="new"><code>frontend/src/api/cartApi.ts</code> — DTO/request types và sáu authenticated API functions.</li>
+                    <li class="test"><code>frontend/src/api/cartApi.test.ts</code> — method/path/token/body/204 contract.</li>
+                    <li class="new"><code>frontend/src/features/cart/CartContext.tsx</code> — auth lifecycle, abort, authoritative state, serialized writes và locks.</li>
+                    <li class="test"><code>frontend/src/features/cart/CartContext.test.tsx</code> — load/reset/stale request/queue/flag/lock regressions.</li>
+                    <li class="new"><code>frontend/src/features/cart/CartHeaderLink.tsx</code> — native cart link và server total badge.</li>
+                    <li class="new"><code>frontend/src/features/cart/CartHeaderLink.css</code> — header cart focus, badge và responsive styles.</li>
+                    <li class="new"><code>frontend/src/features/cart/CartPage.tsx</code> — guest/loading/error/empty/ready route states và cart orchestration.</li>
+                    <li class="new"><code>frontend/src/features/cart/CartPage.css</code> — responsive rows, branch selector, summary và feedback.</li>
+                    <li class="new"><code>frontend/src/features/cart/CartItemRow.tsx</code> — placeholder, price, quantity, row lock/error và remove.</li>
+                    <li class="new"><code>frontend/src/features/cart/BranchChangeConfirmDialog.tsx</code> — accessible destructive branch-change confirmation.</li>
+                    <li class="test"><code>frontend/src/features/cart/CartPage.test.tsx</code> — page/header/item/branch/clear/dialog/accessibility behavior.</li>
+                    <li class="edit"><code>frontend/src/App.tsx</code> — CartProvider wiring và /shopping/cart route.</li>
+                    <li class="edit"><code>frontend/src/app/AppShell.tsx</code> — CartHeaderLink trong header actions.</li>
+                    <li class="edit"><code>frontend/src/features/products/ProductDetailPage.tsx</code> — quantity, auth prompt, add flow, confirmation và retry.</li>
+                    <li class="edit"><code>frontend/src/features/products/ProductDetailPage.css</code> — add controls, feedback và progress.</li>
+                    <li class="test"><code>frontend/src/features/products/ProductDetail.test.tsx</code> — add, auth, sequence, failure, retry và stock conflict.</li>
+                    <li class="read"><code>backend/src/OnlineSupermarket.Api/Contracts/Cart/CartContracts.cs</code> — source contract; không sửa.</li>
+                    <li class="read"><code>backend/src/OnlineSupermarket.Api/Endpoints/CartEndpoints.cs</code> — source endpoints; không sửa.</li>
+                </ul>
+            </section>
+        </main>
+        <footer class="footer">
+            <p><strong>Risk Level:</strong> MEDIUM-HIGH | <strong>Priority:</strong> HIGH | <strong>Scope:</strong> Frontend-only</p>
+            <p>Definition of Done: API contract + CartProvider + serialized writes + header badge + cart management + Product Detail add + branch confirmation + full tests/build pass.</p>
+            <button onclick="checkAll()">Check All</button>
+            <button class="reset" onclick="resetAll()">Reset Progress</button>
+        </footer>
+    </div>
+    <script>
+        const STORAGE_KEY = 'shopping-cart-frontend-progress';
+        const SECTION_COUNT = 7;
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return {};
+            try { return JSON.parse(saved); } catch { return {}; }
+        }
+        function saveProgress(progress) { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }
+        function updateUI() {
+            const progress = loadProgress();
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            const sectionTotal = {};
+            const sectionChecked = {};
+            let checkedCount = 0;
+            checkboxes.forEach((checkbox) => {
+                const taskId = checkbox.dataset.task;
+                const section = checkbox.dataset.section;
+                sectionTotal[section] = (sectionTotal[section] || 0) + 1;
+                checkbox.checked = Boolean(progress[taskId]);
+                const item = checkbox.closest('.task-item');
+                if (checkbox.checked) {
+                    checkedCount += 1;
+                    sectionChecked[section] = (sectionChecked[section] || 0) + 1;
+                    if (item) item.classList.add('checked');
+                } else if (item) {
+                    item.classList.remove('checked');
+                }
+            });
+            for (let section = 1; section <= SECTION_COUNT; section += 1) {
+                const number = document.getElementById('section-num-' + section);
+                const done = sectionTotal[section] > 0 && sectionChecked[section] === sectionTotal[section];
+                if (number) {
+                    number.classList.toggle('done', done);
+                    number.textContent = done ? '✓' : String(section);
+                }
+            }
+            const total = checkboxes.length;
+            const percent = total ? Math.round((checkedCount / total) * 100) : 0;
+            document.getElementById('progress-percent').textContent = percent + '%';
+            document.getElementById('progress-fill').style.width = percent + '%';
+            document.getElementById('checked-count').textContent = String(checkedCount);
+            document.getElementById('total-count').textContent = String(total);
+        }
+        function toggleSection(section) {
+            const element = document.getElementById('section-' + section);
+            if (element) element.classList.toggle('collapsed');
+        }
+        function checkAll() {
+            const progress = {};
+            document.querySelectorAll('.task-checkbox').forEach((checkbox) => {
+                progress[checkbox.dataset.task] = true;
+            });
+            saveProgress(progress);
+            updateUI();
+        }
+        function resetAll() {
+            if (!confirm('Reset tất cả tiến độ?')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            updateUI();
+        }
+        document.querySelectorAll('.task-checkbox').forEach((checkbox) => {
+            checkbox.addEventListener('change', function () {
+                const progress = loadProgress();
+                progress[this.dataset.task] = this.checked;
+                saveProgress(progress);
+                updateUI();
+            });
+        });
+        updateUI();
+    </script>
+</body>
+</html>
