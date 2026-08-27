@@ -1,11 +1,29 @@
-import { render, screen, waitFor, act } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Routes, Route, useLocation, useNavigate, type NavigateFunction } from 'react-router-dom'
 import { catalogApi, type ProductDetailDto } from '../../api/catalogApi'
 import { branchApi, type BranchDto } from '../../api/branchApi'
 import { ApiError } from '../../api/httpClient'
-
+import { useAuth } from '../auth/AuthContext'
+import { useCart } from '../cart/CartContext'
+import type { CartDto, CartItemDto } from '../../api/cartApi'
 import { ProductDetailPage } from './ProductDetailPage'
+
+vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
+vi.mock('../cart/CartContext', () => ({ useCart: vi.fn() }))
+vi.mock('../auth/AuthModal', () => ({
+  AuthModal: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
+    isOpen ? (
+      <div role="dialog" aria-label="Đăng nhập">
+        <button onClick={onClose}>Hoàn tất đăng nhập</button>
+      </div>
+    ) : null,
+}))
+
+const useAuthMock = vi.mocked(useAuth)
+const useCartMock = vi.mocked(useCart)
+const addItem = vi.fn()
+const changeBranch = vi.fn()
 
 const mockDetail: ProductDetailDto = {
   id: 'prod-1',
@@ -27,6 +45,139 @@ const branches: BranchDto[] = [
   { id: 'branch-1', name: 'AptechMart Quận 1', address: '123 Nguyễn Huệ', phone: null, latitude: null, longitude: null, isActive: true },
   { id: 'branch-2', name: 'AptechMart Quận 3', address: '456 Đường 3 Tháng 2', phone: null, latitude: null, longitude: null, isActive: true },
 ]
+
+const guestAuth: ReturnType<typeof useAuth> = {
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
+  isLoading: false,
+  login: vi.fn(),
+  register: vi.fn(),
+  logout: vi.fn(),
+  updateUser: vi.fn(),
+  refreshUser: vi.fn(),
+}
+
+const authenticatedAuth: ReturnType<typeof useAuth> = {
+  ...guestAuth,
+  user: {
+    id: 'user-1',
+    email: 'user@example.com',
+    fullName: 'Người mua',
+    role: 'Customer',
+  },
+  accessToken: 'jwt-token',
+  isAuthenticated: true,
+}
+
+const existingItem: CartItemDto = {
+  id: 'item-existing',
+  productId: 'prod-existing',
+  productName: 'Sản phẩm cũ',
+  sku: 'SKU-OLD',
+  unitPrice: 100000,
+  quantity: 1,
+  lineTotal: 100000,
+  availableQuantity: 3,
+}
+
+const baseCart: CartDto = {
+  id: 'cart-1',
+  userId: 'user-1',
+  branchId: 'branch-2',
+  items: [existingItem],
+  totalItems: 1,
+  subtotal: 100000,
+}
+
+const newBranchCart: CartDto = {
+  ...baseCart,
+  branchId: 'branch-1',
+  items: [],
+  totalItems: 0,
+  subtotal: 0,
+}
+
+const cartWithProduct: CartDto = {
+  ...newBranchCart,
+  items: [
+    {
+      id: 'item-new',
+      productId: 'prod-1',
+      productName: mockDetail.name,
+      sku: mockDetail.sku,
+      unitPrice: 21990000,
+      quantity: 1,
+      lineTotal: 21990000,
+      availableQuantity: 7,
+    },
+  ],
+  totalItems: 1,
+  subtotal: 21990000,
+}
+
+function mockProductDetail(overrides: Partial<ProductDetailDto> = {}) {
+  vi.spyOn(branchApi, 'getBranches').mockResolvedValue(branches)
+  vi.spyOn(catalogApi, 'getProductById').mockResolvedValue({
+    ...mockDetail,
+    ...overrides,
+  })
+}
+
+function mockInStockProduct() {
+  mockProductDetail({
+    branchInventory: {
+      branchId: 'branch-1',
+      sellingPrice: 21990000,
+      availableQuantity: 7,
+      onHand: 9,
+    },
+  })
+}
+
+function mockCart(cart: CartDto | null) {
+  useCartMock.mockReturnValue({
+    status: cart ? 'ready' : 'idle',
+    cart,
+    errorMessage: null,
+    mutatingItemIds: new Set(),
+    isAddingItem: false,
+    isChangingBranch: false,
+    isClearing: false,
+    reloadCart: vi.fn(),
+    addItem,
+    updateItemQuantity: vi.fn(),
+    removeItem: vi.fn(),
+    changeBranch,
+    clearCart: vi.fn(),
+  })
+}
+
+function renderBranchMismatchDetail({ cartItems }: { cartItems: CartItemDto[] }) {
+  useAuthMock.mockReturnValue(authenticatedAuth)
+  mockCart({
+    ...baseCart,
+    items: cartItems,
+    totalItems: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+    subtotal: cartItems.reduce((sum, item) => sum + item.lineTotal, 0),
+  })
+  mockInStockProduct()
+  return renderDetail('/product/prod-1?branchId=branch-1')
+}
+
+function renderSameBranchDetail() {
+  useAuthMock.mockReturnValue(authenticatedAuth)
+  mockCart(newBranchCart)
+  mockInStockProduct()
+  return renderDetail('/product/prod-1?branchId=branch-1')
+}
+
+function renderGuestDetail() {
+  useAuthMock.mockReturnValue(guestAuth)
+  mockCart(null)
+  mockInStockProduct()
+  return renderDetail('/product/prod-1?branchId=branch-1')
+}
 
 function LocationDisplay() {
   const location = useLocation()
@@ -58,6 +209,26 @@ function renderDetail(entry = '/product/prod-1'): RenderDetailResult {
 }
 
 describe('ProductDetailPage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    useAuthMock.mockReturnValue(guestAuth)
+    useCartMock.mockReturnValue({
+      status: 'idle',
+      cart: null,
+      errorMessage: null,
+      mutatingItemIds: new Set(),
+      isAddingItem: false,
+      isChangingBranch: false,
+      isClearing: false,
+      reloadCart: vi.fn(),
+      addItem,
+      updateItemQuantity: vi.fn(),
+      removeItem: vi.fn(),
+      changeBranch,
+      clearCart: vi.fn(),
+    })
+  })
+
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -90,7 +261,6 @@ describe('ProductDetailPage', () => {
     const detailSpy = vi.spyOn(catalogApi, 'getProductById').mockResolvedValue(mockDetail)
     renderDetail('/product/prod-1?ref=browse')
     const select = await screen.findByLabelText('Kho hàng')
-    const { fireEvent } = await import('@testing-library/react')
     fireEvent.change(select, { target: { value: 'branch-2' } })
     await waitFor(() => expect(detailSpy).toHaveBeenLastCalledWith(
       'prod-1', 'branch-2', expect.any(AbortSignal)
@@ -118,7 +288,6 @@ describe('ProductDetailPage', () => {
       imageUrl: 'https://example.com/broken.jpg',
     })
     renderDetail()
-    const { fireEvent } = await import('@testing-library/react')
     fireEvent.error(await screen.findByRole('img', { name: 'iPhone 15 128GB' }))
     expect(screen.getByText('Hình ảnh sản phẩm')).toBeInTheDocument()
   })
@@ -138,7 +307,6 @@ describe('ProductDetailPage', () => {
       .mockRejectedValueOnce(new ApiError(500))
       .mockResolvedValueOnce(mockDetail)
     renderDetail()
-    const { fireEvent } = await import('@testing-library/react')
     fireEvent.click(await screen.findByRole('button', { name: 'Thử lại' }))
     expect(await screen.findByRole('heading', { name: 'iPhone 15 128GB' })).toBeInTheDocument()
     expect(detailSpy).toHaveBeenCalledTimes(2)
@@ -152,7 +320,6 @@ describe('ProductDetailPage', () => {
     renderDetail()
     expect(await screen.findByRole('heading', { name: 'iPhone 15 128GB' })).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('Không thể tải danh sách kho')
-    const { fireEvent } = await import('@testing-library/react')
     fireEvent.click(screen.getByRole('button', { name: 'Tải lại danh sách kho' }))
     expect(await screen.findByLabelText('Kho hàng')).toBeEnabled()
     expect(branchSpy).toHaveBeenCalledTimes(2)
@@ -178,7 +345,6 @@ describe('ProductDetailPage', () => {
       await screen.findByText('Còn 7 sản phẩm tại kho')
 
       const select = screen.getByLabelText('Kho hàng')
-      const { fireEvent } = await import('@testing-library/react')
       fireEvent.change(select, { target: { value: '' } })
 
       await waitFor(() => {
@@ -198,7 +364,6 @@ describe('ProductDetailPage', () => {
     it('aborts stale product request when branchId changes before response', async () => {
       vi.spyOn(branchApi, 'getBranches').mockResolvedValue(branches)
 
-      // First request resolves slowly; second request resolves quickly
       let resolveFirst: (value: ProductDetailDto) => void
       const slowPromise = new Promise<ProductDetailDto>((resolve) => { resolveFirst = resolve })
 
@@ -211,27 +376,125 @@ describe('ProductDetailPage', () => {
 
       const { navigate } = renderDetail('/product/prod-1?branchId=branch-1')
 
-      // Wait for first request to be in flight
       await waitFor(() => {
         expect(detailSpy).toHaveBeenCalledWith('prod-1', 'branch-1', expect.any(AbortSignal))
       })
       const firstSignal = detailSpy.mock.calls[0][2] as AbortSignal
 
-      // Navigate to a different branch — this must abort the first request
       await act(async () => {
         navigate('/product/prod-1?branchId=branch-2')
       })
 
-      // First signal must be aborted so stale response cannot overwrite current state
       expect(firstSignal.aborted).toBe(true)
 
-      // Resolve the now-stale first response — it must NOT update the UI
       resolveFirst!({ ...mockDetail, branchInventory: { branchId: 'branch-1', sellingPrice: 999, availableQuantity: 99, onHand: 99 } })
 
-      // The second (current) request completes and is the visible state
       await waitFor(() => {
         expect(screen.getByText('Còn 3 sản phẩm tại kho')).toBeInTheDocument()
       })
+    })
+  })
+
+  describe('Add to Cart Flow', () => {
+    it.each([
+      ['/product/prod-1', null],
+      ['/product/prod-1?branchId=branch-1', null],
+      ['/product/prod-1?branchId=branch-1', { branchId: 'branch-1', sellingPrice: 10, availableQuantity: 0, onHand: 0 }],
+    ])('disables add when branch inventory is not purchasable', async (entry, inventory) => {
+      mockProductDetail({ branchInventory: inventory })
+      renderDetail(entry)
+      expect(await screen.findByRole('button', { name: 'Thêm vào giỏ' })).toBeDisabled()
+    })
+
+    it('opens login for a guest without adding', async () => {
+      renderGuestDetail()
+      fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      expect(addItem).not.toHaveBeenCalled()
+    })
+
+    it('changes branch then adds after confirmation', async () => {
+      const calls: string[] = []
+      changeBranch.mockImplementation(async () => {
+        calls.push('change')
+        return newBranchCart
+      })
+      addItem.mockImplementation(async () => {
+        calls.push('add')
+        return cartWithProduct
+      })
+      renderBranchMismatchDetail({ cartItems: [existingItem] })
+      fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Đổi kho và xóa giỏ' }))
+      await waitFor(() => expect(calls).toEqual(['change', 'add']))
+    })
+
+    it('retry after changeBranch→addItem fails calls only addItem, not changeBranch again', async () => {
+      changeBranch.mockResolvedValue(newBranchCart)
+      addItem
+        .mockRejectedValueOnce(new ApiError(500))
+        .mockResolvedValueOnce(cartWithProduct)
+      renderBranchMismatchDetail({ cartItems: [existingItem] })
+      fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Đổi kho và xóa giỏ' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Thử lại thêm vào giỏ' }))
+      await waitFor(() => expect(addItem).toHaveBeenCalledTimes(2))
+      expect(changeBranch).toHaveBeenCalledTimes(1)
+    })
+
+    it('stops before add when branch change fails', async () => {
+      changeBranch.mockRejectedValue(new ApiError(500))
+      renderBranchMismatchDetail({ cartItems: [existingItem] })
+      fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Đổi kho và xóa giỏ' }))
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Không thể đổi kho của giỏ hàng.'
+      )
+      expect(addItem).not.toHaveBeenCalled()
+    })
+
+    it('shows authoritative stock from a 409 response', async () => {
+      addItem.mockRejectedValue(
+        new ApiError(409, {
+          message: 'INSUFFICIENT_STOCK',
+          availableQuantity: 2,
+        })
+      )
+      renderSameBranchDetail()
+      fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+      expect(await screen.findByRole('alert')).toHaveTextContent('Chỉ còn 2 sản phẩm')
+    })
+
+    it('does not replay add after login succeeds', async () => {
+      renderGuestDetail()
+      fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Hoàn tất đăng nhập' }))
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(addItem).not.toHaveBeenCalled()
+    })
+
+    it('cancels branch change without a cart mutation', async () => {
+      renderBranchMismatchDetail({ cartItems: [existingItem] })
+      fireEvent.click(await screen.findByRole('button', { name: 'Thêm vào giỏ' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Giữ giỏ hiện tại' }))
+      expect(changeBranch).not.toHaveBeenCalled()
+      expect(addItem).not.toHaveBeenCalled()
+    })
+
+    it('disables add button when quantity is not an integer or less than 1', async () => {
+      renderSameBranchDetail()
+      const input = await screen.findByLabelText('Số lượng')
+      const addButton = screen.getByRole('button', { name: 'Thêm vào giỏ' })
+      expect(addButton).toBeEnabled()
+
+      fireEvent.change(input, { target: { value: '1.5' } })
+      expect(addButton).toBeDisabled()
+
+      fireEvent.change(input, { target: { value: '0' } })
+      expect(addButton).toBeDisabled()
+
+      fireEvent.change(input, { target: { value: '2' } })
+      expect(addButton).toBeEnabled()
     })
   })
 })

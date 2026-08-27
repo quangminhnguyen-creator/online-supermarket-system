@@ -1,8 +1,12 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { catalogApi, type ProductDetailDto } from '../../api/catalogApi'
 import { branchApi, type BranchDto } from '../../api/branchApi'
 import { ApiError } from '../../api/httpClient'
+import { useAuth } from '../auth/AuthContext'
+import { useCart } from '../cart/CartContext'
+import { AuthModal } from '../auth/AuthModal'
+import { BranchChangeConfirmDialog } from '../cart/BranchChangeConfirmDialog'
 import { formatPrice } from './ProductCard'
 import './ProductDetailPage.css'
 
@@ -17,15 +21,58 @@ type BranchState =
   | { kind: 'ready'; data: BranchDto[] }
   | { kind: 'error' }
 
+function isAbortError(error: unknown) {
+  return error instanceof Error && error.name === 'AbortError'
+}
+
+function toCartActionMessage(error: unknown, fallback: string) {
+  if (
+    error instanceof ApiError &&
+    error.status === 409 &&
+    error.data?.message === 'INSUFFICIENT_STOCK'
+  ) {
+    return 'Chỉ còn ' + Number(error.data.availableQuantity) + ' sản phẩm'
+  }
+  if (error instanceof ApiError && error.status === 404) {
+    return 'Sản phẩm hoặc kho không còn khả dụng.'
+  }
+  return fallback
+}
+
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const branchId = searchParams.get('branchId') || undefined
+
+  const { isAuthenticated } = useAuth()
+  const {
+    status: cartStatus,
+    cart,
+    isAddingItem,
+    isChangingBranch,
+    addItem,
+    changeBranch,
+  } = useCart()
+
   const [productState, setProductState] = useState<ProductState>({ kind: 'loading' })
   const [branchState, setBranchState] = useState<BranchState>({ kind: 'loading' })
   const [productRetryKey, setProductRetryKey] = useState(0)
   const [branchRetryKey, setBranchRetryKey] = useState(0)
   const [imageFailed, setImageFailed] = useState(false)
+
+  const [quantity, setQuantity] = useState(1)
+  const [loginOpen, setLoginOpen] = useState(false)
+  const [confirmBranchChange, setConfirmBranchChange] = useState(false)
+  const [addError, setAddError] = useState<string | null>(null)
+  const [retryAdd, setRetryAdd] = useState<{ productId: string; quantity: number } | null>(null)
+  const addButtonRef = useRef<HTMLButtonElement>(null)
+
+  // Reset quantity and feedback when product or branch changes
+  useEffect(() => {
+    setQuantity(1)
+    setAddError(null)
+    setRetryAdd(null)
+  }, [id, branchId])
 
   // Product fetch
   const fetchProduct = useCallback(() => {
@@ -36,7 +83,8 @@ export function ProductDetailPage() {
     const controller = new AbortController()
     setProductState({ kind: 'loading' })
     setImageFailed(false)
-    catalogApi.getProductById(id, branchId, controller.signal)
+    catalogApi
+      .getProductById(id, branchId, controller.signal)
       .then((data) => {
         setProductState({ kind: 'ready', data })
         setImageFailed(false)
@@ -56,7 +104,8 @@ export function ProductDetailPage() {
   const fetchBranches = useCallback(() => {
     const controller = new AbortController()
     setBranchState({ kind: 'loading' })
-    branchApi.getBranches(controller.signal)
+    branchApi
+      .getBranches(controller.signal)
       .then((data) => setBranchState({ kind: 'ready', data }))
       .catch(() => {
         if (controller.signal.aborted) return
@@ -65,8 +114,13 @@ export function ProductDetailPage() {
     return () => controller.abort()
   }, [branchRetryKey])
 
-  useEffect(() => { return fetchProduct() }, [fetchProduct])
-  useEffect(() => { return fetchBranches() }, [fetchBranches])
+  useEffect(() => {
+    return fetchProduct()
+  }, [fetchProduct])
+
+  useEffect(() => {
+    return fetchBranches()
+  }, [fetchBranches])
 
   // Normalize invalid branchId
   useEffect(() => {
@@ -85,10 +139,54 @@ export function ProductDetailPage() {
     setSearchParams(next)
   }
 
+  async function performAdd(productId: string, requestedQuantity: number) {
+    try {
+      await addItem(productId, requestedQuantity)
+      setAddError(null)
+      setRetryAdd(null)
+    } catch (error) {
+      if (isAbortError(error)) return
+      setAddError(toCartActionMessage(error, 'Không thể thêm sản phẩm vào giỏ.'))
+      setRetryAdd({ productId, quantity: requestedQuantity })
+    }
+  }
+
+  async function continueAddAfterBranchCheck() {
+    if (!branchId || !id || !cart) return
+    try {
+      if (cart.branchId !== branchId) {
+        await changeBranch(branchId)
+      }
+    } catch (error) {
+      if (isAbortError(error)) return
+      setAddError(toCartActionMessage(error, 'Không thể đổi kho của giỏ hàng.'))
+      setRetryAdd(null)
+      return
+    }
+    await performAdd(id, quantity)
+  }
+
+  function handleAddClick() {
+    if (!isAuthenticated) {
+      setLoginOpen(true)
+      return
+    }
+    if (!cart || !branchId || !id) return
+    if (cart.branchId !== branchId && cart.items.length > 0) {
+      setConfirmBranchChange(true)
+      return
+    }
+    void continueAddAfterBranchCheck()
+  }
+
   function renderLoading() {
     return (
       <div className="product-detail-page">
-        <div className="product-detail__loading" aria-label="Đang tải chi tiết sản phẩm" aria-busy="true">
+        <div
+          className="product-detail__loading"
+          aria-label="Đang tải chi tiết sản phẩm"
+          aria-busy="true"
+        >
           <div className="product-detail__skeleton-image shimmer" />
           <div className="product-detail__skeleton-body">
             <div className="skeleton-title shimmer" />
@@ -106,7 +204,9 @@ export function ProductDetailPage() {
         <div className="product-detail__not-found">
           <h1>Không tìm thấy sản phẩm</h1>
           <p>Sản phẩm bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
-          <Link to="/browse" className="product-detail__back-link">Quay lại danh sách sản phẩm</Link>
+          <Link to="/browse" className="product-detail__back-link">
+            Quay lại danh sách sản phẩm
+          </Link>
         </div>
       </div>
     )
@@ -126,10 +226,12 @@ export function ProductDetailPage() {
   }
 
   function renderReady(product: ProductDetailDto) {
-    const { availableQuantity, sellingPrice } = product.branchInventory ?? {}
-    const isAvailable = availableQuantity !== undefined && availableQuantity !== null && availableQuantity > 0
-    const isOutOfStock = availableQuantity !== undefined && availableQuantity !== null && availableQuantity === 0
-    const isUnavailable = product.branchInventory === null && branchId
+    const { availableQuantity } = product.branchInventory ?? {}
+    const isAvailable =
+      availableQuantity !== undefined && availableQuantity !== null && availableQuantity > 0
+    const isOutOfStock =
+      availableQuantity !== undefined && availableQuantity !== null && availableQuantity === 0
+    const isUnavailable = product.branchInventory === null && Boolean(branchId)
     const isNoBranch = !branchId
 
     let price = product.basePrice
@@ -152,7 +254,22 @@ export function ProductDetailPage() {
       price = product.branchInventory!.sellingPrice
     }
 
-    const effectiveImageUrl = product.imageUrl && !imageFailed ? product.imageUrl : null
+    const effectiveImageUrl =
+      product.imageUrl && !imageFailed ? product.imageUrl : null
+
+    const available = product.branchInventory?.availableQuantity ?? 0
+    const cartReadyForCurrentVisitor = !isAuthenticated || cartStatus === 'ready'
+    const canAdd = Boolean(
+      branchId &&
+        product.branchInventory &&
+        available > 0 &&
+        Number.isInteger(quantity) &&
+        quantity > 0 &&
+        quantity <= available &&
+        cartReadyForCurrentVisitor &&
+        !isAddingItem &&
+        !isChangingBranch
+    )
 
     return (
       <div className="product-detail-page">
@@ -181,7 +298,11 @@ export function ProductDetailPage() {
                   strokeWidth="1.5"
                   aria-hidden="true"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+                  />
                 </svg>
                 <span>Hình ảnh sản phẩm</span>
               </div>
@@ -236,11 +357,72 @@ export function ProductDetailPage() {
                   disabled={branchState.kind !== 'ready' || productState.kind === 'loading'}
                 >
                   <option value="">Chọn kho</option>
-                  {branchState.kind === 'ready' && branchState.data.map((branch) => (
-                    <option key={branch.id} value={branch.id}>{branch.name}</option>
-                  ))}
+                  {branchState.kind === 'ready' &&
+                    branchState.data.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </option>
+                    ))}
                 </select>
               </div>
+
+              <div className="product-detail__add-to-cart">
+                <div className="product-detail__quantity-box">
+                  <label htmlFor="product-quantity">Số lượng</label>
+                  <input
+                    id="product-quantity"
+                    type="number"
+                    step={1}
+                    min={1}
+                    max={available || 1}
+                    value={quantity}
+                    disabled={!product.branchInventory || available === 0}
+                    onChange={(event) => setQuantity(Number(event.target.value))}
+                  />
+                </div>
+                <button
+                  ref={addButtonRef}
+                  type="button"
+                  className="product-detail__add-btn"
+                  disabled={!canAdd}
+                  onClick={handleAddClick}
+                >
+                  {isAddingItem || isChangingBranch ? 'Đang xử lý…' : 'Thêm vào giỏ'}
+                </button>
+              </div>
+
+              {addError && (
+                <p role="alert" className="product-detail__alert">
+                  {addError}
+                </p>
+              )}
+
+              {retryAdd && (
+                <button
+                  type="button"
+                  className="product-detail__retry-add-btn"
+                  onClick={() => void performAdd(retryAdd.productId, retryAdd.quantity)}
+                >
+                  Thử lại thêm vào giỏ
+                </button>
+              )}
+
+              <AuthModal
+                isOpen={loginOpen}
+                initialMode="login"
+                onClose={() => setLoginOpen(false)}
+              />
+
+              <BranchChangeConfirmDialog
+                isOpen={confirmBranchChange}
+                isBusy={isChangingBranch}
+                returnFocusRef={addButtonRef}
+                onCancel={() => setConfirmBranchChange(false)}
+                onConfirm={async () => {
+                  setConfirmBranchChange(false)
+                  await continueAddAfterBranchCheck()
+                }}
+              />
             </div>
           </div>
         </div>

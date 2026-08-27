@@ -225,6 +225,97 @@
   background: #991b1b;
 }
 
+/* Add to Cart */
+.product-detail__add-to-cart {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.product-detail__quantity-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100px;
+}
+
+.product-detail__quantity-box label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--forest);
+}
+
+.product-detail__quantity-box input {
+  padding: 10px 12px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid rgba(11, 61, 46, 0.3);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  text-align: center;
+}
+
+.product-detail__quantity-box input:focus {
+  outline: 3px solid var(--leaf);
+  outline-offset: 2px;
+}
+
+.product-detail__quantity-box input:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.product-detail__add-btn {
+  flex: 1;
+  padding: 12px 24px;
+  background: var(--forest);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s, opacity 0.15s;
+  min-height: 44px;
+}
+
+.product-detail__add-btn:hover:not(:disabled) {
+  background: var(--leaf);
+}
+
+.product-detail__add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.product-detail__alert {
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.product-detail__retry-add-btn {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.product-detail__retry-add-btn:hover {
+  background: var(--danger);
+  color: white;
+}
+
 /* Error & Not Found */
 .product-detail__error {
   text-align: center;
@@ -356,5 +447,14 @@
 
   .product-detail__price-value {
     font-size: 24px;
+  }
+
+  .product-detail__add-to-cart {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .product-detail__quantity-box {
+    width: 100%;
   }
 }
