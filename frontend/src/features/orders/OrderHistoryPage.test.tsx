@@ -114,7 +114,7 @@ describe('OrderHistoryPage', () => {
   it('maps backend statuses to Vietnamese labels without hiding raw status from tests', async () => {
     vi.spyOn(orderApi, 'getOrders').mockResolvedValue(orderListResponse)
     renderHistory({ isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' })
-    expect(await screen.findByText('Đã xác nhận')).toBeInTheDocument()
+    expect(await screen.findByText('Đã xác nhận', { selector: '.order-status' })).toBeInTheDocument()
     expect(screen.getByText('Confirmed', { selector: '.sr-only' })).toBeInTheDocument()
   })
 
@@ -134,5 +134,31 @@ describe('OrderHistoryPage', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Thử lại' }))
     expect(await screen.findByText('Bạn chưa có đơn hàng nào.')).toBeInTheDocument()
     expect(spy).toHaveBeenCalledTimes(2)
+  })
+
+  it('renders loading state while authentication is resolving without flashing guest prompt', () => {
+    renderHistory({ isAuthenticated: false, isLoading: true, accessToken: null })
+    expect(screen.getByText('Đang tải đơn hàng...')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Đăng nhập để xem đơn hàng' })).not.toBeInTheDocument()
+  })
+
+  it('displays Vietnamese labels in the status filter dropdown', async () => {
+    renderHistory()
+    expect(await screen.findByRole('option', { name: 'Đã xác nhận' })).toHaveValue('Confirmed')
+    expect(screen.getByRole('option', { name: 'Chờ xác nhận' })).toHaveValue('Pending')
+  })
+
+  it('clears stale orders list when subsequent load fails', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(orderApi, 'getOrders')
+      .mockResolvedValueOnce(orderListResponse)
+      .mockRejectedValueOnce(new ApiError(500))
+    renderHistory()
+    expect(await screen.findByText('Mã đơn: 00000000-0000-0000-0000-000000000001')).toBeInTheDocument()
+
+    // Change status filter to trigger reload error
+    await user.selectOptions(screen.getByLabelText('Lọc trạng thái'), 'Cancelled')
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(screen.queryByText('Mã đơn: 00000000-0000-0000-0000-000000000001')).not.toBeInTheDocument()
   })
 })

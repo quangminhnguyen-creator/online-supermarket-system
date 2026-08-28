@@ -56,7 +56,10 @@ export function OrderHistoryPage() {
         setLoadState('ready')
       })
       .catch((error) => {
-        if (!isAbortError(error)) setLoadState('error')
+        if (!isAbortError(error)) {
+          setOrders(null)
+          setLoadState('error')
+        }
       })
     return () => controller.abort()
   }, [isAuthenticated, accessToken, page, status, retryKey])
@@ -75,6 +78,8 @@ export function OrderHistoryPage() {
     setSearchParams(next)
   }
 
+  if (authLoading) return <section className="orders-page" aria-busy="true"><p>Đang tải đơn hàng...</p></section>
+
   if (!isAuthenticated) {
     return (
       <section className="orders-page orders-page--auth-required">
@@ -85,7 +90,7 @@ export function OrderHistoryPage() {
       </section>
     )
   }
-  if (authLoading || loadState === 'loading') return <section className="orders-page" aria-busy="true"><p>Đang tải đơn hàng...</p></section>
+  if (loadState === 'loading') return <section className="orders-page" aria-busy="true"><p>Đang tải đơn hàng...</p></section>
 
   return (
     <main className="orders-page" role="main" aria-label="Lịch sử đơn hàng">
@@ -106,7 +111,7 @@ export function OrderHistoryPage() {
         >
           <option value="">Tất cả trạng thái</option>
           {ORDER_STATUSES.filter(Boolean).map((value) => (
-            <option key={value} value={value}>{value}</option>
+            <option key={value} value={value}>{formatStatus(value)}</option>
           ))}
         </select>
       </div>
