@@ -10,6 +10,7 @@ import { CartPage } from './features/cart/CartPage'
 import { CheckoutPage } from './features/checkout/CheckoutPage'
 import { CheckoutSuccessPage } from './features/checkout/CheckoutSuccessPage'
 import { OrderHistoryPage } from './features/orders/OrderHistoryPage'
+import { OrderDetailPage } from './features/orders/OrderDetailPage'
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
               <Route path="/shopping/checkout" element={<CheckoutPage />} />
               <Route path="/shopping/checkout/success" element={<CheckoutSuccessPage />} />
               <Route path="/orders/history" element={<OrderHistoryPage />} />
+              <Route path="/orders/history/:id" element={<OrderDetailPage />} />
             </Routes>
           </AppShell>
         </CartProvider>
