@@ -373,12 +373,11 @@ describe('CartPage & Header Badge', () => {
     expect(changeBranch).not.toHaveBeenCalled()
   })
 
-  it('keeps checkout disabled for the next dashboard task', () => {
+  it('links ready carts to checkout', async () => {
     renderReadyCart()
     expect(
-      screen.getByRole('button', { name: /Tiến hành thanh toán/ })
-    ).toBeDisabled()
-    expect(screen.getByText('Sắp có')).toBeInTheDocument()
+      await screen.findByRole('link', { name: 'Tiến hành thanh toán' })
+    ).toHaveAttribute('href', '/shopping/checkout')
   })
 
   it('exposes accessible cart controls and progress', () => {

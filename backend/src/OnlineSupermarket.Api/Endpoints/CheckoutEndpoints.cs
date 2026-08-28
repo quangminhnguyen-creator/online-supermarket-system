@@ -192,6 +192,7 @@ public static class CheckoutEndpoints
         var userId = GetUserId(user);
 
         var order = await dbContext.Orders
+            .Include(o => o.StatusHistory)
             .FirstOrDefaultAsync(o => o.Id == request.OrderId && o.UserId == userId, cancellationToken);
 
         if (order == null)
@@ -263,7 +264,9 @@ public static class CheckoutEndpoints
         if (isSuccess && amount == payment.Amount)
         {
             payment.MarkCompleted(externalEventId, System.Text.Json.JsonSerializer.Serialize(request.Data));
-            var order = await dbContext.Orders.FindAsync([payment.OrderId], cancellationToken);
+            var order = await dbContext.Orders
+                .Include(o => o.StatusHistory)
+                .FirstOrDefaultAsync(o => o.Id == payment.OrderId, cancellationToken);
             if (order != null)
             {
                 order.SetStatus(OrderStatus.Confirmed, "Payment confirmed");
@@ -287,6 +290,7 @@ public static class CheckoutEndpoints
     {
         var order = await dbContext.Orders
             .Include(o => o.Items)
+            .Include(o => o.StatusHistory)
             .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken);
 
         if (order == null) return;

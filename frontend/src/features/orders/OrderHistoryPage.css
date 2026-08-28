@@ -146,3 +146,25 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Focus styles */
+button:focus-visible,
+a:focus-visible,
+select:focus-visible {
+  outline: 2px solid #1f7a4d;
+  outline-offset: 2px;
+}
+
+/* Pagination disabled */
+.orders-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f5f5f5;
+}
+
+/* Mobile: prevent horizontal overflow */
+.orders-page,
+.order-detail-page {
+  overflow-x: hidden;
+  max-width: 100%;
+}

@@ -348,9 +348,9 @@ export function CartPage() {
               <span>Tạm tính</span>
               <strong className="cart-summary__price">{formatPrice(cart.subtotal)}</strong>
             </div>
-            <button type="button" className="cart-btn cart-btn--checkout" disabled>
-              Tiến hành thanh toán <span className="cart-btn__badge">Sắp có</span>
-            </button>
+            <Link to="/shopping/checkout" className="cart-btn cart-btn--checkout">
+              Tiến hành thanh toán
+            </Link>
           </aside>
         </div>
       )}

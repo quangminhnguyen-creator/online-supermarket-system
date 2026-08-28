@@ -1,0 +1,41 @@
+import { postJson } from './httpClient'
+
+export type FulfillmentType = 'Pickup' | 'Delivery'
+export type PaymentMethod = 'COD' | 'VNPay' | 'MoMo'
+
+export interface CheckoutRequest {
+  fulfillmentType: FulfillmentType
+  deliveryAddressId?: string | null
+  recipientName?: string | null
+  recipientPhone?: string | null
+  deliveryAddress?: string | null
+}
+
+export interface PaymentInitDto {
+  paymentId: string
+  method: string
+  status: string
+  checkoutUrl: string | null
+}
+
+export interface CheckoutResponse {
+  orderId: string
+  subtotal: number
+  discountAmount: number
+  shippingFee: number
+  totalAmount: number
+  status: string
+  payment: PaymentInitDto | null
+}
+
+export interface PaymentRequest {
+  orderId: string
+  method: PaymentMethod
+}
+
+export const checkoutApi = {
+  checkout: (data: CheckoutRequest, token: string, signal?: AbortSignal) =>
+    postJson<CheckoutResponse>('/checkout', data, { token, signal }),
+  initiatePayment: (data: PaymentRequest, token: string, signal?: AbortSignal) =>
+    postJson<PaymentInitDto>('/checkout/payment', data, { token, signal }),
+}

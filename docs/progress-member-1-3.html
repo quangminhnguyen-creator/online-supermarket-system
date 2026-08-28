@@ -455,13 +455,13 @@
         <div class="metric-card">
             <div class="metric-title">Tiến Độ Frontend Storefront</div>
             <div class="metric-value">
-                <span>~85%</span>
-                <span class="badge badge-done" style="font-size: 0.8rem;">5 / 7 Màn Hình</span>
+                <span>100%</span>
+                <span class="badge badge-done" style="font-size: 0.8rem;">7 / 7 Màn Hình Hoàn Thành</span>
             </div>
             <div class="progress-bar-container">
-                <div class="progress-bar progress-success" style="width: 85%;"></div>
+                <div class="progress-bar progress-success" style="width: 100%;"></div>
             </div>
-            <div class="metric-sub">Đã hoàn thành Auth, Sổ địa chỉ, Duyệt Catalog, Chi tiết sản phẩm & Giỏ hàng mua sắm</div>
+            <div class="metric-sub">Đã hoàn thành Auth, Sổ địa chỉ, Duyệt Catalog, Chi tiết sản phẩm, Giỏ hàng, Thanh toán & Lịch sử đơn hàng</div>
         </div>
 
         <div class="metric-card">
@@ -476,13 +476,13 @@
         <div class="metric-card">
             <div class="metric-title">Kết Quả Kiểm Thử (Unit/Integration)</div>
             <div class="metric-value">
-                <span>191/191</span>
-                <span class="badge badge-done" style="font-size: 0.8rem;">Passed 100%</span>
+                <span>184 verified</span>
+                <span class="badge badge-progress" style="font-size: 0.8rem;">Backend API bị khóa DLL</span>
             </div>
             <div class="progress-bar-container">
-                <div class="progress-bar progress-success" style="width: 100%;"></div>
+                <div class="progress-bar progress-warning" style="width: 82%;"></div>
             </div>
-            <div class="metric-sub">45 Domain + 4 Infra + 51 API + 91 Frontend Vitest</div>
+            <div class="metric-sub">45 Domain + 4 Infra + 135 Frontend Vitest; 51 API Integration chờ tắt OnlineSupermarket.Api PID 4988</div>
         </div>
     </div>
 
@@ -491,7 +491,7 @@
         <button class="tab-btn active" onclick="switchTab('overview')">📊 Tổng Quan Nghiệp Vụ</button>
         <button class="tab-btn" onclick="switchTab('member1')">👤 Thành Viên 1 (Backend Core) <span class="tab-count">7 Tasks</span></button>
         <button class="tab-btn" onclick="switchTab('member3')">👤 Thành Viên 3 (Payment & Order) <span class="tab-count">6 Tasks</span></button>
-        <button class="tab-btn" onclick="switchTab('frontend')">💻 Frontend Tương Ứng <span class="tab-count">5/7 Flow UI</span></button>
+        <button class="tab-btn" onclick="switchTab('frontend')">💻 Frontend Tương Ứng <span class="tab-count">7/7 Flow UI</span></button>
         <button class="tab-btn" onclick="switchTab('apis')">🔌 Danh Mục API & Contracts</button>
         <button class="tab-btn" onclick="switchTab('checklist')">✅ Checklist Nghiệm Thu</button>
     </div>
@@ -768,7 +768,7 @@
         <div class="section-card">
             <div class="section-header">
                 <div class="section-title">💻 Phân Hệ Frontend Tương Ứng (React 19 + TypeScript + Vite)</div>
-                <span class="badge badge-done">5 / 7 Màn Hình Hoàn Thành (~85%)</span>
+                <span class="badge badge-done">7 / 7 Màn Hình Hoàn Thành (100%)</span>
             </div>
 
             <div class="data-table-wrapper">
@@ -814,15 +814,15 @@
                         </tr>
                         <tr>
                             <td><strong>6. Thanh Toán & Đặt Hàng</strong></td>
-                            <td><code class="endpoint">/shopping/checkout</code></td>
+                            <td><code class="endpoint">/shopping/checkout</code>, <code class="endpoint">/shopping/checkout/success</code></td>
                             <td><code class="endpoint">/api/checkout</code>, <code class="endpoint">/api/checkout/payment</code></td>
-                            <td><span class="badge badge-planned">🔄 Sẵn sàng kết nối API Backend</span></td>
+                            <td><span class="badge badge-done">✅ Đã hoàn thành (CheckoutPage, CheckoutSuccessPage, checkoutApi, Fulfillment, COD/VNPay/MoMo - 20 Tests)</span></td>
                         </tr>
                         <tr>
                             <td><strong>7. Theo Dõi Lịch Sử Đơn Hàng</strong></td>
-                            <td><code class="endpoint">/orders/history</code></td>
+                            <td><code class="endpoint">/orders/history</code>, <code class="endpoint">/orders/history/:id</code></td>
                             <td><code class="endpoint">/api/orders</code>, <code class="endpoint">/api/orders/{id}</code></td>
-                            <td><span class="badge badge-planned">🔄 Sẵn sàng kết nối API Backend</span></td>
+                            <td><span class="badge badge-done">✅ Đã hoàn thành (OrderHistoryPage, OrderDetailPage, orderApi, StatusFilter, Pagination, Timeline - 17 Tests)</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -836,6 +836,8 @@
                     <li><strong>Multi-Branch Stock Badge:</strong> Hiển thị badge tồn kho trực quan theo từng Chi nhánh siêu thị đã chọn (Còn hàng, Sắp hết hàng, Hết hàng).</li>
                     <li><strong>Product Detail & Dynamic Branch Stock:</strong> Chi tiết thông số, fallback ảnh tự động, hiển thị giá bán và tồn kho tương ứng theo từng chi nhánh thời gian thực với query param <code>?branchId=</code>, điều khiển thêm giỏ hàng có kiểm tra tồn kho (26 Tests).</li>
                     <li><strong>Shopping Cart & Multi-Branch Protection:</strong> Quản lý giỏ hàng realtime qua CartProvider, khóa theo từng item (ref-counted locks), serialize mutation writes, badge tổng số lượng ở header, modal xác nhận đổi kho/xóa giỏ hàng và xử lý lỗi tồn kho 409 (36 Tests).</li>
+                    <li><strong>Checkout & Sandbox Payment:</strong> Khởi tạo đơn hàng Pickup (0đ ship) / Delivery (15.000đ ship), tự động nạp sổ địa chỉ, thanh toán COD / chuyển hướng VNPay Sandbox & MoMo Sandbox, màn hình Success và bắt lỗi giỏ hàng rỗng / hết tồn kho (20 Tests).</li>
+                    <li><strong>Order History & Timeline Tracking:</strong> Lịch sử đơn hàng có phân trang & lọc trạng thái, chi tiết sản phẩm trong đơn, địa chỉ giao hàng snapshot, thông tin thanh toán và dòng thời gian chuyển đổi trạng thái (17 Tests).</li>
                     <li><strong>Chuyển đổi Chế độ Nguồn Dữ liệu:</strong> Tự động tích hợp chế độ Backend Live API hoặc Dữ liệu giả lập mẫu khi dev độc lập.</li>
                 </ul>
             </div>
@@ -1006,7 +1008,7 @@
         <div class="section-card">
             <div class="section-header">
                 <div class="section-title">✅ Checklist Kiểm Thử & Nghiệm Thu Kỹ Thuật</div>
-                <span class="badge badge-done">100% Passed (191 Tests)</span>
+                <span class="badge badge-progress">Verified 163 Tests + Frontend Build</span>
             </div>
 
             <div class="checklist-item done">
@@ -1038,6 +1040,14 @@
                 <div class="checklist-content">
                     <h5>Giao diện Giỏ hàng & Đồng bộ kho (CartPage & CartContext)</h5>
                     <p>Tích hợp CartProvider quản lý state tập trung, badge header cập nhật tổng số lượng, serialize các write request, ref-counted item locks, modal xác nhận đổi kho/xóa giỏ, và xử lý lỗi tồn kho 409 (36 Vitest tests).</p>
+                </div>
+            </div>
+
+            <div class="checklist-item done">
+                <div class="checklist-icon">✅</div>
+                <div class="checklist-content">
+                    <h5>Giao diện Thanh toán & Khởi tạo giao dịch (CheckoutPage & CheckoutSuccessPage)</h5>
+                    <p>Tích hợp khởi tạo đơn hàng từ giỏ, lựa chọn nhận tại quầy (0đ ship) hoặc giao hàng tận nơi (15.000đ ship), tự động nạp sổ địa chỉ, phương thức COD/VNPay/MoMo Sandbox, bắt lỗi tồn kho 409, dọn giỏ realtime và trang xác nhận đặt hàng thành công (20 Vitest tests).</p>
                 </div>
             </div>
 
@@ -1084,8 +1094,16 @@
             <div class="checklist-item done">
                 <div class="checklist-icon">✅</div>
                 <div class="checklist-content">
-                    <h5>Build & Automated Test Pass 100% (191/191 Tests)</h5>
-                    <p>100 Backend Tests (.NET 10: 45 Domain + 4 Infrastructure + 51 API Integration) + 91 Frontend Vitest Tests đều chạy thành công 100% không có bất kỳ lỗi nào.</p>
+                    <h5>Giao diện Theo dõi Lịch sử Đơn hàng (OrderHistoryPage & OrderDetailPage)</h5>
+                    <p>Tích hợp danh sách đơn hàng phân trang server-side, lọc theo trạng thái đơn hàng, màn hình chi tiết đơn hàng, snapshot địa chỉ người nhận, dòng thời gian trạng thái, thông tin thanh toán và bắt lỗi không tìm thấy đơn (17 Vitest tests).</p>
+                </div>
+            </div>
+
+            <div class="checklist-item done">
+                <div class="checklist-icon">✅</div>
+                <div class="checklist-content">
+                    <h5>Build & Automated Test Verification (28/08/2026)</h5>
+                    <p>Đã xác minh mới: 135/135 Frontend Vitest pass (16/16 test files), frontend production build pass (0 lỗi), 45 Domain tests pass và 4 Infrastructure tests pass. Full backend suite hiện chưa chốt được vì tiến trình <code>OnlineSupermarket.Api</code> PID 4988 đang chạy phục vụ dev và khóa DLL khi build test API Integration; cần tắt tiến trình này rồi chạy lại <code>dotnet test OnlineSupermarket.slnx</code>.</p>
                 </div>
             </div>
         </div>
@@ -1100,6 +1118,8 @@
             <a href="tasks/plan-product-browse.html">plan-product-browse.html</a> | 
             <a href="tasks/plan-product-detail-branch-switching.html">plan-product-detail-branch-switching.html</a> | 
             <a href="tasks/plan-shopping-cart.html">plan-shopping-cart.html</a> | 
+            <a href="tasks/plan-checkout-payment.html">plan-checkout-payment.html</a> | 
+            <a href="tasks/plan-order-history.html">plan-order-history.html</a> | 
             <a href="tasks/plan-seed-data-electronics.html">plan-seed-data-electronics.html</a> | 
             <a href="architecture/erd.md">erd.md</a> | 
             <a href="architecture/dfd.md">dfd.md</a> | 

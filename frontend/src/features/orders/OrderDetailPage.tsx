@@ -175,8 +175,9 @@ export function OrderDetailPage() {
     return () => controller.abort()
   }, [isAuthenticated, accessToken, id, retryKey])
 
-  if (authLoading || loadState === 'loading') return <OrderDetailSkeleton />
+  if (authLoading) return <OrderDetailSkeleton />
   if (!isAuthenticated) return <OrderDetailAuthRequired />
+  if (loadState === 'loading') return <OrderDetailSkeleton />
   if (loadState === 'not-found') return <OrderNotFound />
   if (loadState === 'error') return <OrderDetailError onRetry={() => setRetryKey((key) => key + 1)} />
   if (!order) return <OrderDetailError onRetry={() => setRetryKey((key) => key + 1)} />

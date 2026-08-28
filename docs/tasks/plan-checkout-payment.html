@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementation Plan: Frontend - Thanh Toán &amp; Đặt Hàng</title>
+    <style>
+        :root {
+            --forest: #0b3d2e;
+            --leaf: #1f7a4d;
+            --mist: #e8f1ed;
+            --paper: #f9fbf4;
+            --label: #f49b45;
+            --ink: #132a23;
+            --danger: #b9382a;
+            --blue: #245f8f;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--ink);
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, .08);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--forest), var(--leaf));
+            color: white;
+            padding: 32px;
+        }
+        .header h1 { font-size: 26px; margin-bottom: 8px; }
+        .header p { opacity: .92; font-size: 14px; }
+        .status-bar {
+            background: var(--leaf);
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .progress-container { flex: 1; max-width: 340px; }
+        .progress-bar { height: 8px; background: rgba(255, 255, 255, .3); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0; background: white; transition: width .3s ease; }
+        .progress-text { font-size: 13px; margin-top: 4px; }
+        .content { padding: 32px; }
+        .overview {
+            background: var(--paper);
+            border: 1px solid var(--mist);
+            border-left: 5px solid var(--label);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+        .overview h2 { color: var(--forest); font-size: 19px; margin-bottom: 10px; }
+        .overview h3 { margin-top: 16px; color: var(--forest); font-size: 15px; }
+        .overview p, .overview li { font-size: 14px; }
+        .overview ul { margin: 8px 0 0 22px; }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 24px;
+            margin-top: 14px;
+            font-size: 13px;
+        }
+        code {
+            background: var(--mist);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--forest);
+            font-size: 13px;
+        }
+        .section {
+            margin-bottom: 28px;
+            border: 1px solid var(--mist);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--paper);
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid var(--mist);
+        }
+        .section-header:hover { background: var(--mist); }
+        .section-number {
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            background: var(--forest);
+            color: white;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .section-number.done { background: var(--leaf); }
+        .section-title { font-size: 17px; font-weight: 650; color: var(--forest); flex: 1; }
+        .section-toggle { font-size: 20px; color: #777; transition: transform .2s; }
+        .section.collapsed .section-toggle { transform: rotate(-90deg); }
+        .section.collapsed .section-content { display: none; }
+        .section-content { padding: 20px; }
+        .interfaces {
+            background: #f6faf8;
+            border: 1px dashed rgba(11, 61, 46, .3);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            font-size: 13px;
+        }
+        .interfaces p + p { margin-top: 4px; }
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            margin-bottom: 9px;
+            background: var(--paper);
+            border-radius: 8px;
+            border: 1px solid var(--mist);
+        }
+        .task-item:hover { border-color: var(--leaf); }
+        .task-item.checked { opacity: .58; background: #f0f0f0; }
+        .task-item.checked .task-text > p:first-child { text-decoration: line-through; }
+        .task-checkbox { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; accent-color: var(--leaf); }
+        .task-text { flex: 1; min-width: 0; }
+        .task-text p { margin: 3px 0; }
+        .task-text ul { margin: 8px 0 0 22px; }
+        pre {
+            background: #1a1a2e;
+            color: #d5edf0;
+            padding: 14px 16px;
+            border-radius: 7px;
+            overflow-x: auto;
+            font: 12px/1.55 "Cascadia Code", Consolas, monospace;
+            margin: 9px 0;
+            white-space: pre;
+        }
+        .expected { color: var(--blue); font-size: 13px; font-weight: 650; }
+        .warning { color: var(--danger); font-size: 13px; font-weight: 650; }
+        .data-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+        .data-table th { background: var(--forest); color: white; padding: 9px 11px; text-align: left; }
+        .data-table td { padding: 8px 11px; border-bottom: 1px solid var(--mist); vertical-align: top; }
+        .data-table tr:nth-child(even) { background: var(--paper); }
+        .files-summary { background: var(--mist); padding: 18px; border-radius: 8px; margin-top: 20px; }
+        .files-summary h3 { color: var(--forest); font-size: 16px; margin-bottom: 9px; }
+        .files-summary ul { list-style: none; font-size: 13px; }
+        .files-summary li { padding: 4px 0; }
+        .files-summary li::before { display: inline-block; width: 24px; }
+        .files-summary li.new::before { content: "+"; font-weight: 700; color: var(--leaf); }
+        .files-summary li.edit::before { content: "*"; font-weight: 700; color: var(--blue); }
+        .files-summary li.test::before { content: "T"; font-weight: 700; color: var(--label); }
+        .files-summary li.read::before { content: "R"; font-weight: 700; color: var(--forest); }
+        .footer { background: var(--mist); padding: 22px 32px; text-align: center; font-size: 13px; color: #596963; }
+        .footer button {
+            border: 0;
+            border-radius: 6px;
+            background: var(--leaf);
+            color: white;
+            padding: 10px 22px;
+            margin: 12px 4px 0;
+            cursor: pointer;
+            font-weight: 650;
+        }
+        .footer button.reset { background: var(--danger); }
+        @media (max-width: 700px) {
+            body { padding: 16px 10px; }
+            .content, .header, .status-bar { padding-left: 18px; padding-right: 18px; }
+            .status-bar { flex-direction: column; align-items: stretch; }
+            .progress-container { max-width: none; }
+            .meta-grid { grid-template-columns: 1fr; }
+            .section-header { align-items: flex-start; }
+            .section-content { padding: 14px; }
+            .task-item { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Frontend - Thanh Toán &amp; Đặt Hàng</h1>
+            <p>Route: /shopping/checkout | API: /api/checkout, /api/checkout/payment | FR-108, FR-109, FR-110</p>
+        </header>
+        <div class="status-bar">
+            <div><strong>Tiến độ:</strong> <span id="progress-percent">0%</span></div>
+            <div class="progress-container">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                <div class="progress-text"><span id="checked-count">0</span> / <span id="total-count">0</span> bước hoàn thành</div>
+            </div>
+        </div>
+        <main class="content">
+            <section class="overview">
+                <h2>Checkout &amp; Payment Frontend Implementation Plan Chính Thức</h2>
+                <p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: dùng <code>superpowers:subagent-driven-development</code> (khuyến nghị) hoặc <code>superpowers:executing-plans</code> để thực thi từng task. Checkbox trong file này là nguồn theo dõi tiến độ.</p>
+                <div class="meta-grid">
+                    <p><strong>Goal:</strong> Hoàn thiện màn hình thanh toán frontend, tạo đơn từ giỏ hàng và khởi tạo thanh toán COD / VNPay / MoMo qua backend live API.</p>
+                    <p><strong>Spec:</strong> <code>docs/progress-member-1-3.html</code>, mục Frontend Tương Ứng số 6.</p>
+                    <p><strong>Architecture:</strong> <code>CartProvider</code> tiếp tục là source of truth cho giỏ hàng; <code>CheckoutPage</code> là owner của fulfillment/payment form; backend <code>/api/checkout</code> là điểm chốt order transactional.</p>
+                    <p><strong>Tech stack:</strong> React 19.2.8, TypeScript 5.9.3, React Router 7.18.2, Vite 7.3.6, Vitest 4.1.10, Testing Library 16.3.2.</p>
+                </div>
+                <h3>Global Constraints</h3>
+                <ul>
+                    <li>Frontend-only; không sửa backend, database, DTO hoặc endpoint vì file tiến độ đánh dấu Backend Core đã hoàn thành 100%.</li>
+                    <li>Mọi checkout/payment request phải gửi Bearer JWT; guest không gọi <code>/checkout</code> hoặc <code>/checkout/payment</code>.</li>
+                    <li>Dùng đúng contract hiện tại: frontend client gọi <code>postJson('/checkout')</code> và <code>postJson('/checkout/payment')</code>.</li>
+                    <li>Không thêm dependency, promotion engine, admin order UI, order history đầy đủ hoặc payment provider SDK ở frontend.</li>
+                    <li>Delivery dùng phí hiển thị <code>15000</code> để khớp backend hiện tại; Pickup có phí giao hàng <code>0</code>.</li>
+                    <li>Sau checkout thành công phải reload cart state để header badge và trang giỏ hàng không còn hiển thị snapshot cũ.</li>
+                    <li>Copy giao diện bằng tiếng Việt; responsive từ 320 px; form, radio group, alert, loading và success state phải accessible.</li>
+                    <li>Mỗi task thực hiện RED -> GREEN -> REFACTOR -> COMMIT và không stage thay đổi ngoài scope.</li>
+                </ul>
+                <h3>API Contract Đã Xác Nhận</h3>
+                <table class="data-table">
+                    <thead><tr><th>Action</th><th>Request</th><th>Success</th><th>Error chính</th></tr></thead>
+                    <tbody>
+                        <tr><td>Tạo đơn Pickup</td><td>POST /api/checkout { fulfillmentType: "Pickup" }</td><td>201 CheckoutResponse</td><td>400 CART_EMPTY, 409 INSUFFICIENT_STOCK</td></tr>
+                        <tr><td>Tạo đơn Delivery</td><td>POST /api/checkout { fulfillmentType: "Delivery", recipientName, recipientPhone, deliveryAddress }</td><td>201 CheckoutResponse</td><td>400 thiếu thông tin giao hàng</td></tr>
+                        <tr><td>Khởi tạo thanh toán</td><td>POST /api/checkout/payment { orderId, method }</td><td>200 PaymentInitDto</td><td>400 invalid method, 404 order not found</td></tr>
+                        <tr><td>Thanh toán sandbox</td><td>PaymentInitDto.checkoutUrl khác null</td><td>Redirect trình duyệt tới URL sandbox</td><td>Giữ orderId để user có thể thử lại</td></tr>
+                    </tbody>
+                </table>
+                <h3>Payment Status Flow Cần Giữ Đúng</h3>
+                <ul>
+                    <li><code>/api/checkout</code> chỉ tạo order và trả <code>CheckoutResponse.payment.status = "Pending"</code> như placeholder ban đầu.</li>
+                    <li><code>/api/checkout/payment</code> mới tạo bản ghi <code>Payment</code>; nếu method là <code>COD</code> thì backend trả <code>PaymentInitDto.status = "PendingCollection"</code>.</li>
+                    <li>Frontend vẫn gọi payment endpoint cho COD để backend ghi nhận payment method và chuyển order sang trạng thái xác nhận hiện tại.</li>
+                </ul>
+                <h3>Test Fixtures Chung</h3>
+                <pre>const cartWithItems: CartDto = {
+  id: 'cart-1',
+  userId: 'user-1',
+  branchId: 'branch-1',
+  totalItems: 1,
+  subtotal: 100000,
+  items: [{
+    id: 'item-1',
+    productId: 'prod-1',
+    productName: 'Điện thoại A',
+    sku: 'DT-A',
+    unitPrice: 100000,
+    quantity: 1,
+    lineTotal: 100000,
+    availableQuantity: 5,
+  }],
+}</pre>
+                <p style="font-size: 13px; color: var(--blue); font-weight: 650;">Fixture này là cơ sở cho các expectation <code>15.000 ₫</code> phí giao hàng và <code>115.000 ₫</code> tổng tiền khi chọn Delivery.</p>
+            </section>
+
+            <section class="section" id="section-1">
+                <div class="section-header" onclick="toggleSection(1)">
+                    <div class="section-number" id="section-num-1">1</div>
+                    <div class="section-title">Task 1 - Checkout API client và contract tests</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Create <code>frontend/src/api/checkoutApi.ts</code>, <code>frontend/src/api/checkoutApi.test.ts</code>.</p>
+                        <p><strong>Consumes:</strong> <code>postJson</code> từ <code>httpClient.ts</code>; backend contract trong <code>CheckoutContracts.cs</code>.</p>
+                        <p><strong>Produces:</strong> <code>checkoutApi.checkout</code>, <code>checkoutApi.initiatePayment</code> và exact TypeScript DTOs cho CheckoutResponse/PaymentInitDto.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-1" data-section="1"><div class="task-text">
+                            <p><strong>Step 1: Viết failing tests cho path, token và body checkout/payment</strong></p>
+                            <pre>import { afterEach, expect, it, vi } from 'vitest'
+import { checkoutApi, type CheckoutResponse } from './checkoutApi'
+
+function jsonResponse(data: unknown) {
+  return new Response(JSON.stringify(data), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+afterEach(() =&gt; vi.unstubAllGlobals())
+
+const token = 'jwt-token'
+const checkoutResponse: CheckoutResponse = {
+  orderId: 'order-1',
+  subtotal: 100000,
+  discountAmount: 0,
+  shippingFee: 0,
+  totalAmount: 100000,
+  status: 'Pending',
+  payment: { paymentId: '00000000-0000-0000-0000-000000000000', method: '', status: 'Pending', checkoutUrl: null },
+}
+
+it('creates a pickup order with bearer token', async () =&gt; {
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse(checkoutResponse))
+  vi.stubGlobal('fetch', fetchMock)
+
+  await checkoutApi.checkout({ fulfillmentType: 'Pickup' }, token)
+
+  expect(fetchMock).toHaveBeenCalledWith('/api/checkout', expect.objectContaining({
+    method: 'POST',
+    headers: expect.objectContaining({ Authorization: 'Bearer jwt-token' }),
+    body: JSON.stringify({ fulfillmentType: 'Pickup' }),
+  }))
+})
+
+it('initiates payment with exact body', async () =&gt; {
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+    paymentId: 'payment-1', method: 'COD', status: 'PendingCollection', checkoutUrl: null,
+  }))
+  vi.stubGlobal('fetch', fetchMock)
+
+  await checkoutApi.initiatePayment({ orderId: 'order-1', method: 'COD' }, token)
+
+  expect(fetchMock).toHaveBeenCalledWith('/api/checkout/payment', expect.objectContaining({
+    method: 'POST',
+    body: JSON.stringify({ orderId: 'order-1', method: 'COD' }),
+  }))
+})</pre>
+                            <p class="expected">Expected RED: module <code>checkoutApi</code> chưa tồn tại.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-2" data-section="1"><div class="task-text">
+                            <p><strong>Step 2: Chạy test để xác nhận RED</strong></p>
+                            <pre>Set-Location frontend
+npm.cmd test -- --run src/api/checkoutApi.test.ts</pre>
+                            <p class="expected">Expected: FAIL vì không resolve được <code>./checkoutApi</code>.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-3" data-section="1"><div class="task-text">
+                            <p><strong>Step 3: Khai báo DTOs và hai API functions tối thiểu</strong></p>
+                            <pre>import { postJson } from './httpClient'
+
+export type FulfillmentType = 'Pickup' | 'Delivery'
+export type PaymentMethod = 'COD' | 'VNPay' | 'MoMo'
+
+export interface CheckoutRequest {
+  fulfillmentType: FulfillmentType
+  deliveryAddressId?: string | null
+  recipientName?: string | null
+  recipientPhone?: string | null
+  deliveryAddress?: string | null
+}
+
+export interface PaymentInitDto {
+  paymentId: string
+  method: string
+  status: string
+  checkoutUrl: string | null
+}
+
+export interface CheckoutResponse {
+  orderId: string
+  subtotal: number
+  discountAmount: number
+  shippingFee: number
+  totalAmount: number
+  status: string
+  payment: PaymentInitDto | null
+}
+
+export interface PaymentRequest {
+  orderId: string
+  method: PaymentMethod
+}
+
+export const checkoutApi = {
+  checkout: (data: CheckoutRequest, token: string, signal?: AbortSignal) =&gt;
+    postJson&lt;CheckoutResponse&gt;('/checkout', data, { token, signal }),
+  initiatePayment: (data: PaymentRequest, token: string, signal?: AbortSignal) =&gt;
+    postJson&lt;PaymentInitDto&gt;('/checkout/payment', data, { token, signal }),
+}</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-4" data-section="1"><div class="task-text">
+                            <p><strong>Step 4: Bổ sung Delivery, VNPay/MoMo và AbortSignal tests</strong></p>
+                            <pre>it('creates a delivery order with recipient snapshot', async () =&gt; {
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse(checkoutResponse))
+  vi.stubGlobal('fetch', fetchMock)
+
+  await checkoutApi.checkout({
+    fulfillmentType: 'Delivery',
+    deliveryAddressId: 'address-1',
+    recipientName: 'Nguyen Van A',
+    recipientPhone: '0900000000',
+    deliveryAddress: '12 Nguyen Trai, Quan 1, TP.HCM',
+  }, token)
+
+  expect(fetchMock).toHaveBeenCalledWith('/api/checkout', expect.objectContaining({
+    body: JSON.stringify({
+      fulfillmentType: 'Delivery',
+      deliveryAddressId: 'address-1',
+      recipientName: 'Nguyen Van A',
+      recipientPhone: '0900000000',
+      deliveryAddress: '12 Nguyen Trai, Quan 1, TP.HCM',
+    }),
+  }))
+})
+
+it.each(['VNPay', 'MoMo'] as const)('accepts %s payment method', async (method) =&gt; {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({
+    paymentId: 'payment-1', method, status: 'Pending', checkoutUrl: 'https://sandbox.example/pay',
+  })))
+  await checkoutApi.initiatePayment({ orderId: 'order-1', method }, token)
+  expect(fetch).toHaveBeenCalledWith('/api/checkout/payment', expect.objectContaining({
+    body: JSON.stringify({ orderId: 'order-1', method }),
+  }))
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-5" data-section="1"><div class="task-text">
+                            <p><strong>Step 5: Chạy GREEN, build và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/api/checkoutApi.test.ts
+npm.cmd run build
+git add frontend/src/api/checkoutApi.ts frontend/src/api/checkoutApi.test.ts
+git commit -m "feat(frontend): add checkout API client"</pre>
+                            <p class="expected">Expected: contract tests PASS; TypeScript build PASS; không sửa <code>httpClient.ts</code>.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-2">
+                <div class="section-header" onclick="toggleSection(2)">
+                    <div class="section-number" id="section-num-2">2</div>
+                    <div class="section-title">Task 2 - Route checkout và CTA từ giỏ hàng</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Create <code>frontend/src/features/checkout/CheckoutPage.tsx</code>, <code>CheckoutPage.css</code>, <code>CheckoutPage.test.tsx</code>; Modify <code>frontend/src/App.tsx</code>, <code>frontend/src/features/cart/CartPage.tsx</code>, <code>CartPage.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> <code>useCart()</code>, <code>useAuth()</code>, <code>AuthModal</code>, existing <code>/shopping/cart</code>.</p>
+                        <p><strong>Produces:</strong> Public route <code>/shopping/checkout</code> và CTA giỏ hàng điều hướng được khi cart có item.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-1" data-section="2"><div class="task-text">
+                            <p><strong>Step 1: Viết route tests cho trạng thái guest, loading, empty và ready</strong></p>
+                            <pre>it('asks guests to login before checkout', () =&gt; {
+  renderCheckout({ auth: { isAuthenticated: false, isLoading: false } })
+  expect(screen.getByRole('heading', { name: 'Đăng nhập để thanh toán' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Đăng nhập' })).toBeInTheDocument()
+})
+
+it('sends empty carts back to shopping cart', () =&gt; {
+  renderCheckout({ cart: { ...cartDto, items: [], totalItems: 0, subtotal: 0 } })
+  expect(screen.getByRole('heading', { name: 'Giỏ hàng đang trống' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Quay lại giỏ hàng' })).toHaveAttribute('href', '/shopping/cart')
+})
+
+it('renders the checkout heading and order summary for a ready cart', () =&gt; {
+  renderCheckout({ cart: cartWithItems })
+  expect(screen.getByRole('heading', { level: 1, name: 'Thanh toán đơn hàng' })).toBeInTheDocument()
+  expect(screen.getByText('Điện thoại A')).toBeInTheDocument()
+  expect(screen.getByText('100.000 ₫')).toBeInTheDocument()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-2" data-section="2"><div class="task-text">
+                            <p><strong>Step 2: Viết CartPage CTA test để thay nút disabled</strong></p>
+                            <pre>it('links ready carts to checkout', async () =&gt; {
+  renderCartPage({ cart: cartWithItems })
+  expect(await screen.findByRole('link', { name: 'Tiến hành thanh toán' }))
+    .toHaveAttribute('href', '/shopping/checkout')
+})</pre>
+                            <p class="expected">Expected RED: hiện CTA đang là button disabled có badge "Sắp có".</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-3" data-section="2"><div class="task-text">
+                            <p><strong>Step 3: Chạy RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/checkout/CheckoutPage.test.tsx src/features/cart/CartPage.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì chưa có route/page và CartPage chưa link checkout.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-4" data-section="2"><div class="task-text">
+                            <p><strong>Step 4: Thêm CheckoutPage shell và route</strong></p>
+                            <pre>import { Link } from 'react-router-dom'
+import { AuthModal } from '../auth/AuthModal'
+import { useAuth } from '../auth/AuthContext'
+import { useCart } from '../cart/CartContext'
+import './CheckoutPage.css'
+
+export function CheckoutPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const { status, cart, reloadCart } = useCart()
+  const [loginOpen, setLoginOpen] = useState(false)
+
+  if (authLoading || status === 'idle' || status === 'loading') return &lt;CheckoutSkeleton /&gt;
+  if (!isAuthenticated) return &lt;CheckoutAuthRequired openLogin={() =&gt; setLoginOpen(true)} loginOpen={loginOpen} setLoginOpen={setLoginOpen} /&gt;
+  if (status === 'error' || !cart) return &lt;CheckoutLoadError onRetry={() =&gt; void reloadCart()} /&gt;
+  if (cart.items.length === 0) return &lt;EmptyCheckout /&gt;
+
+  return (
+    &lt;section className="checkout-page"&gt;
+      &lt;nav aria-label="Breadcrumb"&gt;&lt;Link to="/shopping/cart"&gt;Giỏ hàng&lt;/Link&gt;&lt;/nav&gt;
+      &lt;h1&gt;Thanh toán đơn hàng&lt;/h1&gt;
+      &lt;CheckoutOrderSummary cart={cart} shippingFee={0} /&gt;
+    &lt;/section&gt;
+  )
+}</pre>
+                            <p>Trong <code>App.tsx</code>, import <code>CheckoutPage</code> và thêm <code>&lt;Route path="/shopping/checkout" element={&lt;CheckoutPage /&gt;} /&gt;</code>.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-5" data-section="2"><div class="task-text">
+                            <p><strong>Step 5: Bật CTA từ CartPage sang checkout</strong></p>
+                            <pre>import { Link } from 'react-router-dom'
+
+&lt;Link to="/shopping/checkout" className="cart-btn cart-btn--checkout"&gt;
+  Tiến hành thanh toán
+&lt;/Link&gt;</pre>
+                            <p>Giữ disabled-like state chỉ cho cart rỗng bằng EmptyCart hiện tại; không render link checkout khi không có item.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-6" data-section="2"><div class="task-text">
+                            <p><strong>Step 6: Chạy GREEN và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/features/checkout/CheckoutPage.test.tsx src/features/cart/CartPage.test.tsx
+git add frontend/src/App.tsx frontend/src/features/cart/CartPage.tsx frontend/src/features/cart/CartPage.test.tsx frontend/src/features/checkout
+git commit -m "feat(frontend): add checkout route from cart"</pre>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-3">
+                <div class="section-header" onclick="toggleSection(3)">
+                    <div class="section-number" id="section-num-3">3</div>
+                    <div class="section-title">Task 3 - Fulfillment form, địa chỉ giao hàng và tổng tiền</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Modify <code>CheckoutPage.tsx</code>, <code>CheckoutPage.css</code>; Test <code>CheckoutPage.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> <code>getAddressesApi(token, signal)</code>, <code>AddressDto</code>, <code>accessToken</code> từ <code>useAuth()</code>, cart subtotal.</p>
+                        <p><strong>Produces:</strong> <code>buildCheckoutRequest()</code> behavior qua UI: Pickup/Delivery, selected address snapshot, manual delivery fallback và shipping fee display.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-1" data-section="3"><div class="task-text">
+                            <p><strong>Step 1: Viết tests fail cho Pickup/Delivery và phí giao hàng</strong></p>
+                            <pre>it('defaults to pickup with zero shipping fee', () =&gt; {
+  renderCheckout({ cart: cartWithItems })
+  expect(screen.getByRole('radio', { name: 'Nhận tại chi nhánh' })).toBeChecked()
+  expect(screen.getByText('Phí giao hàng')).toBeInTheDocument()
+  expect(screen.getAllByText('0 ₫').length).toBeGreaterThan(0)
+})
+
+it('shows delivery fields and adds the backend shipping fee', async () =&gt; {
+  renderCheckout({ cart: cartWithItems })
+  await user.click(screen.getByRole('radio', { name: 'Giao hàng tận nơi' }))
+  expect(screen.getByLabelText('Người nhận')).toBeInTheDocument()
+  expect(screen.getByLabelText('Số điện thoại')).toBeInTheDocument()
+  expect(screen.getByLabelText('Địa chỉ giao hàng')).toBeInTheDocument()
+  expect(screen.getByText('15.000 ₫')).toBeInTheDocument()
+  expect(screen.getByText('115.000 ₫')).toBeInTheDocument()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-2" data-section="3"><div class="task-text">
+                            <p><strong>Step 2: Viết tests fail cho load địa chỉ và snapshot địa chỉ mặc định</strong></p>
+                            <pre>it('loads saved addresses and pre-fills the selected address', async () =&gt; {
+  vi.spyOn(addressApi, 'getAddressesApi').mockResolvedValue([{
+    id: 'address-1',
+    recipientName: 'Nguyen Van A',
+    phone: '0900000000',
+    street: '12 Nguyen Trai',
+    ward: 'Ben Thanh',
+    district: 'Quan 1',
+    city: 'TP.HCM',
+    postalCode: null,
+    isDefault: true,
+    createdAtUtc: '2026-08-28T00:00:00Z',
+    updatedAtUtc: '2026-08-28T00:00:00Z',
+  }])
+
+  renderCheckout({ cart: cartWithItems })
+  await user.click(screen.getByRole('radio', { name: 'Giao hàng tận nơi' }))
+
+  expect(await screen.findByDisplayValue('Nguyen Van A')).toBeInTheDocument()
+  expect(screen.getByDisplayValue('0900000000')).toBeInTheDocument()
+  expect(screen.getByDisplayValue('12 Nguyen Trai, Ben Thanh, Quan 1, TP.HCM')).toBeInTheDocument()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-3" data-section="3"><div class="task-text">
+                            <p><strong>Step 3: Chạy RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/checkout/CheckoutPage.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì form fulfillment và address loading chưa có.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-4" data-section="3"><div class="task-text">
+                            <p><strong>Step 4: Cài fulfillment state và address effect</strong></p>
+                            <pre>const DELIVERY_SHIPPING_FEE = 15000
+
+function formatAddress(address: AddressDto) {
+  return [address.street, address.ward, address.district, address.city].filter(Boolean).join(', ')
+}
+
+const [fulfillmentType, setFulfillmentType] = useState&lt;FulfillmentType&gt;('Pickup')
+const [addresses, setAddresses] = useState&lt;AddressDto[]&gt;([])
+const [selectedAddressId, setSelectedAddressId] = useState&lt;string&gt;('')
+const [recipientName, setRecipientName] = useState('')
+const [recipientPhone, setRecipientPhone] = useState('')
+const [deliveryAddress, setDeliveryAddress] = useState('')
+
+useEffect(() =&gt; {
+  if (!isAuthenticated || !accessToken) return
+  const controller = new AbortController()
+  getAddressesApi(accessToken, controller.signal)
+    .then((items) =&gt; {
+      setAddresses(items)
+      const selected = items.find((item) =&gt; item.isDefault) ?? items[0]
+      if (selected) {
+        setSelectedAddressId(selected.id)
+        setRecipientName(selected.recipientName)
+        setRecipientPhone(selected.phone)
+        setDeliveryAddress(formatAddress(selected))
+      }
+    })
+    .catch((error) =&gt; {
+      if (!isAbortError(error)) setAddressLoadError('Không thể tải sổ địa chỉ. Bạn vẫn có thể nhập địa chỉ thủ công.')
+    })
+  return () =&gt; controller.abort()
+}, [isAuthenticated, accessToken])</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-5" data-section="3"><div class="task-text">
+                            <p><strong>Step 5: Render radio group, address select, manual fields và summary</strong></p>
+                            <pre>&lt;fieldset className="checkout-form__section"&gt;
+  &lt;legend&gt;Hình thức nhận hàng&lt;/legend&gt;
+  &lt;label&gt;
+    &lt;input type="radio" name="fulfillment" checked={fulfillmentType === 'Pickup'} onChange={() =&gt; setFulfillmentType('Pickup')} /&gt;
+    Nhận tại chi nhánh
+  &lt;/label&gt;
+  &lt;label&gt;
+    &lt;input type="radio" name="fulfillment" checked={fulfillmentType === 'Delivery'} onChange={() =&gt; setFulfillmentType('Delivery')} /&gt;
+    Giao hàng tận nơi
+  &lt;/label&gt;
+&lt;/fieldset&gt;</pre>
+                            <p>Khi đổi địa chỉ đã lưu, update đồng thời <code>selectedAddressId</code>, <code>recipientName</code>, <code>recipientPhone</code>, <code>deliveryAddress</code>. Khi user sửa tay, giữ <code>selectedAddressId</code> hiện tại nhưng snapshot gửi lên dùng giá trị input.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-6" data-section="3"><div class="task-text">
+                            <p><strong>Step 6: Chạy GREEN và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/features/checkout/CheckoutPage.test.tsx
+git add frontend/src/features/checkout/CheckoutPage.tsx frontend/src/features/checkout/CheckoutPage.css frontend/src/features/checkout/CheckoutPage.test.tsx
+git commit -m "feat(frontend): add checkout fulfillment form"</pre>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-4">
+                <div class="section-header" onclick="toggleSection(4)">
+                    <div class="section-number" id="section-num-4">4</div>
+                    <div class="section-title">Task 4 - Submit tạo order và khởi tạo payment</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Modify <code>CheckoutPage.tsx</code>, <code>CheckoutPage.test.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> <code>checkoutApi.checkout</code>, <code>checkoutApi.initiatePayment</code>, <code>reloadCart()</code>, React Router <code>useNavigate</code>.</p>
+                        <p><strong>Produces:</strong> Deterministic submit sequence: validate -> POST checkout -> POST payment -> reload cart -> navigate hoặc redirect sandbox.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-1" data-section="4"><div class="task-text">
+                            <p><strong>Step 1: Viết tests fail cho validation Delivery</strong></p>
+                            <pre>it('blocks delivery submission when recipient data is missing', async () =&gt; {
+  const checkoutSpy = vi.spyOn(checkoutApi, 'checkout')
+  renderCheckout({ cart: cartWithItems })
+
+  await user.click(screen.getByRole('radio', { name: 'Giao hàng tận nơi' }))
+  await user.clear(screen.getByLabelText('Người nhận'))
+  await user.click(screen.getByRole('button', { name: 'Đặt hàng' }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Vui lòng nhập đầy đủ thông tin giao hàng.')
+  expect(checkoutSpy).not.toHaveBeenCalled()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-2" data-section="4"><div class="task-text">
+                            <p><strong>Step 2: Viết tests fail cho COD sequence và success navigation</strong></p>
+                            <pre>it('creates an order, initiates COD payment, reloads cart and navigates to success', async () =&gt; {
+  const checkoutSpy = vi.spyOn(checkoutApi, 'checkout').mockResolvedValue({
+    orderId: 'order-1',
+    subtotal: 100000,
+    discountAmount: 0,
+    shippingFee: 0,
+    totalAmount: 100000,
+    status: 'Pending',
+    payment: null,
+  })
+  const paymentSpy = vi.spyOn(checkoutApi, 'initiatePayment').mockResolvedValue({
+    paymentId: 'payment-1',
+    method: 'COD',
+    status: 'PendingCollection',
+    checkoutUrl: null,
+  })
+  const reloadCart = vi.fn().mockResolvedValue(undefined)
+
+  renderCheckout({ cart: cartWithItems, reloadCart })
+  await user.click(screen.getByRole('radio', { name: 'Thanh toán khi nhận hàng' }))
+  await user.click(screen.getByRole('button', { name: 'Đặt hàng' }))
+
+  expect(checkoutSpy).toHaveBeenCalledWith({ fulfillmentType: 'Pickup' }, 'jwt-token', expect.any(AbortSignal))
+  expect(paymentSpy).toHaveBeenCalledWith({ orderId: 'order-1', method: 'COD' }, 'jwt-token', expect.any(AbortSignal))
+  expect(reloadCart).toHaveBeenCalled()
+  expect(mockNavigate).toHaveBeenCalledWith('/shopping/checkout/success?orderId=order-1&amp;paymentStatus=PendingCollection')
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-3" data-section="4"><div class="task-text">
+                            <p><strong>Step 3: Viết tests fail cho VNPay/MoMo redirect</strong></p>
+                            <pre>it('redirects to sandbox checkoutUrl for VNPay', async () =&gt; {
+  vi.spyOn(checkoutApi, 'checkout').mockResolvedValue(checkoutResponse)
+  vi.spyOn(checkoutApi, 'initiatePayment').mockResolvedValue({
+    paymentId: 'payment-1',
+    method: 'VNPay',
+    status: 'Pending',
+    checkoutUrl: 'https://sandbox.vnpayment.vn/test?orderId=order-1',
+  })
+  const assign = vi.fn()
+  Object.defineProperty(window, 'location', { value: { assign }, writable: true })
+
+  renderCheckout({ cart: cartWithItems })
+  await user.click(screen.getByRole('radio', { name: 'VNPay Sandbox' }))
+  await user.click(screen.getByRole('button', { name: 'Đặt hàng' }))
+
+  expect(assign).toHaveBeenCalledWith('https://sandbox.vnpayment.vn/test?orderId=order-1')
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-4" data-section="4"><div class="task-text">
+                            <p><strong>Step 4: Chạy RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/checkout/CheckoutPage.test.tsx</pre>
+                            <p class="expected">Expected: FAIL vì submit orchestration chưa có.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-5" data-section="4"><div class="task-text">
+                            <p><strong>Step 5: Cài submit handler và payment method state</strong></p>
+                            <pre>const [paymentMethod, setPaymentMethod] = useState&lt;PaymentMethod&gt;('COD')
+const [isSubmitting, setIsSubmitting] = useState(false)
+const [submitError, setSubmitError] = useState&lt;string | null&gt;(null)
+
+function buildCheckoutRequest(): CheckoutRequest | null {
+  if (fulfillmentType === 'Pickup') return { fulfillmentType: 'Pickup' }
+  if (!recipientName.trim() || !recipientPhone.trim() || !deliveryAddress.trim()) return null
+  return {
+    fulfillmentType: 'Delivery',
+    deliveryAddressId: selectedAddressId || null,
+    recipientName: recipientName.trim(),
+    recipientPhone: recipientPhone.trim(),
+    deliveryAddress: deliveryAddress.trim(),
+  }
+}
+
+async function handleSubmit(event: React.FormEvent) {
+  event.preventDefault()
+  if (!accessToken) return
+  const request = buildCheckoutRequest()
+  if (!request) {
+    setSubmitError('Vui lòng nhập đầy đủ thông tin giao hàng.')
+    return
+  }
+
+  setIsSubmitting(true)
+  setSubmitError(null)
+  const controller = new AbortController()
+  try {
+    const order = await checkoutApi.checkout(request, accessToken, controller.signal)
+    const payment = await checkoutApi.initiatePayment({ orderId: order.orderId, method: paymentMethod }, accessToken, controller.signal)
+    await reloadCart()
+    if (payment.checkoutUrl) {
+      window.location.assign(payment.checkoutUrl)
+      return
+    }
+    // payment.status comes from PaymentInitDto, not Order.Status.
+    navigate(`/shopping/checkout/success?orderId=${encodeURIComponent(order.orderId)}&amp;paymentStatus=${encodeURIComponent(payment.status)}`)
+  } catch (error) {
+    if (!isAbortError(error)) setSubmitError(toCheckoutError(error))
+  } finally {
+    setIsSubmitting(false)
+  }
+}</pre>
+                            <p>Store controller trong ref nếu cần abort khi unmount; disable toàn bộ form khi <code>isSubmitting</code> true.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-6" data-section="4"><div class="task-text">
+                            <p><strong>Step 6: Chạy GREEN và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/features/checkout/CheckoutPage.test.tsx
+git add frontend/src/features/checkout/CheckoutPage.tsx frontend/src/features/checkout/CheckoutPage.test.tsx
+git commit -m "feat(frontend): submit checkout and payment"</pre>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-5">
+                <div class="section-header" onclick="toggleSection(5)">
+                    <div class="section-number" id="section-num-5">5</div>
+                    <div class="section-title">Task 5 - Success page và xử lý lỗi nghiệp vụ</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Create <code>frontend/src/features/checkout/CheckoutSuccessPage.tsx</code>, <code>frontend/src/App.test.tsx</code>; Modify <code>CheckoutPage.tsx</code>, <code>CheckoutPage.test.tsx</code>, <code>App.tsx</code>.</p>
+                        <p><strong>Consumes:</strong> Query params <code>orderId</code>, <code>paymentStatus</code>, <code>ApiError.status/data.message</code>.</p>
+                        <p><strong>Produces:</strong> Route <code>/shopping/checkout/success</code>, user-friendly errors cho <code>CART_EMPTY</code>, <code>INSUFFICIENT_STOCK</code>, 401 và payment failure.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-1" data-section="5"><div class="task-text">
+                            <p><strong>Step 1: Viết success page tests và App route smoke test</strong></p>
+                            <pre>it('renders checkout success with order id and next actions', () =&gt; {
+  render(
+    &lt;MemoryRouter initialEntries={['/shopping/checkout/success?orderId=order-1&amp;paymentStatus=PendingCollection']}&gt;
+      &lt;CheckoutSuccessPage /&gt;
+    &lt;/MemoryRouter&gt;
+  )
+
+  expect(screen.getByRole('heading', { name: 'Đặt hàng thành công' })).toBeInTheDocument()
+  expect(screen.getByText('order-1')).toBeInTheDocument()
+  expect(screen.getByText('PendingCollection')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Tiếp tục mua sắm' })).toHaveAttribute('href', '/browse')
+})</pre>
+                            <pre>// frontend/src/App.test.tsx
+import type { PropsWithChildren } from 'react'
+import { render, screen } from '@testing-library/react'
+import { expect, it, vi } from 'vitest'
+import App from './App'
+
+vi.mock('./app/AppShell', () =&gt; ({
+  AppShell: ({ children }: PropsWithChildren) =&gt; &lt;main&gt;{children}&lt;/main&gt;,
+}))
+vi.mock('./features/auth/AuthContext', () =&gt; ({
+  AuthProvider: ({ children }: PropsWithChildren) =&gt; &lt;&gt;{children}&lt;/&gt;,
+}))
+vi.mock('./features/cart/CartContext', () =&gt; ({
+  CartProvider: ({ children }: PropsWithChildren) =&gt; &lt;&gt;{children}&lt;/&gt;,
+}))
+vi.mock('./features/products/ProductBrowsePage', () =&gt; ({ ProductBrowsePage: () =&gt; &lt;div /&gt; }))
+vi.mock('./features/products/ProductDetailPage', () =&gt; ({ ProductDetailPage: () =&gt; &lt;div /&gt; }))
+vi.mock('./features/account/ProfilePage', () =&gt; ({ ProfilePage: () =&gt; &lt;div /&gt; }))
+vi.mock('./features/account/AddressListPage', () =&gt; ({ AddressListPage: () =&gt; &lt;div /&gt; }))
+vi.mock('./features/cart/CartPage', () =&gt; ({ CartPage: () =&gt; &lt;div /&gt; }))
+vi.mock('./features/checkout/CheckoutPage', () =&gt; ({ CheckoutPage: () =&gt; &lt;div /&gt; }))
+vi.mock('./features/checkout/CheckoutSuccessPage', () =&gt; ({
+  CheckoutSuccessPage: () =&gt; &lt;h1&gt;Checkout success route&lt;/h1&gt;,
+}))
+
+it('wires the checkout success route', () =&gt; {
+  window.history.pushState({}, '', '/shopping/checkout/success?orderId=order-1&amp;paymentStatus=PendingCollection')
+  render(&lt;App /&gt;)
+  expect(screen.getByRole('heading', { name: 'Checkout success route' })).toBeInTheDocument()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-2" data-section="5"><div class="task-text">
+                            <p><strong>Step 2: Viết business error mapping tests</strong></p>
+                            <pre>it('shows cart empty error and links back to cart', async () =&gt; {
+  vi.spyOn(checkoutApi, 'checkout').mockRejectedValue(new ApiError(400, { message: 'CART_EMPTY' }))
+  renderCheckout({ cart: cartWithItems })
+  await user.click(screen.getByRole('button', { name: 'Đặt hàng' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Giỏ hàng không còn sản phẩm.')
+  expect(screen.getByRole('link', { name: 'Quay lại giỏ hàng' })).toHaveAttribute('href', '/shopping/cart')
+})
+
+it('shows stock conflict error from backend', async () =&gt; {
+  vi.spyOn(checkoutApi, 'checkout').mockRejectedValue(new ApiError(409, { message: 'INSUFFICIENT_STOCK' }))
+  renderCheckout({ cart: cartWithItems })
+  await user.click(screen.getByRole('button', { name: 'Đặt hàng' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Một số sản phẩm không còn đủ tồn kho.')
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-3" data-section="5"><div class="task-text">
+                            <p><strong>Step 3: Chạy RED</strong></p>
+                            <pre>npm.cmd test -- --run src/features/checkout/CheckoutPage.test.tsx src/App.test.tsx</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-4" data-section="5"><div class="task-text">
+                            <p><strong>Step 4: Cài success page và exact error mapper</strong></p>
+                            <pre>function toCheckoutError(error: unknown) {
+  if (error instanceof ApiError &amp;&amp; error.status === 400 &amp;&amp; error.data?.message === 'CART_EMPTY') {
+    return 'Giỏ hàng không còn sản phẩm.'
+  }
+  if (error instanceof ApiError &amp;&amp; error.status === 409 &amp;&amp; error.data?.message === 'INSUFFICIENT_STOCK') {
+    return 'Một số sản phẩm không còn đủ tồn kho. Vui lòng quay lại giỏ hàng để cập nhật số lượng.'
+  }
+  if (error instanceof ApiError &amp;&amp; error.status === 401) {
+    return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
+  }
+  if (error instanceof ApiError &amp;&amp; error.status === 404) {
+    return 'Không tìm thấy đơn hàng để thanh toán.'
+  }
+  return 'Không thể đặt hàng. Vui lòng thử lại.'
+}</pre>
+                            <p>Thêm <code>import { CheckoutSuccessPage } from './features/checkout/CheckoutSuccessPage'</code> và route <code>&lt;Route path="/shopping/checkout/success" element={&lt;CheckoutSuccessPage /&gt;} /&gt;</code> vào <code>App.tsx</code>. Success page chỉ đọc query params và không gọi <code>/api/orders</code>, vì lịch sử đơn hàng thuộc mục 7.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-5" data-section="5"><div class="task-text">
+                            <p><strong>Step 5: Chạy GREEN và commit</strong></p>
+                            <pre>npm.cmd test -- --run src/features/checkout/CheckoutPage.test.tsx src/App.test.tsx
+git add frontend/src/App.tsx frontend/src/App.test.tsx frontend/src/features/checkout/CheckoutPage.tsx frontend/src/features/checkout/CheckoutSuccessPage.tsx frontend/src/features/checkout/CheckoutPage.test.tsx
+git commit -m "feat(frontend): handle checkout success and failures"</pre>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-6">
+                <div class="section-header" onclick="toggleSection(6)">
+                    <div class="section-number" id="section-num-6">6</div>
+                    <div class="section-title">Task 6 - Responsive UI, accessibility và nghiệm thu đầy đủ</div>
+                    <div class="section-toggle">▼</div>
+                </div>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> Modify <code>CheckoutPage.css</code> và markup khi semantic tests yêu cầu; Test toàn bộ checkout/cart/frontend.</p>
+                        <p><strong>Consumes:</strong> Toàn bộ feature từ Tasks 1-5, global styles và existing cart layout pattern.</p>
+                        <p><strong>Produces:</strong> Checkout page responsive, keyboard-accessible, verified full suite/build và acceptance matrix.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-1" data-section="6"><div class="task-text">
+                            <p><strong>Step 1: Thêm accessibility assertions trước CSS polish</strong></p>
+                            <pre>it('exposes accessible checkout form controls', () =&gt; {
+  renderCheckout({ cart: cartWithItems })
+  expect(screen.getByRole('form', { name: 'Thông tin thanh toán' })).toBeInTheDocument()
+  expect(screen.getByRole('group', { name: 'Hình thức nhận hàng' })).toBeInTheDocument()
+  expect(screen.getByRole('group', { name: 'Phương thức thanh toán' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Đặt hàng' })).toBeEnabled()
+})</pre>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-2" data-section="6"><div class="task-text">
+                            <p><strong>Step 2: Hoàn thiện CSS responsive bằng token hiện tại</strong></p>
+                            <pre>.checkout-page { width: min(1180px, calc(100% - 40px)); margin: 0 auto 64px; }
+.checkout-page__layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); gap: 28px; }
+.checkout-form { display: grid; gap: 18px; }
+.checkout-form__section { border: 1px solid rgba(11, 61, 46, .2); border-radius: 10px; padding: 18px; }
+.checkout-summary { position: sticky; top: 20px; align-self: start; background: var(--paper); border: 1px solid var(--mist); border-radius: 12px; padding: 20px; }
+.checkout-alert { border: 1px solid rgba(185, 56, 42, .35); background: #fff5f3; color: var(--danger); border-radius: 8px; padding: 12px 14px; }
+
+@media (max-width: 760px) {
+  .checkout-page { width: min(100% - 24px, 640px); }
+  .checkout-page__layout { grid-template-columns: 1fr; }
+  .checkout-summary { position: static; }
+}</pre>
+                            <p>Thêm <code>:focus-visible</code>, disabled contrast, loading button state và không tạo horizontal overflow ở viewport 320 px.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-3" data-section="6"><div class="task-text">
+                            <p><strong>Step 3: Chạy focused checkout/cart suite</strong></p>
+                            <pre>npm.cmd test -- --run src/api/checkoutApi.test.ts
+npm.cmd test -- --run src/features/checkout/CheckoutPage.test.tsx src/App.test.tsx
+npm.cmd test -- --run src/features/cart/CartPage.test.tsx src/features/cart/CartContext.test.tsx</pre>
+                            <p class="expected">Expected: API contract, checkout flow, cart CTA và cart reload regressions PASS.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-4" data-section="6"><div class="task-text">
+                            <p><strong>Step 4: Chạy full frontend test suite</strong></p>
+                            <pre>npm.cmd test -- --run</pre>
+                            <p class="expected">Expected: toàn bộ Auth, Account, Browse, ProductDetail, Cart, Checkout và system tests PASS.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-5" data-section="6"><div class="task-text">
+                            <p><strong>Step 5: Chạy TypeScript và production build</strong></p>
+                            <pre>npm.cmd run build</pre>
+                            <p class="expected">Expected: <code>tsc --noEmit</code> và <code>vite build</code> exit code 0; không có type mismatch.</p>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-6" data-section="6"><div class="task-text">
+                            <p><strong>Step 6: Kiểm tra GUI thủ công theo acceptance matrix</strong></p>
+                            <table class="data-table">
+                                <thead><tr><th>Scenario</th><th>Expected</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Guest mở /shopping/checkout</td><td>Không gọi checkout API; hiển thị login prompt; login xong load cart tại chỗ.</td></tr>
+                                    <tr><td>Cart rỗng</td><td>Hiển thị "Giỏ hàng đang trống" và link quay lại /shopping/cart.</td></tr>
+                                    <tr><td>Cart có hàng, Pickup + COD</td><td>POST /checkout, POST /checkout/payment, reload cart, navigate success.</td></tr>
+                                    <tr><td>Delivery thiếu người nhận</td><td>Không gửi request; alert tiếng Việt rõ ràng.</td></tr>
+                                    <tr><td>Delivery dùng địa chỉ mặc định</td><td>Form prefill tên, phone, snapshot địa chỉ và gửi deliveryAddressId.</td></tr>
+                                    <tr><td>VNPay hoặc MoMo có checkoutUrl</td><td>Reload cart rồi redirect tới sandbox URL backend trả về.</td></tr>
+                                    <tr><td>409 INSUFFICIENT_STOCK</td><td>Giữ form, báo quay lại giỏ cập nhật số lượng.</td></tr>
+                                    <tr><td>Network/API lỗi payment sau khi order đã tạo</td><td>Hiển thị lỗi thử lại; không mất dữ liệu form; không tự tạo lại khi user chưa bấm.</td></tr>
+                                    <tr><td>Viewport 320 px và keyboard-only</td><td>Không overflow; focus rõ; radio, select, inputs và submit dùng được bằng bàn phím.</td></tr>
+                                </tbody>
+                            </table>
+                        </div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-7" data-section="6"><div class="task-text">
+                            <p><strong>Step 7: Commit nghiệm thu feature</strong></p>
+                            <pre>git add frontend/src/App.tsx frontend/src/App.test.tsx frontend/src/api/checkoutApi.ts frontend/src/api/checkoutApi.test.ts frontend/src/features/cart/CartPage.tsx frontend/src/features/cart/CartPage.test.tsx frontend/src/features/checkout
+git commit -m "feat(frontend): complete checkout payment flow"</pre>
+                            <p>Chỉ tạo commit này khi còn refinement chưa nằm trong commits trước; nếu worktree sạch thì ghi nhận verification thay vì tạo empty commit.</p>
+                        </div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="files-summary">
+                <h3>File map đã khóa</h3>
+                <ul>
+                    <li class="new"><code>frontend/src/api/checkoutApi.ts</code> - DTO/request types và authenticated checkout/payment API functions.</li>
+                    <li class="test"><code>frontend/src/api/checkoutApi.test.ts</code> - method/path/token/body/redirect contract coverage.</li>
+                    <li class="new"><code>frontend/src/features/checkout/CheckoutPage.tsx</code> - route page, auth/cart guards, fulfillment form, payment selection và submit orchestration.</li>
+                    <li class="new"><code>frontend/src/features/checkout/CheckoutPage.css</code> - responsive layout, form controls, summary, alerts và success styles.</li>
+                    <li class="new"><code>frontend/src/features/checkout/CheckoutSuccessPage.tsx</code> - confirmation route sau COD hoặc non-redirect payment.</li>
+                    <li class="test"><code>frontend/src/features/checkout/CheckoutPage.test.tsx</code> - route guards, delivery form, API sequence, errors, success và accessibility.</li>
+                    <li class="test"><code>frontend/src/App.test.tsx</code> - smoke test xác nhận route <code>/shopping/checkout/success</code> được khai báo trong App.</li>
+                    <li class="edit"><code>frontend/src/App.tsx</code> - thêm <code>/shopping/checkout</code> và <code>/shopping/checkout/success</code>.</li>
+                    <li class="edit"><code>frontend/src/features/cart/CartPage.tsx</code> - đổi CTA checkout từ disabled button sang route link khi cart có hàng.</li>
+                    <li class="test"><code>frontend/src/features/cart/CartPage.test.tsx</code> - regression cho CTA checkout.</li>
+                    <li class="read"><code>backend/src/OnlineSupermarket.Api/Contracts/Checkout/CheckoutContracts.cs</code> - source contract; không sửa.</li>
+                    <li class="read"><code>backend/src/OnlineSupermarket.Api/Endpoints/CheckoutEndpoints.cs</code> - source endpoints; không sửa.</li>
+                    <li class="read"><code>docs/progress-member-1-3.html</code> - nguồn trạng thái: mục 6 "Sẵn sàng kết nối API Backend".</li>
+                </ul>
+            </section>
+        </main>
+        <footer class="footer">
+            <p><strong>Risk Level:</strong> MEDIUM-HIGH | <strong>Priority:</strong> HIGH | <strong>Scope:</strong> Frontend-only</p>
+            <p>Definition of Done: checkout API client + route from cart + fulfillment form + COD/VNPay/MoMo submit + success/error states + full tests/build pass.</p>
+            <button onclick="checkAll()">Check All</button>
+            <button class="reset" onclick="resetAll()">Reset Progress</button>
+        </footer>
+    </div>
+    <script>
+        const STORAGE_KEY = 'checkout-payment-frontend-progress';
+        const SECTION_COUNT = 6;
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) {
+                const all = {};
+                document.querySelectorAll('.task-checkbox').forEach(cb => { all[cb.dataset.task] = true; });
+                return all;
+            }
+            try { return JSON.parse(saved); } catch { return {}; }
+        }
+        function saveProgress(progress) { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }
+        function updateUI() {
+            const progress = loadProgress();
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            const sectionTotal = {};
+            const sectionChecked = {};
+            let checkedCount = 0;
+            checkboxes.forEach((checkbox) => {
+                const taskId = checkbox.dataset.task;
+                const section = checkbox.dataset.section;
+                sectionTotal[section] = (sectionTotal[section] || 0) + 1;
+                checkbox.checked = Boolean(progress[taskId]);
+                const item = checkbox.closest('.task-item');
+                if (checkbox.checked) {
+                    checkedCount += 1;
+                    sectionChecked[section] = (sectionChecked[section] || 0) + 1;
+                    if (item) item.classList.add('checked');
+                } else if (item) {
+                    item.classList.remove('checked');
+                }
+            });
+            for (let section = 1; section <= SECTION_COUNT; section += 1) {
+                const number = document.getElementById('section-num-' + section);
+                const done = sectionTotal[section] > 0 && sectionChecked[section] === sectionTotal[section];
+                if (number) {
+                    number.classList.toggle('done', done);
+                    number.textContent = done ? '✓' : String(section);
+                }
+            }
+            const total = checkboxes.length;
+            const percent = total ? Math.round((checkedCount / total) * 100) : 0;
+            document.getElementById('progress-percent').textContent = percent + '%';
+            document.getElementById('progress-fill').style.width = percent + '%';
+            document.getElementById('checked-count').textContent = String(checkedCount);
+            document.getElementById('total-count').textContent = String(total);
+        }
+        function toggleSection(section) {
+            const element = document.getElementById('section-' + section);
+            if (element) element.classList.toggle('collapsed');
+        }
+        function checkAll() {
+            const progress = {};
+            document.querySelectorAll('.task-checkbox').forEach((checkbox) => {
+                progress[checkbox.dataset.task] = true;
+            });
+            saveProgress(progress);
+            updateUI();
+        }
+        function resetAll() {
+            if (!confirm('Reset tất cả tiến độ?')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            updateUI();
+        }
+        document.querySelectorAll('.task-checkbox').forEach((checkbox) => {
+            checkbox.addEventListener('change', function () {
+                const progress = loadProgress();
+                progress[this.dataset.task] = this.checked;
+                saveProgress(progress);
+                updateUI();
+            });
+        });
+        updateUI();
+    </script>
+</body>
+</html>

@@ -8,7 +8,7 @@ import { orderApi } from '../../api/orderApi'
 import { ApiError } from '../../api/httpClient'
 
 // Must be hoisted before vi.mock so the factory can reference it
-const mockAuth = { isAuthenticated: false, isLoading: false, accessToken: null }
+const mockAuth: { isAuthenticated: boolean; isLoading: boolean; accessToken: string | null } = { isAuthenticated: false, isLoading: false, accessToken: null }
 
 vi.mock('../auth/AuthContext', () => ({
   AuthProvider: ({ children }: PropsWithChildren) => <>{children}</>,
@@ -29,10 +29,25 @@ const orderListResponse = {
   pageSize: 10,
 }
 
-function renderHistory(auth = { isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' }, url = '/orders/history') {
-  mockAuth.isAuthenticated = auth.isAuthenticated
-  mockAuth.isLoading = auth.isLoading
-  mockAuth.accessToken = auth.accessToken
+interface AuthParam {
+  isAuthenticated?: boolean
+  isLoading?: boolean
+  accessToken?: string | null
+  auth?: {
+    isAuthenticated?: boolean
+    isLoading?: boolean
+    accessToken?: string | null
+  }
+}
+
+function renderHistory(
+  authParam: AuthParam = { isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' },
+  url = '/orders/history'
+) {
+  const auth = authParam.auth ?? authParam
+  mockAuth.isAuthenticated = auth.isAuthenticated ?? true
+  mockAuth.isLoading = auth.isLoading ?? false
+  mockAuth.accessToken = auth.accessToken !== undefined ? auth.accessToken : 'jwt-token'
   if (!vi.isMockFunction(orderApi.getOrders)) {
     vi.spyOn(orderApi, 'getOrders').mockResolvedValue({ data: [], totalCount: 0, page: 1, pageSize: 10 })
   }
@@ -64,7 +79,7 @@ describe('OrderHistoryPage', () => {
     vi.spyOn(orderApi, 'getOrders').mockResolvedValue({ data: [], totalCount: 0, page: 1, pageSize: 10 })
     renderHistory({ isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' })
     expect(await screen.findByRole('heading', { level: 1, name: 'Lịch sử đơn hàng' })).toBeInTheDocument()
-    expect(screen.getByText('Bạn chưa có đơn hàng nào.')).toBeInTheDocument()
+    expect(await screen.findByText('Bạn chưa có đơn hàng nào.')).toBeInTheDocument()
   })
 
   it('renders order cards from backend data', async () => {
@@ -101,6 +116,14 @@ describe('OrderHistoryPage', () => {
     renderHistory({ isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' })
     expect(await screen.findByText('Đã xác nhận')).toBeInTheDocument()
     expect(screen.getByText('Confirmed', { selector: '.sr-only' })).toBeInTheDocument()
+  })
+
+  it('exposes accessible order history controls', async () => {
+    vi.spyOn(orderApi, 'getOrders').mockResolvedValue(orderListResponse)
+    renderHistory({ auth: { isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' } })
+    expect(await screen.findByRole('main', { name: 'Lịch sử đơn hàng' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Lọc trạng thái')).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Phân trang đơn hàng' })).toBeInTheDocument()
   })
 
   it('retries list load failure', async () => {

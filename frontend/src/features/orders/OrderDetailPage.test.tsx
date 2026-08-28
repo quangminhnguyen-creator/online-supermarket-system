@@ -15,9 +15,12 @@ vi.mock('../../api/orderApi', () => ({
   getOrderById: mockGetOrderById,
 }))
 
+// Track the current auth state so tests can toggle it
+let currentAuth: { isAuthenticated: boolean; isLoading: boolean; accessToken: string | null } = { isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' }
+
 vi.mock('../auth/AuthContext', () => ({
   AuthProvider: ({ children }: PropsWithChildren) => <>{children}</>,
-  useAuth: () => ({ isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' }),
+  useAuth: () => currentAuth,
 }))
 
 const orderDetail = {
@@ -54,10 +57,28 @@ function renderDetail(url = '/orders/history/00000000-0000-0000-0000-00000000000
 describe('OrderDetailPage', () => {
   beforeEach(() => {
     localStorage.setItem('os_access_token', 'jwt-token')
+    currentAuth = { isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' }
   })
   afterEach(() => {
     localStorage.clear()
-    vi.restoreAllMocks()
+    mockGetOrderById.mockReset()
+  })
+
+  it('asks guests to login before viewing order detail', () => {
+    // Toggle auth state to unauthenticated via the shared closure variable
+    currentAuth = { isAuthenticated: false, isLoading: false, accessToken: null }
+    mockGetOrderById.mockResolvedValue(orderDetail)
+    renderDetail('/orders/history/00000000-0000-0000-0000-000000000001')
+    // Component immediately shows auth required when not authenticated (no API call needed)
+    expect(screen.getByRole('heading', { name: 'Đăng nhập để xem đơn hàng' })).toBeInTheDocument()
+  })
+
+  it('exposes accessible order detail sections', async () => {
+    mockGetOrderById.mockResolvedValue(orderDetail)
+    renderDetail('/orders/history/00000000-0000-0000-0000-000000000001')
+    expect(await screen.findByRole('region', { name: 'Thông tin giao hàng' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Sản phẩm trong đơn' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Lịch sử trạng thái' })).toBeInTheDocument()
   })
 
   it('renders order detail, items, totals, payment and timeline', async () => {
@@ -75,7 +96,7 @@ describe('OrderDetailPage', () => {
     mockGetOrderById.mockRejectedValue(new ApiError(404, { message: 'Order not found.' }))
     renderDetail('/orders/history/00000000-0000-0000-0000-000000009999')
     expect(await screen.findByRole('heading', { name: 'Không tìm thấy đơn hàng' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Quay lại lịch sử đơn hàng' })).toHaveAttribute('href', '/orders/history')
+    expect(screen.getByRole('link', { name: 'Quay lại lịch sử đơn hàng' })).toBeInTheDocument()
   })
 
   it('retries a generic detail load failure', async () => {

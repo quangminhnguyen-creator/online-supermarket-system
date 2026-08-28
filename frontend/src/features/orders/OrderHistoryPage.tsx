@@ -85,10 +85,10 @@ export function OrderHistoryPage() {
       </section>
     )
   }
-  if (authLoading || loadState === 'loading') return <section className="orders-page" aria-busy="true"><h1>Lịch sử đơn hàng</h1><p>Đang tải...</p></section>
+  if (authLoading || loadState === 'loading') return <section className="orders-page" aria-busy="true"><p>Đang tải đơn hàng...</p></section>
 
   return (
-    <section className="orders-page" aria-label="Lịch sử đơn hàng">
+    <main className="orders-page" role="main" aria-label="Lịch sử đơn hàng">
       <h1>Lịch sử đơn hàng</h1>
       {loadState === 'error' && (
         <section className="orders-empty-state" role="alert">
@@ -150,6 +150,6 @@ export function OrderHistoryPage() {
           </button>
         </nav>
       )}
-    </section>
+    </main>
   )
 }

@@ -45,4 +45,17 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var entry in ChangeTracker.Entries<OrderStatusHistory>())
+        {
+            if (entry.State == EntityState.Modified)
+            {
+                entry.State = EntityState.Unchanged;
+            }
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
+    }
 }
