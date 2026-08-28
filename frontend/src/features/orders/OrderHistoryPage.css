@@ -1,1 +1,75 @@
-/* Orders feature styles - to be expanded in later tasks */
+.orders-page {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto 64px;
+  padding: 24px 0;
+}
+
+.orders-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.orders-list {
+  display: grid;
+  gap: 14px;
+}
+
+.order-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 20px;
+  border: 1px solid #e8f1ed;
+  border-radius: 10px;
+  padding: 18px;
+  background: white;
+}
+
+.order-card h2 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.order-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #e8f1ed;
+  color: #0b3d2e;
+}
+
+.order-card p {
+  margin: 4px 0;
+}
+
+.orders-pagination {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 24px;
+  justify-content: center;
+}
+
+.orders-pagination button {
+  padding: 8px 16px;
+  border: 1px solid #e8f1ed;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.orders-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.orders-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #596963;
+}
