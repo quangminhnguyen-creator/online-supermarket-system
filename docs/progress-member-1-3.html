@@ -432,7 +432,7 @@
         <p class="lead">Trục Nghiệp Vụ Cốt Lõi: Catalog & Tồn Kho Chi Nhánh ➔ Giỏ Hàng ➔ Transactional Checkout ➔ Thanh Toán Sandbox ➔ Quản Lý Đơn Hàng.</p>
         
         <div class="header-meta">
-            <div>📅 <strong>Ngày báo cáo:</strong> 25/08/2026</div>
+            <div>📅 <strong>Ngày báo cáo:</strong> 28/08/2026</div>
             <div>⚡ <strong>Tech Stack:</strong> .NET 10 Minimal APIs, EF Core 10, MySQL 8.4 LTS, React 19</div>
             <div>🎯 <strong>Phạm vi FR:</strong> FR-101, 102, 103, 107, 108, 109, 110, 112, 114, 115, 203, 205</div>
         </div>
@@ -455,13 +455,13 @@
         <div class="metric-card">
             <div class="metric-title">Tiến Độ Frontend Storefront</div>
             <div class="metric-value">
-                <span>~70%</span>
-                <span class="badge badge-done" style="font-size: 0.8rem;">4 / 7 Màn Hình</span>
+                <span>~85%</span>
+                <span class="badge badge-done" style="font-size: 0.8rem;">5 / 7 Màn Hình</span>
             </div>
             <div class="progress-bar-container">
-                <div class="progress-bar progress-success" style="width: 70%;"></div>
+                <div class="progress-bar progress-success" style="width: 85%;"></div>
             </div>
-            <div class="metric-sub">Đã hoàn thành Auth, Sổ địa chỉ, Duyệt Catalog & Chi tiết sản phẩm Đổi kho</div>
+            <div class="metric-sub">Đã hoàn thành Auth, Sổ địa chỉ, Duyệt Catalog, Chi tiết sản phẩm & Giỏ hàng mua sắm</div>
         </div>
 
         <div class="metric-card">
@@ -476,13 +476,13 @@
         <div class="metric-card">
             <div class="metric-title">Kết Quả Kiểm Thử (Unit/Integration)</div>
             <div class="metric-value">
-                <span>144/144</span>
+                <span>191/191</span>
                 <span class="badge badge-done" style="font-size: 0.8rem;">Passed 100%</span>
             </div>
             <div class="progress-bar-container">
                 <div class="progress-bar progress-success" style="width: 100%;"></div>
             </div>
-            <div class="metric-sub">45 Domain + 4 Infra + 51 API + 44 Frontend Vitest</div>
+            <div class="metric-sub">45 Domain + 4 Infra + 51 API + 91 Frontend Vitest</div>
         </div>
     </div>
 
@@ -491,7 +491,7 @@
         <button class="tab-btn active" onclick="switchTab('overview')">📊 Tổng Quan Nghiệp Vụ</button>
         <button class="tab-btn" onclick="switchTab('member1')">👤 Thành Viên 1 (Backend Core) <span class="tab-count">7 Tasks</span></button>
         <button class="tab-btn" onclick="switchTab('member3')">👤 Thành Viên 3 (Payment & Order) <span class="tab-count">6 Tasks</span></button>
-        <button class="tab-btn" onclick="switchTab('frontend')">💻 Frontend Tương Ứng <span class="tab-count">4/7 Flow UI</span></button>
+        <button class="tab-btn" onclick="switchTab('frontend')">💻 Frontend Tương Ứng <span class="tab-count">5/7 Flow UI</span></button>
         <button class="tab-btn" onclick="switchTab('apis')">🔌 Danh Mục API & Contracts</button>
         <button class="tab-btn" onclick="switchTab('checklist')">✅ Checklist Nghiệm Thu</button>
     </div>
@@ -768,7 +768,7 @@
         <div class="section-card">
             <div class="section-header">
                 <div class="section-title">💻 Phân Hệ Frontend Tương Ứng (React 19 + TypeScript + Vite)</div>
-                <span class="badge badge-done">4 / 7 Màn Hình Hoàn Thành (~70%)</span>
+                <span class="badge badge-done">5 / 7 Màn Hình Hoàn Thành (~85%)</span>
             </div>
 
             <div class="data-table-wrapper">
@@ -792,25 +792,25 @@
                             <td><strong>2. Hồ Sơ & Sổ Địa Chỉ</strong></td>
                             <td><code class="endpoint">/account/profile</code>, <code class="endpoint">/addresses</code></td>
                             <td><code class="endpoint">/api/users/me</code>, <code class="endpoint">/api/users/me/addresses</code></td>
-                            <td><span class="badge badge-done">✅ Đã hoàn thành (AddressManagement, UserEndpoints)</span></td>
+                            <td><span class="badge badge-done">✅ Đã hoàn thành (AddressManagement, UserEndpoints - 7 Tests)</span></td>
                         </tr>
                         <tr>
                             <td><strong>3. Duyệt Sản Phẩm & Lọc Kho</strong></td>
                             <td><code class="endpoint">/browse</code>, <code class="endpoint">/products</code>, <code class="endpoint">/</code></td>
                             <td><code class="endpoint">/api/products</code>, <code class="endpoint">/api/branches</code>, <code class="endpoint">/api/categories</code>, <code class="endpoint">/api/brands</code></td>
-                            <td><span class="badge badge-done">✅ Đã hoàn thành (ProductBrowsePage, FilterSidebar, ProductGrid, Pagination - 11 Tests)</span></td>
+                            <td><span class="badge badge-done">✅ Đã hoàn thành (ProductBrowsePage, FilterSidebar, ProductGrid, Pagination - 12 Tests)</span></td>
                         </tr>
                         <tr>
                             <td><strong>4. Chi Tiết Sản Phẩm & Đổi Kho</strong></td>
                             <td><code class="endpoint">/product/:id</code></td>
                             <td><code class="endpoint">/api/products/{id}?branchId=</code></td>
-                            <td><span class="badge badge-done">✅ Đã hoàn thành (ProductDetailPage, BranchSelector, StockStatus, ImageFallback - 15 Tests)</span></td>
+                            <td><span class="badge badge-done">✅ Đã hoàn thành (ProductDetailPage, BranchSelector, StockStatus, ImageFallback, AddToCart - 26 Tests)</span></td>
                         </tr>
                         <tr>
                             <td><strong>5. Giỏ Hàng Mua Sắm</strong></td>
                             <td><code class="endpoint">/shopping/cart</code></td>
-                            <td><code class="endpoint">/api/cart</code>, <code class="endpoint">/api/cart/items</code></td>
-                            <td><span class="badge badge-planned">🔄 Sẵn sàng kết nối API Backend</span></td>
+                            <td><code class="endpoint">/api/cart</code>, <code class="endpoint">/api/cart/items</code>, <code class="endpoint">/api/cart/change-branch</code></td>
+                            <td><span class="badge badge-done">✅ Đã hoàn thành (CartContext, CartHeaderLink, CartItemRow, CartPage, BranchChangeConfirmDialog - 36 Tests)</span></td>
                         </tr>
                         <tr>
                             <td><strong>6. Thanh Toán & Đặt Hàng</strong></td>
@@ -834,7 +834,8 @@
                     <li><strong>Product Browse & Search:</strong> Tìm kiếm tức thời theo từ khóa, hỗ trợ URL query parameters đồng bộ 2 chiều.</li>
                     <li><strong>Dynamic Multi-Filter:</strong> Lọc theo Danh mục sản phẩm (Categories), Thương hiệu (Brands), Khoảng giá tùy chỉnh, và trạng thái Chỉ hiện còn hàng (In-Stock Only).</li>
                     <li><strong>Multi-Branch Stock Badge:</strong> Hiển thị badge tồn kho trực quan theo từng Chi nhánh siêu thị đã chọn (Còn hàng, Sắp hết hàng, Hết hàng).</li>
-                    <li><strong>Product Detail & Dynamic Branch Stock:</strong> Chi tiết thông số, fallback ảnh tự động, hiển thị giá bán và tồn kho tương ứng theo từng chi nhánh thời gian thực với query param <code>?branchId=</code> (15 Tests).</li>
+                    <li><strong>Product Detail & Dynamic Branch Stock:</strong> Chi tiết thông số, fallback ảnh tự động, hiển thị giá bán và tồn kho tương ứng theo từng chi nhánh thời gian thực với query param <code>?branchId=</code>, điều khiển thêm giỏ hàng có kiểm tra tồn kho (26 Tests).</li>
+                    <li><strong>Shopping Cart & Multi-Branch Protection:</strong> Quản lý giỏ hàng realtime qua CartProvider, khóa theo từng item (ref-counted locks), serialize mutation writes, badge tổng số lượng ở header, modal xác nhận đổi kho/xóa giỏ hàng và xử lý lỗi tồn kho 409 (36 Tests).</li>
                     <li><strong>Chuyển đổi Chế độ Nguồn Dữ liệu:</strong> Tự động tích hợp chế độ Backend Live API hoặc Dữ liệu giả lập mẫu khi dev độc lập.</li>
                 </ul>
             </div>
@@ -1005,7 +1006,7 @@
         <div class="section-card">
             <div class="section-header">
                 <div class="section-title">✅ Checklist Kiểm Thử & Nghiệm Thu Kỹ Thuật</div>
-                <span class="badge badge-done">100% Passed (144 Tests)</span>
+                <span class="badge badge-done">100% Passed (191 Tests)</span>
             </div>
 
             <div class="checklist-item done">
@@ -1020,7 +1021,7 @@
                 <div class="checklist-icon">✅</div>
                 <div class="checklist-content">
                     <h5>Giao diện Duyệt sản phẩm & Bộ lọc kho (ProductBrowsePage)</h5>
-                    <p>Tích hợp bộ lọc danh mục, thương hiệu, khoảng giá, sắp xếp giá/tên, phân trang và trạng thái tồn kho theo chi nhánh (11 Vitest tests).</p>
+                    <p>Tích hợp bộ lọc danh mục, thương hiệu, khoảng giá, sắp xếp giá/tên, phân trang và trạng thái tồn kho theo chi nhánh (12 Vitest tests).</p>
                 </div>
             </div>
 
@@ -1028,7 +1029,15 @@
                 <div class="checklist-icon">✅</div>
                 <div class="checklist-content">
                     <h5>Giao diện Chi tiết sản phẩm & Chuyển đổi kho (ProductDetailPage)</h5>
-                    <p>Tích hợp hiển thị chi tiết sản phẩm, đổi kho qua query params <code>?branchId=</code>, fallback hình ảnh lỗi, xử lý 404 Not Found và cơ chế retry (15 Vitest tests).</p>
+                    <p>Tích hợp hiển thị chi tiết sản phẩm, đổi kho qua query params <code>?branchId=</code>, fallback hình ảnh lỗi, xử lý 404 Not Found, thêm vào giỏ và cơ chế retry (26 Vitest tests).</p>
+                </div>
+            </div>
+
+            <div class="checklist-item done">
+                <div class="checklist-icon">✅</div>
+                <div class="checklist-content">
+                    <h5>Giao diện Giỏ hàng & Đồng bộ kho (CartPage & CartContext)</h5>
+                    <p>Tích hợp CartProvider quản lý state tập trung, badge header cập nhật tổng số lượng, serialize các write request, ref-counted item locks, modal xác nhận đổi kho/xóa giỏ, và xử lý lỗi tồn kho 409 (36 Vitest tests).</p>
                 </div>
             </div>
 
@@ -1075,8 +1084,8 @@
             <div class="checklist-item done">
                 <div class="checklist-icon">✅</div>
                 <div class="checklist-content">
-                    <h5>Build & Automated Test Pass 100% (144/144 Tests)</h5>
-                    <p>100 Backend Tests (.NET 10: 45 Domain + 4 Infrastructure + 51 API Integration) + 44 Frontend Vitest Tests đều chạy thành công 100% không có bất kỳ lỗi nào.</p>
+                    <h5>Build & Automated Test Pass 100% (191/191 Tests)</h5>
+                    <p>100 Backend Tests (.NET 10: 45 Domain + 4 Infrastructure + 51 API Integration) + 91 Frontend Vitest Tests đều chạy thành công 100% không có bất kỳ lỗi nào.</p>
                 </div>
             </div>
         </div>
@@ -1090,6 +1099,7 @@
             <a href="project-spec.html">project-spec.html</a> | 
             <a href="tasks/plan-product-browse.html">plan-product-browse.html</a> | 
             <a href="tasks/plan-product-detail-branch-switching.html">plan-product-detail-branch-switching.html</a> | 
+            <a href="tasks/plan-shopping-cart.html">plan-shopping-cart.html</a> | 
             <a href="tasks/plan-seed-data-electronics.html">plan-seed-data-electronics.html</a> | 
             <a href="architecture/erd.md">erd.md</a> | 
             <a href="architecture/dfd.md">dfd.md</a> | 
