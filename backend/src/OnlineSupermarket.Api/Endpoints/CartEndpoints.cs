@@ -196,11 +196,13 @@ public static class CartEndpoints
             return Results.NotFound(new { message = "Branch not found." });
 
         var cart = await dbContext.Carts
+            .Include(c => c.Items)
             .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
 
         if (cart == null)
             return Results.NotFound(new { message = "Cart not found." });
 
+        dbContext.CartItems.RemoveRange(cart.Items);
         cart.ChangeBranch(request.BranchId);
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -215,11 +217,13 @@ public static class CartEndpoints
         var userId = GetUserId(user);
 
         var cart = await dbContext.Carts
+            .Include(c => c.Items)
             .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
 
         if (cart == null)
             return Results.NoContent();
 
+        dbContext.CartItems.RemoveRange(cart.Items);
         cart.Clear();
         await dbContext.SaveChangesAsync(cancellationToken);
 
