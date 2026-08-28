@@ -7,6 +7,9 @@ import { ProductDetailPage } from './features/products/ProductDetailPage'
 import { ProfilePage } from './features/account/ProfilePage'
 import { AddressListPage } from './features/account/AddressListPage'
 import { CartPage } from './features/cart/CartPage'
+import { CheckoutPage } from './features/checkout/CheckoutPage'
+import { CheckoutSuccessPage } from './features/checkout/CheckoutSuccessPage'
+import { OrderHistoryPage } from './features/orders/OrderHistoryPage'
 
 export default function App() {
   return (
@@ -24,6 +27,9 @@ export default function App() {
               <Route path="/account/addresses" element={<AddressListPage />} />
               <Route path="/addresses" element={<AddressListPage />} />
               <Route path="/shopping/cart" element={<CartPage />} />
+              <Route path="/shopping/checkout" element={<CheckoutPage />} />
+              <Route path="/shopping/checkout/success" element={<CheckoutSuccessPage />} />
+              <Route path="/orders/history" element={<OrderHistoryPage />} />
             </Routes>
           </AppShell>
         </CartProvider>

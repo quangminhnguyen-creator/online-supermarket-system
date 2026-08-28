@@ -180,5 +180,25 @@ describe('Auth Feature', () => {
       expect(screen.getByText('Quản trị viên')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeInTheDocument()
     })
+
+    it('shows an order history link for authenticated users', async () => {
+      localStorage.setItem('os_access_token', 'valid_token')
+      vi.spyOn(authApi, 'getMeApi').mockResolvedValue({
+        id: 'user-1',
+        email: 'admin@example.com',
+        fullName: 'Admin User',
+        role: 'Admin',
+      })
+
+      render(
+        <MemoryRouter>
+          <AuthProvider>
+            <UserMenu />
+          </AuthProvider>
+        </MemoryRouter>
+      )
+
+      expect(await screen.findByRole('link', { name: 'Đơn hàng' })).toHaveAttribute('href', '/orders/history')
+    })
   })
 })

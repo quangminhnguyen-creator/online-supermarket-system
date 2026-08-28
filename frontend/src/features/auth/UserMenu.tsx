@@ -44,6 +44,9 @@ export function UserMenu() {
         <Link to="/account/addresses" className="btn-nav-address" title="Sổ địa chỉ giao hàng">
           📍 Địa chỉ
         </Link>
+        <Link to="/orders/history" className="btn-nav-orders" title="Lịch sử đơn hàng">
+          Đơn hàng
+        </Link>
         <button
           type="button"
           className="btn-logout"
