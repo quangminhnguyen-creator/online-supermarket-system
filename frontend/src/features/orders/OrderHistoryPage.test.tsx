@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { PropsWithChildren } from 'react'
 import { OrderHistoryPage } from './OrderHistoryPage'
 import { orderApi } from '../../api/orderApi'
+import { ApiError } from '../../api/httpClient'
 
 // Must be hoisted before vi.mock so the factory can reference it
 const mockAuth = { isAuthenticated: false, isLoading: false, accessToken: null }
@@ -93,5 +94,22 @@ describe('OrderHistoryPage', () => {
     renderHistory({ isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' }, '/orders/history')
     await user.click(await screen.findByRole('button', { name: 'Trang sau' }))
     expect(await screen.findByText('Trang 2')).toBeInTheDocument()
+  })
+
+  it('maps backend statuses to Vietnamese labels without hiding raw status from tests', async () => {
+    vi.spyOn(orderApi, 'getOrders').mockResolvedValue(orderListResponse)
+    renderHistory({ isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' })
+    expect(await screen.findByText('Đã xác nhận')).toBeInTheDocument()
+    expect(screen.getByText('Confirmed', { selector: '.sr-only' })).toBeInTheDocument()
+  })
+
+  it('retries list load failure', async () => {
+    const spy = vi.spyOn(orderApi, 'getOrders')
+      .mockRejectedValueOnce(new ApiError(500))
+      .mockResolvedValueOnce({ data: [], totalCount: 0, page: 1, pageSize: 10 })
+    renderHistory({ isAuthenticated: true, isLoading: false, accessToken: 'jwt-token' })
+    await userEvent.click(await screen.findByRole('button', { name: 'Thử lại' }))
+    expect(await screen.findByText('Bạn chưa có đơn hàng nào.')).toBeInTheDocument()
+    expect(spy).toHaveBeenCalledTimes(2)
   })
 })

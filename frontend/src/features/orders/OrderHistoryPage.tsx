@@ -20,6 +20,22 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  Pending: 'Chờ xác nhận',
+  Confirmed: 'Đã xác nhận',
+  Preparing: 'Đang chuẩn bị',
+  Ready: 'Sẵn sàng nhận hàng',
+  Shipped: 'Đang giao hàng',
+  Delivered: 'Đã giao hàng',
+  Completed: 'Hoàn tất',
+  Cancelled: 'Đã hủy',
+  Failed: 'Thất bại',
+}
+
+function formatStatus(status: string) {
+  return STATUS_LABELS[status] ?? status
+}
+
 export function OrderHistoryPage() {
   const { isAuthenticated, isLoading: authLoading, accessToken } = useAuth()
   const [loginOpen, setLoginOpen] = useState(false)
@@ -28,6 +44,7 @@ export function OrderHistoryPage() {
   const status = searchParams.get('status') || ''
   const [orders, setOrders] = useState<PaginatedOrdersDto | null>(null)
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return
@@ -42,7 +59,7 @@ export function OrderHistoryPage() {
         if (!isAbortError(error)) setLoadState('error')
       })
     return () => controller.abort()
-  }, [isAuthenticated, accessToken, page, status])
+  }, [isAuthenticated, accessToken, page, status, retryKey])
 
   function setStatusFilter(nextStatus: string) {
     const next = new URLSearchParams(searchParams)
@@ -77,6 +94,7 @@ export function OrderHistoryPage() {
         <section className="orders-empty-state" role="alert">
           <h2>Không thể tải đơn hàng</h2>
           <p>Vui lòng thử lại sau ít phút.</p>
+          <button type="button" onClick={() => setRetryKey(prev => prev + 1)}>Thử lại</button>
         </section>
       )}
       <div className="orders-toolbar">
@@ -104,7 +122,10 @@ export function OrderHistoryPage() {
             <h2>Mã đơn: {order.id}</h2>
             <p>{formatDate(order.createdAtUtc)}</p>
             <strong>{formatPrice(order.totalAmount)}</strong>
-            <span className={`order-status order-status--${order.status.toLowerCase()}`} role="status">{order.status}</span>
+            <span className={`order-status order-status--${order.status.toLowerCase()}`} role="status">
+              {formatStatus(order.status)}
+              <span className="sr-only">{order.status}</span>
+            </span>
             <p>{order.fulfillmentType} - {order.itemCount} sản phẩm</p>
             <Link to={`/orders/history/${encodeURIComponent(order.id)}`}>Xem chi tiết {order.id}</Link>
           </article>
