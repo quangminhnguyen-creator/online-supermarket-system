@@ -5,6 +5,7 @@ import { branchApi, type BranchDto } from '../../api/branchApi'
 import { ApiError } from '../../api/httpClient'
 import { useAuth } from '../auth/AuthContext'
 import { useCart } from '../cart/CartContext'
+import { useCompare } from '../compare/CompareContext'
 import { AuthModal } from '../auth/AuthModal'
 import { BranchChangeConfirmDialog } from '../cart/BranchChangeConfirmDialog'
 import { formatPrice } from './ProductCard'
@@ -53,6 +54,14 @@ export function ProductDetailPage() {
     addItem,
     changeBranch,
   } = useCart()
+  const {
+    isInCompare,
+    addToCompare,
+    removeFromCompare,
+    openModal,
+    getDifferentCategoryWarning,
+    hasProduct,
+  } = useCompare()
 
   const [productState, setProductState] = useState<ProductState>({ kind: 'loading' })
   const [branchState, setBranchState] = useState<BranchState>({ kind: 'loading' })
@@ -406,6 +415,55 @@ export function ProductDetailPage() {
                   Thử lại thêm vào giỏ
                 </button>
               )}
+
+              {/* Compare Button */}
+              <div className="product-detail__compare-section">
+                {id && isInCompare(id) ? (
+                  <>
+                    <span className="product-detail__compare-added">✓ Đã thêm vào so sánh</span>
+                    <button
+                      type="button"
+                      className="product-detail__compare-remove-btn"
+                      onClick={() => {
+                        if (id) removeFromCompare(id)
+                      }}
+                    >
+                      Hủy so sánh
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="product-detail__compare-btn"
+                    onClick={() => {
+                      const warning = getDifferentCategoryWarning({
+                        id: id!,
+                        categoryId: product.categoryId,
+                        categoryName: product.categoryName,
+                        categorySlug: product.categorySlug,
+                      })
+                      if (warning) {
+                        alert(warning)
+                        return
+                      }
+                      const added = addToCompare({
+                        id: id!,
+                        categoryId: product.categoryId,
+                        categoryName: product.categoryName,
+                        categorySlug: product.categorySlug,
+                      })
+                      if (added || hasProduct) {
+                        openModal()
+                      }
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                    </svg>
+                    So sánh sản phẩm
+                  </button>
+                )}
+              </div>
 
               <AuthModal
                 isOpen={loginOpen}

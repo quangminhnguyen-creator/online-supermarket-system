@@ -6,11 +6,13 @@ import { branchApi, type BranchDto } from '../../api/branchApi'
 import { ApiError } from '../../api/httpClient'
 import { useAuth } from '../auth/AuthContext'
 import { useCart } from '../cart/CartContext'
+import { useCompare } from '../compare/CompareContext'
 import type { CartDto, CartItemDto } from '../../api/cartApi'
 import { ProductDetailPage } from './ProductDetailPage'
 
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../cart/CartContext', () => ({ useCart: vi.fn() }))
+vi.mock('../compare/CompareContext', () => ({ useCompare: vi.fn() }))
 vi.mock('../auth/AuthModal', () => ({
   AuthModal: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
@@ -22,6 +24,7 @@ vi.mock('../auth/AuthModal', () => ({
 
 const useAuthMock = vi.mocked(useAuth)
 const useCartMock = vi.mocked(useCart)
+const useCompareMock = vi.mocked(useCompare)
 const addItem = vi.fn()
 const changeBranch = vi.fn()
 
@@ -36,6 +39,7 @@ const mockDetail: ProductDetailDto = {
   imageUrl: null,
   categoryId: 'cat-1',
   categoryName: 'Điện thoại & Tablet',
+  categorySlug: 'dien-thoai',
   brandId: 'brand-1',
   brandName: 'Apple',
   branchInventory: null,
@@ -226,6 +230,19 @@ describe('ProductDetailPage', () => {
       removeItem: vi.fn(),
       changeBranch,
       clearCart: vi.fn(),
+    })
+    useCompareMock.mockReturnValue({
+      compareProducts: [],
+      isInCompare: vi.fn(() => false),
+      addToCompare: vi.fn(() => true),
+      removeFromCompare: vi.fn(),
+      clearCompare: vi.fn(),
+      canAddMore: true,
+      hasProduct: false,
+      getDifferentCategoryWarning: vi.fn(() => null),
+      openModal: vi.fn(),
+      closeModal: vi.fn(),
+      isModalOpen: false,
     })
   })
 
