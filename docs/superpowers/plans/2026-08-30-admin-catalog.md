@@ -6,7 +6,7 @@
 
 **Architecture:** Mở rộng trực tiếp domain entity và Minimal API hiện có; validation nội tại nằm trong entity, validation uniqueness/relationship nằm trong `AdminCatalogEndpoints`. Frontend dùng một admin API client, một route guard/layout và ba trang quản trị độc lập.
 
-**Tech Stack:** .NET 9, ASP.NET Core Minimal API, EF Core/MySQL, xUnit, React 19, React Router, TypeScript, Vitest, Testing Library.
+**Tech Stack:** .NET 10, ASP.NET Core Minimal API, EF Core/MySQL, xUnit, React 19, React Router, TypeScript, Vitest, Testing Library.
 
 **Spec:** `docs/superpowers/specs/2026-08-30-admin-catalog-design.md`
 
@@ -19,6 +19,7 @@
 - Public catalog chỉ trả category, brand và product active.
 - Không cho deactivate category/brand đang được product active tham chiếu; không cho deactivate category cha còn child active.
 - Không cho cập nhật parent category tạo self-reference hoặc cycle.
+- Khi tạo Product hoặc đổi Category/Brand, association đích phải active; update trường khác được giữ association cũ inactive, còn restore Product yêu cầu cả Category và Brand active.
 - Không sửa hoặc commit các thay đổi có sẵn trong `PLAN.md`, `docs/project-progress-4-members.html`, `docs/tasks/plan-order-history.html`, `docs/tasks/plan-catalog-category-hierarchy.html`.
 
 ## File Map
@@ -38,6 +39,8 @@
 - Create `frontend/src/api/adminCatalogApi.test.ts`: URL, token and payload tests.
 - Create `frontend/src/features/admin/AdminRoute.tsx`: guest/customer/admin state gate.
 - Create `frontend/src/features/admin/AdminLayout.tsx`: Admin Catalog navigation and outlet.
+- Create `frontend/src/features/admin/AdminConfirmDialog.tsx`: accessible, reusable destructive confirmation dialog.
+- Create `frontend/src/features/admin/AdminConfirmDialog.test.tsx`: focus, cancel, confirm and Escape behavior.
 - Create `frontend/src/features/admin/AdminCatalog.css`: scoped admin layout, table, form and state styles.
 - Create `frontend/src/features/admin/categories/AdminCategoriesPage.tsx`: category list/form/status workflow.
 - Create `frontend/src/features/admin/categories/AdminCategoriesPage.test.tsx`: category UI tests.
@@ -94,7 +97,7 @@ public void Product_Update_WithNegativePrice_Throws()
 }
 ```
 
-Add equivalent Brand update/status and Product successful update/status tests. Use a private `CreateProduct()` factory in the test class to keep inputs consistent.
+Add equivalent Brand update/status and Product successful update/status tests. Add one theory covering empty `categoryId`, empty `brandId`, blank `sku`, blank `name`, blank `slug`, negative `basePrice`, and blank `unit`; after every thrown exception assert every original Product property is unchanged. Use a private `CreateProduct()` factory in the test class to keep inputs consistent.
 
 - [ ] **Step 2: Run tests and verify red state**
 
@@ -193,7 +196,7 @@ var group = routes.MapGroup("/api/admin/catalog")
     .RequireAuthorization("AdminOnly");
 ```
 
-For uniqueness, exclude the resource being updated and compare normalized lower-case values. For cycle detection, walk `ParentCategoryId` upward with `HashSet<Guid>` until null; return `400` if the edited category ID is encountered or an already visited node repeats. Before deactivate, query active children/products and return `Results.Conflict(new { message = "..." })`.
+For uniqueness, exclude the resource being updated and compare normalized lower-case values. Implement `WouldCreateCategoryCycleAsync(AppDbContext dbContext, Guid categoryId, Guid? newParentId, CancellationToken cancellationToken)`: return false for null; initialize `HashSet<Guid>` with `categoryId`; while the current parent is non-null, fail when `visited.Add(currentId)` returns false, otherwise query only its `ParentCategoryId`; stop at null. A missing parent is handled separately as `400`. Before deactivate, query active children/products and return `Results.Conflict(new { message = "..." })`.
 
 Map all eight Category/Brand endpoints and call `app.MapAdminCatalogEndpoints()` in `Program.cs` after public Catalog mapping.
 
@@ -219,11 +222,11 @@ git commit -m "feat(admin): add category and brand management APIs"
 
 **Interfaces:**
 - Consumes: Task 1 `Product.Update/Activate/Deactivate`.
-- Produces: `UpsertProductRequest`, `AdminProductDto`, `AdminProductListResponse` and five product handlers.
+- Produces: `UpsertProductRequest`, `AdminProductDto` and four product handlers.
 
 - [ ] **Step 1: Write failing Product API tests**
 
-Add tests for paginated/filterable list, create, update, deactivate, restore, duplicate SKU ignoring case, duplicate slug ignoring case, missing/inactive category, missing/inactive brand, negative price and not-found mutation.
+Add tests for paginated/filterable list, create, update, deactivate, restore, duplicate SKU ignoring case, duplicate slug ignoring case, missing/inactive category, missing/inactive brand, negative price and not-found mutation. Prove create and changed associations reject inactive targets; prove an update that keeps the same now-inactive association may edit descriptive fields; prove restore rejects inactive Category/Brand.
 
 Representative success assertion:
 
@@ -264,13 +267,12 @@ Map:
 
 ```text
 GET   /api/admin/catalog/products
-GET   /api/admin/catalog/products/{id}
 POST  /api/admin/catalog/products
 PUT   /api/admin/catalog/products/{id}
 PATCH /api/admin/catalog/products/{id}/status
 ```
 
-Clamp page/pageSize exactly like `CatalogEndpoints`. Include Category and Brand in DTO queries. Normalize query `search`; allow nullable `isActive`. Validate active Category/Brand before entity construction/update. Map domain `ArgumentException`/`ArgumentOutOfRangeException` to `400` and database uniqueness conflicts detected before save to `409`.
+Clamp page/pageSize exactly like `CatalogEndpoints`. Include Category and Brand in DTO queries so list rows contain every field needed to populate the edit form. Normalize query `search`; allow nullable `isActive`. Require active Category/Brand on create, association change and Product restore; allow unchanged inactive associations during descriptive edits. Map domain `ArgumentException`/`ArgumentOutOfRangeException` to `400` and database uniqueness conflicts detected before save to `409`.
 
 - [ ] **Step 5: Run Product API tests**
 
@@ -312,7 +314,7 @@ Modify product list/detail predicates so active product, category and brand are 
 
 - [ ] **Step 4: Add OpenAPI contract assertions and document paths**
 
-Extend tests to assert all 13 Admin Catalog operations exist across nine URL paths and contain bearer security. Add request/response schemas and response codes `200/201/400/401/403/404/409` to `docs/api/openapi.json`; keep JSON valid and preserve existing components.
+Extend tests to assert all 12 Admin Catalog operations exist across nine URL paths and contain bearer security. Add request/response schemas and response codes `200/201/400/401/403/404/409` to `docs/api/openapi.json`; keep JSON valid and preserve existing components.
 
 - [ ] **Step 5: Run backend suite**
 
@@ -381,8 +383,10 @@ git commit -m "feat(frontend): add admin catalog API client"
 **Files:**
 - Create: `frontend/src/features/admin/AdminRoute.tsx`
 - Create: `frontend/src/features/admin/AdminLayout.tsx`
+- Create: `frontend/src/features/admin/AdminConfirmDialog.tsx`
 - Create: `frontend/src/features/admin/AdminCatalog.css`
 - Create: `frontend/src/features/admin/AdminRoute.test.tsx`
+- Create: `frontend/src/features/admin/AdminConfirmDialog.test.tsx`
 - Modify: `frontend/src/App.tsx`
 - Modify: `frontend/src/App.test.tsx`
 
@@ -390,14 +394,15 @@ git commit -m "feat(frontend): add admin catalog API client"
 - Consumes: `useAuth()` fields `user`, `accessToken`, `isAuthenticated`, `isLoading`.
 - Produces: `<AdminRoute />` rendering `<Outlet />` only for `user.role === 'Admin'`.
 - Produces: `<AdminLayout />` with links to the three Admin Catalog pages and `<Outlet />`.
+- Produces: `<AdminConfirmDialog isOpen title message confirmLabel isBusy onCancel onConfirm />`.
 
 - [ ] **Step 1: Write failing route guard tests**
 
-Mock `useAuth` for loading, guest, Customer and Admin states. Assert loading text, guest redirect to `/`, Customer redirect to `/`, and Admin child rendering. Use `<MemoryRouter initialEntries={['/admin/catalog/categories']}>` with a sentinel home route.
+Mock `useAuth` for loading, guest, Customer and Admin states. Assert loading text, guest `<Navigate to="/" replace />`, Customer `<Navigate to="/" replace />`, and Admin child rendering. Use `<MemoryRouter initialEntries={['/admin/catalog/categories']}>` with a sentinel home route; do not use `window.location` for internal redirects.
 
 - [ ] **Step 2: Run route tests and verify red state**
 
-Run: `npm test -- --run src/features/admin/AdminRoute.test.tsx src/App.test.tsx` from `frontend`.
+Run: `npm test -- --run src/features/admin/AdminRoute.test.tsx src/features/admin/AdminConfirmDialog.test.tsx src/App.test.tsx` from `frontend`.
 
 Expected: component import/route assertions fail.
 
@@ -416,11 +421,11 @@ Add nested routes:
 </Route>
 ```
 
-Initially create page modules that render accessible headings only; Tasks 7–8 replace those minimal bodies. Style admin navigation, content container, responsive table wrapper, form grid, buttons, alerts and visually hidden labels in `AdminCatalog.css`.
+Initially create page modules that render accessible headings only; Tasks 7–8 replace those minimal bodies. Implement `AdminConfirmDialog` following the existing `BranchChangeConfirmDialog` accessibility pattern: `role="dialog"`, `aria-modal="true"`, labelled title/description, initial focus on cancel, Escape to cancel, return focus on close, and disabled controls while busy. Style admin navigation, content container, responsive table wrapper, form grid, buttons, alerts, dialog overlay/destructive button and visually hidden labels in `AdminCatalog.css`.
 
 - [ ] **Step 4: Run route tests and frontend build**
 
-Run: `npm test -- --run src/features/admin/AdminRoute.test.tsx src/App.test.tsx` and `npm run build` from `frontend`.
+Run: `npm test -- --run src/features/admin/AdminRoute.test.tsx src/features/admin/AdminConfirmDialog.test.tsx src/App.test.tsx` and `npm run build` from `frontend`.
 
 Expected: tests and TypeScript build pass.
 
@@ -446,7 +451,7 @@ git commit -m "feat(frontend): add protected admin catalog shell"
 
 - [ ] **Step 1: Write failing page tests**
 
-Mock `adminCatalogApi` and `useAuth`. For each page cover: loading list, empty state, rendered active/inactive rows, create form payload, edit form population/update payload, server Problem Details message, confirmation before deactivate, restore without destructive wording, and reload after mutation.
+Mock `adminCatalogApi` and `useAuth`. For each page cover: loading list, empty state, rendered active/inactive rows, create form payload, edit form population/update payload, server Problem Details message, `AdminConfirmDialog` before deactivate, restore without opening the destructive dialog, and reload after mutation.
 
 Category-specific assertion:
 
@@ -465,7 +470,7 @@ Expected: behavior assertions fail against heading-only pages.
 
 - [ ] **Step 3: Implement Category page**
 
-Use controlled fields `name`, `slug`, `parentCategoryId`; exclude the edited category and its descendants from parent options. Load with `includeInactive=true`, use `AbortController`, clear stale rows on failed load, disable form/actions while saving, and render errors with `role="alert"`.
+Use controlled fields `name`, `slug`, `parentCategoryId`; exclude the edited category and its descendants from parent options. Load with `includeInactive=true`, use `AbortController`, clear stale rows on failed load, disable form/actions while saving, and render errors with `role="alert"`. Open `AdminConfirmDialog` with the resource name, an explanation that it will disappear from the storefront, cancel as initial focus, and a red `Vô hiệu hóa` button.
 
 - [ ] **Step 4: Implement Brand page**
 
@@ -497,7 +502,7 @@ git commit -m "feat(frontend): manage admin categories and brands"
 
 - [ ] **Step 1: Write failing Product page tests**
 
-Cover initial parallel load of products/categories/brands, search/category/brand/status filters, pagination, empty/error states, create payload conversion of price to number, edit population, field validation, confirmation before deactivate, restore, and refresh after mutation.
+Cover initial parallel load of products/categories/brands, search/category/brand/status filters, pagination, empty/error states, create payload conversion of price to number, edit population, field validation, `AdminConfirmDialog` before deactivate, restore without the destructive dialog, and refresh after mutation.
 
 ```ts
 expect(adminCatalogApi.createProduct).toHaveBeenCalledWith(expect.objectContaining({

@@ -39,7 +39,7 @@ Tạo admin route guard dựa trên `AuthContext.user.role`, admin layout và ba
 - `/admin/catalog/brands`
 - `/admin/catalog/products`
 
-Mỗi trang dùng API client riêng, bảng danh sách và form tạo/sửa. Deactivate/restore là hành động có xác nhận. UI hiển thị loading, empty state, validation error, lỗi authorization và lỗi server bằng thông báo rõ ràng.
+Mỗi trang dùng API client riêng, bảng danh sách và form tạo/sửa. Deactivate dùng confirmation dialog có `role="dialog"`, `aria-modal`, focus ban đầu vào nút hủy và nút xác nhận destructive; restore không dùng ngôn ngữ destructive. UI hiển thị loading, empty state, validation error, lỗi authorization và lỗi server bằng thông báo rõ ràng.
 
 ## API
 
@@ -78,7 +78,8 @@ API danh sách sản phẩm trả dữ liệu phân trang theo envelope catalog 
 - Slug danh mục và thương hiệu phải duy nhất không phân biệt hoa thường trong từng bảng.
 - Slug và SKU sản phẩm phải duy nhất không phân biệt hoa thường.
 - `basePrice` không âm.
-- Category và Brand được gán cho Product phải tồn tại và đang active.
+- Khi tạo Product hoặc đổi `categoryId`/`brandId`, association đích phải tồn tại và đang active. Khi chỉ sửa trường khác, Admin được giữ association cũ đã inactive để có thể chỉnh dữ liệu; Product đó vẫn bị ẩn khỏi catalog công khai.
+- Chỉ restore Product khi Category và Brand hiện tại đều active.
 - Parent category phải tồn tại, đang active, không được trỏ vào chính nó hoặc tạo chu trình.
 - Không cho deactivate category/brand khi còn product active trực tiếp tham chiếu; API trả `409 Conflict` cùng thông báo hành động khắc phục.
 - Không cho deactivate category cha khi còn category con active.
@@ -133,4 +134,3 @@ API danh sách sản phẩm trả dữ liệu phân trang theo envelope catalog 
 - Storefront chỉ hiển thị catalog active sau mọi mutation.
 - OpenAPI mô tả endpoint và schema mới.
 - `FR-201` và `FR-202` chỉ chuyển sang `IMPLEMENTED/DONE` sau khi backend tests, frontend tests và frontend build đều thành công.
-
