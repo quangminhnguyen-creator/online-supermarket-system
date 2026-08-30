@@ -94,4 +94,45 @@ public sealed class AdminCatalogEndpointsTests : IClassFixture<AuthTestApiFactor
             new UpsertCategoryRequest("Tivi", "tivi-2", existing.Id));
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task CreateProduct_WithValidData_ReturnsCreated()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var category = new Category("Cat", "cat");
+        var brand = new Brand("Brand", "brand");
+        dbContext.Categories.Add(category);
+        dbContext.Brands.Add(brand);
+        await dbContext.SaveChangesAsync();
+
+        using var client = await CreateAuthenticatedClientAsync(UserRole.Admin);
+        var response = await client.PostAsJsonAsync("/api/admin/catalog/products", new UpsertProductRequest(
+            category.Id, brand.Id, "ADM-001", "Sản phẩm Admin", "san-pham-admin",
+            "Mô tả", 1_250_000m, "cái", "https://img.example/item.jpg"));
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var dto = await response.Content.ReadFromJsonAsync<AdminProductDto>();
+        Assert.NotNull(dto);
+        Assert.Equal("ADM-001", dto!.Sku);
+        Assert.True(dto.IsActive);
+    }
+
+    [Fact]
+    public async Task CreateProduct_WithInactiveCategory_ReturnsConflict()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var category = new Category("Cat", "cat");
+        category.Deactivate();
+        var brand = new Brand("Brand", "brand");
+        dbContext.Categories.Add(category);
+        dbContext.Brands.Add(brand);
+        await dbContext.SaveChangesAsync();
+
+        using var client = await CreateAuthenticatedClientAsync(UserRole.Admin);
+        var response = await client.PostAsJsonAsync("/api/admin/catalog/products", new UpsertProductRequest(
+            category.Id, brand.Id, "ADM-002", "Sp", "sp", null, 1000m, "cái", null));
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
 }
+
