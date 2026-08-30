@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react'
@@ -51,6 +52,12 @@ function getCompareBlockReason(
 export function CompareProvider({ children }: PropsWithChildren) {
   const [compareProducts, setCompareProducts] = useState<CompareProduct[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const compareRef = useRef<CompareProduct[]>([])
+
+  const updateCompare = useCallback((next: CompareProduct[]) => {
+    compareRef.current = next
+    setCompareProducts(next)
+  }, [])
 
   // Listen for global open event
   useEffect(() => {
@@ -75,26 +82,26 @@ export function CompareProvider({ children }: PropsWithChildren) {
 
   const addToCompare = useCallback(
     (product: CompareProduct): boolean => {
-      if (compareProducts.length >= MAX_COMPARE_PRODUCTS) return false
-
-      // Check if already in compare
-      if (compareProducts.some((p) => p.id === product.id)) return false
-
-      if (getCompareBlockReason(compareProducts[0], product) !== null) return false
-
-      setCompareProducts((prev) => [...prev, product])
+      const current = compareRef.current
+      if (current.some((p) => p.id === product.id)) return false
+      if (current.length >= MAX_COMPARE_PRODUCTS) return false
+      if (getCompareBlockReason(current[0], product) !== null) return false
+      updateCompare([...current, product])
       return true
     },
-    [compareProducts]
+    [updateCompare]
   )
 
-  const removeFromCompare = useCallback((id: string) => {
-    setCompareProducts((prev) => prev.filter((p) => p.id !== id))
-  }, [])
+  const removeFromCompare = useCallback(
+    (id: string) => {
+      updateCompare(compareRef.current.filter((p) => p.id !== id))
+    },
+    [updateCompare]
+  )
 
   const clearCompare = useCallback(() => {
-    setCompareProducts([])
-  }, [])
+    updateCompare([])
+  }, [updateCompare])
 
   const value: CompareContextValue = {
     compareProducts,

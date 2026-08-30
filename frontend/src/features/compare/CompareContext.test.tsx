@@ -14,6 +14,12 @@ const phoneB: CompareProduct = {
   categoryName: 'Điện thoại',
   categorySlug: 'dien-thoai',
 }
+const phoneC: CompareProduct = {
+  id: 'phone-c',
+  categoryId: 'phone-leaf',
+  categoryName: 'Điện thoại',
+  categorySlug: 'dien-thoai',
+}
 const tablet: CompareProduct = {
   id: 'tablet-a',
   categoryId: 'tablet-leaf',
@@ -37,6 +43,7 @@ function Harness() {
       <span data-testid="modalOpen">{String(ctx.isModalOpen)}</span>
       <button onClick={() => ctx.addToCompare(phoneA)}>add-phone-a</button>
       <button onClick={() => ctx.addToCompare(phoneB)}>add-phone-b</button>
+      <button onClick={() => ctx.addToCompare(phoneC)}>add-phone-c</button>
       <button onClick={() => ctx.addToCompare(tablet)}>add-tablet</button>
       <button onClick={() => ctx.addToCompare(unknown)}>add-unknown</button>
       <button onClick={() => ctx.removeFromCompare(phoneA.id)}>remove-phone-a</button>
@@ -108,6 +115,29 @@ describe('CompareContext', () => {
     expect(screen.getByTestId('unknown-warning')).toHaveTextContent(
       'Sản phẩm chưa được phân loại nên chưa thể so sánh.',
     )
+  })
+
+  it('keeps the category invariant across adds in a single batch', () => {
+    renderHarness()
+    act(() => {
+      screen.getByRole('button', { name: 'add-phone-a' }).click()
+      screen.getByRole('button', { name: 'add-tablet' }).click()
+    })
+    expect(screen.getByTestId('count')).toHaveTextContent('1')
+    expect(screen.getByTestId('warning')).toHaveTextContent(
+      'Chỉ có thể so sánh các sản phẩm cùng loại.',
+    )
+  })
+
+  it('never exceeds two products across adds in a single batch', () => {
+    renderHarness()
+    act(() => {
+      screen.getByRole('button', { name: 'add-phone-a' }).click()
+      screen.getByRole('button', { name: 'add-phone-b' }).click()
+      screen.getByRole('button', { name: 'add-phone-c' }).click()
+    })
+    expect(screen.getByTestId('count')).toHaveTextContent('2')
+    expect(screen.getByTestId('canAddMore')).toHaveTextContent('false')
   })
 
   it('removes a single product', () => {
