@@ -7,7 +7,9 @@ export interface ProductSummaryDto {
   sku: string
   basePrice: number
   imageUrl: string | null
+  categoryId: string
   categoryName: string
+  categorySlug: string
   brandName: string
 }
 
@@ -29,6 +31,7 @@ export interface ProductDetailDto {
   imageUrl: string | null
   categoryId: string
   categoryName: string
+  categorySlug: string
   brandId: string
   brandName: string
   branchInventory: BranchInventoryDto | null

@@ -12,6 +12,7 @@ const detailResponse = {
   imageUrl: null,
   categoryId: 'cat-1',
   categoryName: 'Điện thoại',
+  categorySlug: 'dien-thoai',
   brandId: 'brand-1',
   brandName: 'Apple',
   branchInventory: null,
@@ -28,7 +29,8 @@ it.each([
     headers: { 'Content-Type': 'application/json' },
   }))
   vi.stubGlobal('fetch', fetchMock)
-  await catalogApi.getProductById('prod-1', branchId)
+  const detail = await catalogApi.getProductById('prod-1', branchId)
+  expect(detail.categorySlug).toBe('dien-thoai')
   expect(fetchMock).toHaveBeenCalledWith(expectedUrl, expect.objectContaining({
     headers: { Accept: 'application/json' },
   }))

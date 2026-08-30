@@ -105,6 +105,23 @@ export function FilterSidebar({
     })
   }
 
+  const compareCategoryName = (a: CategoryDto, b: CategoryDto) => {
+    if (a.slug === 'uncategorized') return 1
+    if (b.slug === 'uncategorized') return -1
+    return a.name.localeCompare(b.name, 'vi')
+  }
+
+  const categoryOptions = categories
+    .filter((category) => category.parentCategoryId === null)
+    .sort(compareCategoryName)
+    .flatMap((parent) => [
+      { category: parent, label: parent.name },
+      ...categories
+        .filter((child) => child.parentCategoryId === parent.id)
+        .sort(compareCategoryName)
+        .map((child) => ({ category: child, label: `— ${child.name}` })),
+    ])
+
   const hasActiveFilters = Boolean(
     filters.search ||
     filters.categoryId ||
@@ -221,10 +238,8 @@ export function FilterSidebar({
             onChange={handleCategoryChange}
           >
             <option value="">-- Tất cả danh mục --</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
+            {categoryOptions.map(({ category, label }) => (
+              <option key={category.id} value={category.id}>{label}</option>
             ))}
           </select>
         </section>

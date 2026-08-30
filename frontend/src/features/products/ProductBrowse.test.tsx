@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { ProductCard, formatPrice } from './ProductCard'
@@ -8,6 +8,7 @@ import { Pagination } from './Pagination'
 import { ProductBrowsePage } from './ProductBrowsePage'
 import { catalogApi } from '../../api/catalogApi'
 import { branchApi } from '../../api/branchApi'
+import { CompareProvider } from '../compare/CompareContext'
 
 const mockProduct = {
   id: 'prod-1',
@@ -16,7 +17,9 @@ const mockProduct = {
   sku: 'MILK-001',
   basePrice: 38000,
   imageUrl: 'https://example.com/milk.jpg',
+  categoryId: 'cat-2',
   categoryName: 'Sữa & Bơ sữa',
+  categorySlug: 'sua-bo-sua',
   brandName: 'Vinamilk',
 }
 
@@ -63,7 +66,9 @@ describe('Product Browse Feature', () => {
     it('renders product information properly', () => {
       render(
         <MemoryRouter>
-          <ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" />
+          <CompareProvider>
+            <ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" />
+          </CompareProvider>
         </MemoryRouter>
       )
 
@@ -78,7 +83,9 @@ describe('Product Browse Feature', () => {
     it('renders a native detail link and preserves branchId', () => {
       render(
         <MemoryRouter>
-          <ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" branchId="branch-1" />
+          <CompareProvider>
+            <ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" branchId="branch-1" />
+          </CompareProvider>
         </MemoryRouter>
       )
 
@@ -89,7 +96,9 @@ describe('Product Browse Feature', () => {
     it('omits branchId when no branch is selected', () => {
       render(
         <MemoryRouter>
-          <ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" />
+          <CompareProvider>
+            <ProductCard product={mockProduct} branchName="Chi nhánh Quận 1" />
+          </CompareProvider>
         </MemoryRouter>
       )
 
@@ -99,6 +108,42 @@ describe('Product Browse Feature', () => {
   })
 
   describe('FilterSidebar component', () => {
+    it('renders roots, then children, then uncategorized last and filters by leaf', () => {
+      const onFilterChange = vi.fn()
+      const topLevelCategories = [
+        { id: 'tv-parent', name: 'TV & Màn hình', slug: 'tv-man-hinh', parentCategoryId: null, isActive: true },
+        { id: 'tv', name: 'TV', slug: 'tivi', parentCategoryId: 'tv-parent', isActive: true },
+        { id: 'monitor', name: 'Màn hình máy tính', slug: 'man-hinh-may-tinh', parentCategoryId: 'tv-parent', isActive: true },
+        { id: 'uncategorized', name: 'Chưa phân loại', slug: 'uncategorized', parentCategoryId: null, isActive: true },
+      ]
+
+      render(
+        <FilterSidebar
+          categories={topLevelCategories}
+          brands={mockBrands}
+          branches={mockBranches}
+          filters={{}}
+          onFilterChange={onFilterChange}
+          onReset={vi.fn()}
+        />
+      )
+
+      const select = screen.getByLabelText('Danh mục sản phẩm')
+      const labels = within(select).getAllByRole('option').map((option) => option.textContent)
+      expect(labels).toEqual([
+        '-- Tất cả danh mục --',
+        'TV & Màn hình',
+        '— Màn hình máy tính',
+        '— TV',
+        'Chưa phân loại',
+      ])
+
+      fireEvent.change(select, { target: { value: 'monitor' } })
+      expect(onFilterChange).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId: 'monitor' })
+      )
+    })
+
     it('renders categories, brands, branches and handles filter changes', () => {
       const onFilterChange = vi.fn()
       const onReset = vi.fn()
@@ -194,7 +239,9 @@ describe('Product Browse Feature', () => {
     it('renders list of products when available', () => {
       render(
         <MemoryRouter>
-          <ProductGrid products={[mockProduct]} loading={false} />
+          <CompareProvider>
+            <ProductGrid products={[mockProduct]} loading={false} />
+          </CompareProvider>
         </MemoryRouter>
       )
       expect(screen.getByTestId('product-grid')).toBeInTheDocument()
@@ -244,7 +291,9 @@ describe('Product Browse Feature', () => {
 
       render(
         <MemoryRouter initialEntries={['/browse']}>
-          <ProductBrowsePage />
+          <CompareProvider>
+            <ProductBrowsePage />
+          </CompareProvider>
         </MemoryRouter>
       )
 
