@@ -251,4 +251,23 @@ public sealed class DataSeederTests
         Assert.Equal(bySlug["tai-nghe"], productsAfter["AT-SON-001"].CategoryId);
         Assert.Equal(bySlug["loa"], productsAfter["AT-JBL-002"].CategoryId);
     }
+
+    [Fact]
+    public async Task Reconcile_MatchesSkuCaseInsensitively()
+    {
+        using var context = CreateInMemoryDbContext();
+        var hasher = new PasswordHasher();
+
+        await DataSeeder.SeedAllAsync(context, hasher);
+        var tv = await context.Products.SingleAsync(p => p.Sku == "TV-SAM-001");
+        context.Entry(tv).Property(p => p.Sku).CurrentValue = "tv-sam-001";
+        tv.ChangeCategory((await context.Categories.SingleAsync(c => c.Slug == "tv-man-hinh")).Id);
+        await context.SaveChangesAsync();
+
+        await DataSeeder.SeedAllAsync(context, hasher);
+
+        var bySlug = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
+        var reconciled = await context.Products.SingleAsync(p => p.Sku == "tv-sam-001");
+        Assert.Equal(bySlug["tivi"], reconciled.CategoryId);
+    }
 }

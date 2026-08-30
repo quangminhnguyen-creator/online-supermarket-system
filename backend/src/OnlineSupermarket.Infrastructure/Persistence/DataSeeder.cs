@@ -276,7 +276,7 @@ public static class DataSeeder
     private static async Task ReconcileSeedProductCategoriesAsync(AppDbContext context)
     {
         var categoriesBySlug = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
-        var mappedSkus = CatalogSeedTaxonomy.ProductCategorySlugBySku.Keys.ToArray();
+        var mappedSkus = CatalogSeedTaxonomy.ProductCategorySlugBySku.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
         var products = await context.Products.Where(p => mappedSkus.Contains(p.Sku)).ToListAsync();
 
         foreach (var product in products)
