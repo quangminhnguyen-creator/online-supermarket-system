@@ -4,6 +4,7 @@ using OnlineSupermarket.Domain.Identity;
 using OnlineSupermarket.Domain.Orders;
 using OnlineSupermarket.Infrastructure.Identity;
 using OnlineSupermarket.Infrastructure.Persistence;
+using OnlineSupermarket.Infrastructure.Persistence.SeedData;
 
 namespace OnlineSupermarket.Infrastructure.Tests;
 
@@ -123,5 +124,51 @@ public sealed class DataSeederTests
         Assert.Equal(branchCountFirst, await context.Branches.CountAsync());
         Assert.Equal(productCountFirst, await context.Products.CountAsync());
         Assert.Equal(userCountFirst, await context.Users.CountAsync());
+    }
+
+    [Fact]
+    public void CatalogSeedTaxonomy_DefinesRootsLeavesAndUncategorized()
+    {
+        Assert.Equal(23, CatalogSeedTaxonomy.Categories.Count);
+        var roots = CatalogSeedTaxonomy.Categories.Where(c => c.ParentSlug is null).ToList();
+        var navigationParents = roots.Where(root =>
+            CatalogSeedTaxonomy.Categories.Any(child => child.ParentSlug == root.Slug));
+
+        Assert.Equal(9, roots.Count);
+        Assert.Equal(8, navigationParents.Count());
+        Assert.Equal(14, CatalogSeedTaxonomy.Categories.Count(c => c.ParentSlug is not null));
+        Assert.Contains(CatalogSeedTaxonomy.Categories,
+            c => c.Slug == "man-hinh-may-tinh" && c.ParentSlug == "tv-man-hinh");
+        Assert.Contains(CatalogSeedTaxonomy.Categories,
+            c => c.Slug == "uncategorized" && c.ParentSlug is null);
+    }
+
+    [Theory]
+    [InlineData("TV-SAM-001", "tivi")]
+    [InlineData("MH-SAM-001", "man-hinh-may-tinh")]
+    [InlineData("AT-SON-001", "tai-nghe")]
+    [InlineData("AT-JBL-002", "loa")]
+    [InlineData("UNKNOWN-SKU", "uncategorized")]
+    [InlineData(null, "uncategorized")]
+    public void ResolveProductCategorySlug_ReturnsExpectedLeafOrFallback(
+        string? sku,
+        string expectedSlug)
+    {
+        Assert.Equal(expectedSlug, CatalogSeedTaxonomy.ResolveProductCategorySlug(sku));
+    }
+
+    [Fact]
+    public void ResolveProductCategoryId_WithUnmappedSku_ReturnsUncategorizedId()
+    {
+        var uncategorizedId = Guid.NewGuid();
+        var categoryIds = new Dictionary<string, Guid>
+        {
+            ["dien-thoai"] = Guid.NewGuid(),
+            ["uncategorized"] = uncategorizedId,
+        };
+
+        var result = CatalogSeedTaxonomy.ResolveProductCategoryId("UNKNOWN-SKU", categoryIds);
+
+        Assert.Equal(uncategorizedId, result);
     }
 }
