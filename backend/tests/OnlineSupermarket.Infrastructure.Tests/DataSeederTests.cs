@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using OnlineSupermarket.Domain.Catalog;
 using OnlineSupermarket.Domain.Identity;
 using OnlineSupermarket.Domain.Orders;
 using OnlineSupermarket.Infrastructure.Identity;
@@ -37,15 +38,14 @@ public sealed class DataSeederTests
 
         // 2. Categories
         var categories = await context.Categories.ToListAsync();
-        Assert.Equal(8, categories.Count);
-        Assert.Contains(categories, c => c.Slug == "dien-thoai-tablet");
-        Assert.Contains(categories, c => c.Slug == "laptop-may-tinh");
-        Assert.Contains(categories, c => c.Slug == "tv-man-hinh");
-        Assert.Contains(categories, c => c.Slug == "thiet-bi-gia-dung");
-        Assert.Contains(categories, c => c.Slug == "am-thanh-loa");
-        Assert.Contains(categories, c => c.Slug == "phu-kien");
-        Assert.Contains(categories, c => c.Slug == "game-gaming");
-        Assert.Contains(categories, c => c.Slug == "camera-an-ninh");
+        Assert.Equal(23, categories.Count);
+
+        var bySlug = categories.ToDictionary(c => c.Slug);
+        Assert.Equal(bySlug["tv-man-hinh"].Id, bySlug["tivi"].ParentCategoryId);
+        Assert.Equal(bySlug["tv-man-hinh"].Id, bySlug["man-hinh-may-tinh"].ParentCategoryId);
+        Assert.Equal(bySlug["am-thanh-loa"].Id, bySlug["tai-nghe"].ParentCategoryId);
+        Assert.Equal(bySlug["am-thanh-loa"].Id, bySlug["loa"].ParentCategoryId);
+        Assert.Null(bySlug["uncategorized"].ParentCategoryId);
 
         // 3. Brands
         var brands = await context.Brands.ToListAsync();
@@ -71,6 +71,18 @@ public sealed class DataSeederTests
         Assert.Contains(products, p => p.Sku == "TV-SAM-001");
         Assert.Contains(products, p => p.Sku == "GD-PAN-001");
         Assert.Contains(products, p => p.Sku == "AT-JBL-001");
+
+        // Every seeded product must live in a leaf category matching its SKU mapping.
+        var parentIds = categories
+            .Where(parent => categories.Any(child => child.ParentCategoryId == parent.Id))
+            .Select(parent => parent.Id)
+            .ToHashSet();
+        Assert.DoesNotContain(products, product => parentIds.Contains(product.CategoryId));
+        foreach (var product in products)
+        {
+            var expectedSlug = CatalogSeedTaxonomy.ResolveProductCategorySlug(product.Sku);
+            Assert.Equal(bySlug[expectedSlug].Id, product.CategoryId);
+        }
 
         // 5. Branch Inventories
         var inventories = await context.BranchInventories.ToListAsync();
@@ -170,5 +182,73 @@ public sealed class DataSeederTests
         var result = CatalogSeedTaxonomy.ResolveProductCategoryId("UNKNOWN-SKU", categoryIds);
 
         Assert.Equal(uncategorizedId, result);
+    }
+
+    [Fact]
+    public async Task UnmappedSku_IsPersistedInUncategorized()
+    {
+        using var context = CreateInMemoryDbContext();
+        await DataSeeder.SeedCategoriesAsync(context);
+        await DataSeeder.SeedBrandsAsync(context);
+
+        var categoryIds = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
+        var appleBrandId = await context.Brands
+            .Where(brand => brand.Slug == "apple")
+            .Select(brand => brand.Id)
+            .SingleAsync();
+        var resolvedCategoryId = CatalogSeedTaxonomy.ResolveProductCategoryId(
+            "UNMAPPED-SKU",
+            categoryIds);
+        var product = new Product(
+            resolvedCategoryId,
+            appleBrandId,
+            "UNMAPPED-SKU",
+            "Sản phẩm chờ phân loại",
+            "san-pham-cho-phan-loai",
+            null,
+            100_000m,
+            "cái",
+            null);
+
+        context.Products.Add(product);
+        await context.SaveChangesAsync();
+
+        Assert.Equal(categoryIds["uncategorized"], product.CategoryId);
+        Assert.Equal(product.Id, (await context.Products.SingleAsync()).Id);
+    }
+
+    [Fact]
+    public async Task Reconcile_MovesSeededProductsBackToLeafWithoutChangingIds()
+    {
+        using var context = CreateInMemoryDbContext();
+        var hasher = new PasswordHasher();
+
+        await DataSeeder.SeedAllAsync(context, hasher);
+        var originalIds = (await context.Products.ToListAsync()).ToDictionary(p => p.Sku, p => p.Id);
+
+        var categoriesBySlug = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
+        var products = await context.Products
+            .Where(p =>
+                p.Sku == "TV-SAM-001" || p.Sku == "MH-SAM-001" ||
+                p.Sku == "AT-SON-001" || p.Sku == "AT-JBL-002")
+            .ToListAsync();
+
+        // Simulate legacy rows still pointing at navigation parents.
+        products.Single(p => p.Sku == "TV-SAM-001").ChangeCategory(categoriesBySlug["tv-man-hinh"]);
+        products.Single(p => p.Sku == "MH-SAM-001").ChangeCategory(categoriesBySlug["tv-man-hinh"]);
+        products.Single(p => p.Sku == "AT-SON-001").ChangeCategory(categoriesBySlug["am-thanh-loa"]);
+        products.Single(p => p.Sku == "AT-JBL-002").ChangeCategory(categoriesBySlug["am-thanh-loa"]);
+        await context.SaveChangesAsync();
+
+        await DataSeeder.SeedAllAsync(context, hasher);
+
+        var bySlug = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
+        var productsAfter = (await context.Products.ToListAsync()).ToDictionary(p => p.Sku);
+
+        Assert.Equal(originalIds["TV-SAM-001"], productsAfter["TV-SAM-001"].Id);
+        Assert.Equal(bySlug["tivi"], productsAfter["TV-SAM-001"].CategoryId);
+        Assert.Equal(bySlug["man-hinh-may-tinh"], productsAfter["MH-SAM-001"].CategoryId);
+        Assert.Equal(bySlug["tai-nghe"], productsAfter["AT-SON-001"].CategoryId);
+        Assert.Equal(bySlug["loa"], productsAfter["AT-JBL-002"].CategoryId);
     }
 }

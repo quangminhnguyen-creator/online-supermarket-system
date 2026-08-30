@@ -7,6 +7,7 @@ using OnlineSupermarket.Domain.Inventory;
 using OnlineSupermarket.Domain.Orders;
 using OnlineSupermarket.Domain.Shopping;
 using OnlineSupermarket.Infrastructure.Identity;
+using OnlineSupermarket.Infrastructure.Persistence.SeedData;
 
 namespace OnlineSupermarket.Infrastructure.Persistence;
 
@@ -18,6 +19,7 @@ public static class DataSeeder
         await SeedCategoriesAsync(context);
         await SeedBrandsAsync(context);
         await SeedProductsAsync(context);
+        await ReconcileSeedProductCategoriesAsync(context);
         await SeedBranchInventoriesAsync(context);
         await SeedUsersAsync(context, hasher);
         await SeedAddressesAsync(context);
@@ -57,21 +59,31 @@ public static class DataSeeder
 
     public static async Task SeedCategoriesAsync(AppDbContext context)
     {
-        if (await context.Categories.AnyAsync()) return;
+        var categoriesBySlug = await context.Categories.ToDictionaryAsync(c => c.Slug);
 
-        var categories = new List<Category>
+        Category EnsureCategory(CategorySeedDefinition definition, Guid? parentId)
         {
-            new("Điện thoại & Tablet", "dien-thoai-tablet"),
-            new("Laptop & Máy tính", "laptop-may-tinh"),
-            new("TV & Màn hình", "tv-man-hinh"),
-            new("Thiết bị gia dụng", "thiet-bi-gia-dung"),
-            new("Âm thanh & Loa", "am-thanh-loa"),
-            new("Phụ kiện", "phu-kien"),
-            new("Game & Gaming", "game-gaming"),
-            new("Camera & An ninh", "camera-an-ninh"),
-        };
+            if (categoriesBySlug.TryGetValue(definition.Slug, out var existing))
+            {
+                return existing;
+            }
 
-        await context.Categories.AddRangeAsync(categories);
+            var category = new Category(definition.Name, definition.Slug, parentId);
+            context.Categories.Add(category);
+            categoriesBySlug.Add(definition.Slug, category);
+            return category;
+        }
+
+        foreach (var root in CatalogSeedTaxonomy.Categories.Where(c => c.ParentSlug is null))
+        {
+            EnsureCategory(root, null);
+        }
+        await context.SaveChangesAsync();
+
+        foreach (var child in CatalogSeedTaxonomy.Categories.Where(c => c.ParentSlug is not null))
+        {
+            EnsureCategory(child, categoriesBySlug[child.ParentSlug!].Id);
+        }
         await context.SaveChangesAsync();
     }
 
@@ -104,158 +116,179 @@ public static class DataSeeder
         var categories = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
         var brands = await context.Brands.ToDictionaryAsync(b => b.Slug, b => b.Id);
 
+        Guid CategoryIdFor(string sku) => CatalogSeedTaxonomy.ResolveProductCategoryId(sku, categories);
+
         var products = new List<Product>
         {
             // Điện thoại & Tablet
-            new(categories["dien-thoai-tablet"], brands["samsung"], "DT-SAM-001",
+            new(CategoryIdFor("DT-SAM-001"), brands["samsung"], "DT-SAM-001",
                 "Samsung Galaxy S24 Ultra 256GB", "samsung-galaxy-s24-ultra-256gb",
                 "Flagship Samsung với chip Snapdragon 8 Gen 3, màn hình Dynamic AMOLED 2X 6.8 inch và camera 200MP chống rung OIS.",
                 28990000m, "cái", "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=500&q=80"),
 
-            new(categories["dien-thoai-tablet"], brands["samsung"], "DT-SAM-002",
+            new(CategoryIdFor("DT-SAM-002"), brands["samsung"], "DT-SAM-002",
                 "Samsung Galaxy Z Fold6", "samsung-galaxy-z-fold6",
                 "Điện thoại gập cao cấp nhất của Samsung với thiết kế mỏng nhẹ, bản lề Flex Hinge bền bỉ và hỗ trợ Galaxy AI.",
                 41990000m, "cái", "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=500&q=80"),
 
-            new(categories["dien-thoai-tablet"], brands["apple"], "DT-APP-001",
+            new(CategoryIdFor("DT-APP-001"), brands["apple"], "DT-APP-001",
                 "iPhone 15 Pro Max 256GB", "iphone-15-pro-max-256gb",
                 "Thiết kế khung viền titan siêu bền, chip Apple A17 Pro mạnh mẽ, camera zoom quang học 5x sắc nét và cổng sạc USB-C.",
                 34990000m, "cái", "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&q=80"),
 
-            new(categories["dien-thoai-tablet"], brands["apple"], "DT-APP-002",
+            new(CategoryIdFor("DT-APP-002"), brands["apple"], "DT-APP-002",
                 "iPhone 15 128GB", "iphone-15-128gb",
                 "Màn hình Super Retina XDR với Dynamic Island, camera chính 48MP và mặt lưng kính pha màu sang trọng.",
                 22990000m, "cái", "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=500&q=80"),
 
-            new(categories["dien-thoai-tablet"], brands["xiaomi"], "DT-XIA-001",
+            new(CategoryIdFor("DT-XIA-001"), brands["xiaomi"], "DT-XIA-001",
                 "Xiaomi Redmi Note 13 Pro", "xiaomi-redmi-note-13-pro",
                 "Camera 200MP chống rung OIS, màn hình AMOLED 1.5K 120Hz mượt mà và sạc siêu nhanh 67W.",
                 6990000m, "cái", "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=500&q=80"),
 
-            new(categories["dien-thoai-tablet"], brands["samsung"], "DT-SAM-003",
+            new(CategoryIdFor("DT-SAM-003"), brands["samsung"], "DT-SAM-003",
                 "Samsung Galaxy Tab S9 FE", "samsung-galaxy-tab-s9-fe",
                 "Máy tính bảng chuẩn kháng nước kháng bụi IP68, màn hình 10.9 inch 90Hz đi kèm bút S Pen đa năng.",
                 12990000m, "cái", "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500&q=80"),
 
-            new(categories["dien-thoai-tablet"], brands["apple"], "DT-APP-003",
+            new(CategoryIdFor("DT-APP-003"), brands["apple"], "DT-APP-003",
                 "iPad Mini 6 64GB WiFi", "ipad-mini-6-64gb-wifi",
                 "Thiết kế viền mỏng toàn màn hình Liquid Retina 8.3 inch, chip A15 Bionic mạnh mẽ trong kiểu dáng nhỏ gọn.",
                 13490000m, "cái", "https://images.unsplash.com/photo-1561154464-82e9adf32764?w=500&q=80"),
 
             // Laptop & Máy tính
-            new(categories["laptop-may-tinh"], brands["dell"], "LT-DEL-001",
+            new(CategoryIdFor("LT-DEL-001"), brands["dell"], "LT-DEL-001",
                 "Dell XPS 15 9530 (i7, 16GB, 512GB)", "dell-xps-15-9530",
                 "Laptop doanh nhân cao cấp màn hình OLED tràn viền 3.5K, vi xử lý Intel Core i7 thế hệ 13 và card đồ họa rời RTX 4050.",
                 35990000m, "cái", "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=500&q=80"),
 
-            new(categories["laptop-may-tinh"], brands["apple"], "LT-APP-001",
+            new(CategoryIdFor("LT-APP-001"), brands["apple"], "LT-APP-001",
                 "MacBook Pro 14\" M3 Pro", "macbook-pro-14-m3-pro",
                 "Laptop chuyên nghiệp trang bị vi xử lý Apple M3 Pro, màn hình Liquid Retina XDR 120Hz và thời lượng pin 18 giờ.",
                 45990000m, "cái", "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&q=80"),
 
-            new(categories["laptop-may-tinh"], brands["apple"], "LT-APP-002",
+            new(CategoryIdFor("LT-APP-002"), brands["apple"], "LT-APP-002",
                 "MacBook Air 15\" M3", "macbook-air-15-m3",
                 "Thiết kế siêu mỏng nhẹ thanh lịch, chip Apple M3 hiệu năng mạnh mẽ cùng màn hình Liquid Retina 15.3 inch rực rỡ.",
                 32990000m, "cái", "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=500&q=80"),
 
-            new(categories["laptop-may-tinh"], brands["asus"], "LT-ASUS-001",
+            new(CategoryIdFor("LT-ASUS-001"), brands["asus"], "LT-ASUS-001",
                 "ASUS ROG Strix G16 Gaming", "asus-rog-strix-g16-gaming",
                 "Cỗ máy gaming đỉnh cao với Intel Core i7 Gen 13, card đồ họa NVIDIA RTX 4060 và màn hình 165Hz chuẩn thi đấu eSports.",
                 28990000m, "cái", "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500&q=80"),
 
-            new(categories["laptop-may-tinh"], brands["asus"], "LT-ASUS-002",
+            new(CategoryIdFor("LT-ASUS-002"), brands["asus"], "LT-ASUS-002",
                 "ASUS ZenBook 14 OLED", "asus-zenbook-14-oled",
                 "Laptop mỏng nhẹ thời thượng với màn hình Lumina OLED 3K 120Hz, chip Intel Core Ultra AI và pin khủng 75Wh.",
                 21990000m, "cái", "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&q=80"),
 
             // TV & Màn hình
-            new(categories["tv-man-hinh"], brands["samsung"], "TV-SAM-001",
+            new(CategoryIdFor("TV-SAM-001"), brands["samsung"], "TV-SAM-001",
                 "Samsung Neo QLED 4K 65 inch QA65QN90C", "samsung-neo-qled-4k-65-inch-qa65qn90c",
                 "Smart TV 65 inch công nghệ Quantum Matrix mini LED đỉnh cao, chip xử lý Neural Quantum 4K AI và loa Dolby Atmos sống động.",
                 45990000m, "cái", "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=500&q=80"),
 
-            new(categories["tv-man-hinh"], brands["lg"], "TV-LG-001",
+            new(CategoryIdFor("TV-LG-001"), brands["lg"], "TV-LG-001",
                 "LG OLED evo 4K 55 inch C4", "lg-oled-evo-4k-55-inch-c4",
                 "Màn hình OLED điểm ảnh tự phát sáng, bộ xử lý α9 AI Gen7 4K, tần số quét 144Hz hỗ trợ chơi game đỉnh cao và Dolby Vision.",
                 32990000m, "cái", "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=500&q=80"),
 
-            new(categories["tv-man-hinh"], brands["sony"], "TV-SON-001",
+            new(CategoryIdFor("TV-SON-001"), brands["sony"], "TV-SON-001",
                 "Sony Bravia 4K 55 inch XR-55A80L", "sony-bravia-4k-55-inch-xr-55a80l",
                 "Màn hình OLED sắc sảo tích hợp bộ xử lý nhận thức Cognitive Processor XR tái tạo độ sâu và màu sắc chân thực như mắt người.",
                 28990000m, "cái", "https://images.unsplash.com/photo-1552975084-6e027cd345c2?w=500&q=80"),
 
-            new(categories["tv-man-hinh"], brands["samsung"], "MH-SAM-001",
+            new(CategoryIdFor("MH-SAM-001"), brands["samsung"], "MH-SAM-001",
                 "Samsung M8 Smart Monitor 32\"", "samsung-m8-smart-monitor-32",
                 "Màn hình 32 inch 4K đa năng tích hợp hệ điều hành Smart Hub xem phim không cần PC, kèm webcam từ tính SlimFit độ nét cao.",
                 14990000m, "cái", "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&q=80"),
 
             // Thiết bị gia dụng
-            new(categories["thiet-bi-gia-dung"], brands["panasonic"], "GD-PAN-001",
+            new(CategoryIdFor("GD-PAN-001"), brands["panasonic"], "GD-PAN-001",
                 "Panasonic Inverter 1.5 HP CU/CS-U12XK", "panasonic-inverter-1-5-hp-cu-cs-u12xk",
                 "Máy lạnh Inverter cao cấp tích hợp công nghệ lọc không khí nanoe™ X khử mùi ức chế vi khuẩn và chế độ làm lạnh nhanh iAUTO-X.",
                 12990000m, "cái", "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80"),
 
-            new(categories["thiet-bi-gia-dung"], brands["lg"], "GD-LG-001",
+            new(CategoryIdFor("GD-LG-001"), brands["lg"], "GD-LG-001",
                 "LG Inverter 2 HP B19END", "lg-inverter-2-hp-b19end",
                 "Điều hòa nhiệt độ LG Dual Inverter tiết kiệm điện đến 70%, làm lạnh nhanh hơn 40% với gas R32 thân thiện môi trường.",
                 16990000m, "cái", "https://images.unsplash.com/photo-1585338107529-13afc5f02586?w=500&q=80"),
 
-            new(categories["thiet-bi-gia-dung"], brands["lg"], "GD-LG-002",
+            new(CategoryIdFor("GD-LG-002"), brands["lg"], "GD-LG-002",
                 "LG Door-in-Door 601L InstaView", "lg-door-in-door-601l-instaview",
                 "Tủ lạnh Side by Side 601 lít sang trọng, cửa kính InstaView gõ 2 lần nhìn thấu bên trong hạn chế thất thoát khí lạnh.",
                 42990000m, "cái", "https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=500&q=80"),
 
-            new(categories["thiet-bi-gia-dung"], brands["panasonic"], "GD-PAN-002",
+            new(CategoryIdFor("GD-PAN-002"), brands["panasonic"], "GD-PAN-002",
                 "Panasonic Giant 8.5kg NA-F85V1", "panasonic-giant-8-5kg-na-f85v1",
                 "Máy giặt lồng đứng 8.5kg với mâm giặt Active Wave tạo luồng nước đa chiều đánh bay vết bẩn cứng đầu nhanh chóng.",
                 14990000m, "cái", "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=500&q=80"),
 
             // Âm thanh & Loa
-            new(categories["am-thanh-loa"], brands["jbl"], "AT-JBL-001",
+            new(CategoryIdFor("AT-JBL-001"), brands["jbl"], "AT-JBL-001",
                 "JBL PartyBox 310", "jbl-partybox-310",
                 "Loa di động tiệc tùng công suất 240W uy lực, tích hợp hiệu ứng ánh sáng đèn LED đồng bộ điệu nhạc và pin khủng 18 giờ.",
                 14990000m, "cái", "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=500&q=80"),
 
-            new(categories["am-thanh-loa"], brands["sony"], "AT-SON-001",
+            new(CategoryIdFor("AT-SON-001"), brands["sony"], "AT-SON-001",
                 "Sony WH-1000XM5", "sony-wh-1000xm5",
                 "Tai nghe chụp tai chống ồn chủ động không dây hàng đầu với 2 bộ xử lý âm thanh HD V1 và QN1, hỗ trợ âm thanh Hi-Res LDAC.",
                 8990000m, "cái", "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80"),
 
-            new(categories["am-thanh-loa"], brands["jbl"], "AT-JBL-002",
+            new(CategoryIdFor("AT-JBL-002"), brands["jbl"], "AT-JBL-002",
                 "JBL Flip 6", "jbl-flip-6",
                 "Loa Bluetooth di động nhỏ gọn chống bụi nước chuẩn IP67, hệ thống loa 2 chiều âm thanh mạnh mẽ và thời lượng pin 12 giờ.",
                 3490000m, "cái", "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&q=80"),
 
-            new(categories["am-thanh-loa"], brands["apple"], "PK-APP-001",
+            new(CategoryIdFor("PK-APP-001"), brands["apple"], "PK-APP-001",
                 "AirPods Pro 2", "airpods-pro-2",
                 "Tai nghe không dây Apple thế hệ 2 với chip H2 chống ồn chủ động gấp 2 lần, âm thanh không gian cá nhân hóa và hộp sạc MagSafe.",
                 5990000m, "cái", "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=500&q=80"),
 
             // Phụ kiện
-            new(categories["phu-kien"], brands["apple"], "PK-APP-002",
+            new(CategoryIdFor("PK-APP-002"), brands["apple"], "PK-APP-002",
                 "Apple Magic Mouse", "apple-magic-mouse",
                 "Chuột không dây Bluetooth thiết kế thanh mảnh bề mặt cảm ứng đa điểm Multi-Touch mượt mà tối ưu cho máy Mac.",
                 2190000m, "cái", "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=500&q=80"),
 
             // Game & Gaming
-            new(categories["game-gaming"], brands["sony"], "GM-SON-001",
+            new(CategoryIdFor("GM-SON-001"), brands["sony"], "GM-SON-001",
                 "Sony PlayStation 5 Slim", "sony-playstation-5-slim",
                 "Máy chơi game console PS5 phiên bản Slim ổ đĩa siêu tốc 1TB SSD, hỗ trợ ray tracing chân thực và đồ họa 4K 120Hz mượt mà.",
                 14990000m, "cái", "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=500&q=80"),
 
             // Camera & An ninh
-            new(categories["camera-an-ninh"], brands["canon"], "CAM-CAN-001",
+            new(CategoryIdFor("CAM-CAN-001"), brands["canon"], "CAM-CAN-001",
                 "Canon EOS R50 Mirrorless Kit 18-45mm", "canon-eos-r50-kit-18-45mm",
                 "Máy ảnh mirrorless cảm biến APS-C 24.2MP nhỏ nhẹ lý tưởng cho người sáng tạo nội dung, hỗ trợ quay video 4K sắc nét và Dual Pixel AF.",
                 18990000m, "cái", "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=500&q=80"),
 
-            new(categories["camera-an-ninh"], brands["xiaomi"], "CAM-XIA-001",
+            new(CategoryIdFor("CAM-XIA-001"), brands["xiaomi"], "CAM-XIA-001",
                 "Xiaomi Smart Camera C300 2K", "xiaomi-smart-camera-c300-2k",
                 "Camera an ninh xoay 360 độ góc nhìn toàn cảnh, độ phân giải 2K siêu nét, đàm thoại 2 chiều và cảnh báo chuyển động bằng AI thông minh.",
                 890000m, "cái", "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=500&q=80"),
         };
 
         await context.Products.AddRangeAsync(products);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task ReconcileSeedProductCategoriesAsync(AppDbContext context)
+    {
+        var categoriesBySlug = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
+        var mappedSkus = CatalogSeedTaxonomy.ProductCategorySlugBySku.Keys.ToArray();
+        var products = await context.Products.Where(p => mappedSkus.Contains(p.Sku)).ToListAsync();
+
+        foreach (var product in products)
+        {
+            var targetSlug = CatalogSeedTaxonomy.ResolveProductCategorySlug(product.Sku);
+            var targetCategoryId = categoriesBySlug[targetSlug];
+            if (product.CategoryId != targetCategoryId)
+            {
+                product.ChangeCategory(targetCategoryId);
+            }
+        }
+
         await context.SaveChangesAsync();
     }
 
