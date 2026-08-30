@@ -31,4 +31,35 @@ public sealed class CatalogEntityTests
             Guid.NewGuid(), Guid.NewGuid(), "SKU-001", "Sữa tươi",
             "sua-tuoi", "Hộp 1L", -1m, "hộp", null));
     }
+
+    [Fact]
+    public void Product_WithEmptyCategoryId_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => new Product(
+            Guid.Empty, Guid.NewGuid(), "SKU-001", "Sản phẩm",
+            "san-pham", null, 100_000m, "cái", null));
+    }
+
+    [Fact]
+    public void ChangeCategory_WithLeafCategory_UpdatesCategoryId()
+    {
+        var product = new Product(
+            Guid.NewGuid(), Guid.NewGuid(), "SKU-001", "Sản phẩm",
+            "san-pham", null, 100_000m, "cái", null);
+        var leafCategoryId = Guid.NewGuid();
+
+        product.ChangeCategory(leafCategoryId);
+
+        Assert.Equal(leafCategoryId, product.CategoryId);
+    }
+
+    [Fact]
+    public void ChangeCategory_WithEmptyCategoryId_Throws()
+    {
+        var product = new Product(
+            Guid.NewGuid(), Guid.NewGuid(), "SKU-001", "Sản phẩm",
+            "san-pham", null, 100_000m, "cái", null);
+
+        Assert.Throws<ArgumentException>(() => product.ChangeCategory(Guid.Empty));
+    }
 }

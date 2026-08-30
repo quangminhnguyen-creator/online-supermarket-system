@@ -25,6 +25,11 @@ public sealed class Product : Entity
             throw new ArgumentOutOfRangeException(nameof(basePrice));
         }
 
+        if (categoryId == Guid.Empty)
+        {
+            throw new ArgumentException("Category id is required.", nameof(categoryId));
+        }
+
         CategoryId = categoryId;
         BrandId = brandId;
         Sku = Guard.Required(sku, nameof(sku));
@@ -37,6 +42,16 @@ public sealed class Product : Entity
     }
 
     public Guid CategoryId { get; private set; }
+
+    public void ChangeCategory(Guid categoryId)
+    {
+        if (categoryId == Guid.Empty)
+        {
+            throw new ArgumentException("Category id is required.", nameof(categoryId));
+        }
+
+        CategoryId = categoryId;
+    }
     public Guid BrandId { get; private set; }
     public string Sku { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
