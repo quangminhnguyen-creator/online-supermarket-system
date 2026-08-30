@@ -277,7 +277,9 @@ public static class DataSeeder
     {
         var categoriesBySlug = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
         var mappedSkus = CatalogSeedTaxonomy.ProductCategorySlugBySku.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var products = await context.Products.Where(p => mappedSkus.Contains(p.Sku)).ToListAsync();
+        var products = await context.Products
+            .Where(p => mappedSkus.Contains(p.Sku.ToUpper()))
+            .ToListAsync();
 
         foreach (var product in products)
         {

@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using OnlineSupermarket.Domain.Catalog;
@@ -245,11 +246,38 @@ public sealed class DataSeederTests
         var bySlug = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
         var productsAfter = (await context.Products.ToListAsync()).ToDictionary(p => p.Sku);
 
-        Assert.Equal(originalIds["TV-SAM-001"], productsAfter["TV-SAM-001"].Id);
+Assert.Equal(originalIds["TV-SAM-001"], productsAfter["TV-SAM-001"].Id);
         Assert.Equal(bySlug["tivi"], productsAfter["TV-SAM-001"].CategoryId);
         Assert.Equal(bySlug["man-hinh-may-tinh"], productsAfter["MH-SAM-001"].CategoryId);
         Assert.Equal(bySlug["tai-nghe"], productsAfter["AT-SON-001"].CategoryId);
         Assert.Equal(bySlug["loa"], productsAfter["AT-JBL-002"].CategoryId);
+    }
+
+    [Fact]
+    public async Task Reconcile_MatchesSkuCaseInsensitively_WithRelationalSqlite()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        using var context = new AppDbContext(options);
+        await context.Database.EnsureCreatedAsync();
+
+        var hasher = new PasswordHasher();
+        await DataSeeder.SeedAllAsync(context, hasher);
+
+        var tv = await context.Products.SingleAsync(p => p.Sku == "TV-SAM-001");
+        context.Entry(tv).Property(p => p.Sku).CurrentValue = "tv-sam-001";
+        tv.ChangeCategory((await context.Categories.SingleAsync(c => c.Slug == "tv-man-hinh")).Id);
+        await context.SaveChangesAsync();
+
+        await DataSeeder.SeedAllAsync(context, hasher);
+
+        var bySlug = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
+        var reconciled = await context.Products.SingleAsync(p => p.Sku == "tv-sam-001");
+        Assert.Equal(bySlug["tivi"], reconciled.CategoryId);
     }
 
     [Fact]
