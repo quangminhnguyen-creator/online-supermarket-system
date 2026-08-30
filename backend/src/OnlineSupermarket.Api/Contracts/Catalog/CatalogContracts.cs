@@ -19,7 +19,9 @@ public sealed record ProductSummaryDto(
     [property: JsonPropertyName("sku")] string Sku,
     [property: JsonPropertyName("basePrice")] decimal BasePrice,
     [property: JsonPropertyName("imageUrl")] string? ImageUrl,
+    [property: JsonPropertyName("categoryId")] Guid CategoryId,
     [property: JsonPropertyName("categoryName")] string CategoryName,
+    [property: JsonPropertyName("categorySlug")] string CategorySlug,
     [property: JsonPropertyName("brandName")] string BrandName);
 
 public sealed record ProductDetailDto(
@@ -33,6 +35,7 @@ public sealed record ProductDetailDto(
     [property: JsonPropertyName("imageUrl")] string? ImageUrl,
     [property: JsonPropertyName("categoryId")] Guid CategoryId,
     [property: JsonPropertyName("categoryName")] string CategoryName,
+    [property: JsonPropertyName("categorySlug")] string CategorySlug,
     [property: JsonPropertyName("brandId")] Guid BrandId,
     [property: JsonPropertyName("brandName")] string BrandName,
     [property: JsonPropertyName("branchInventory")] BranchInventoryDto? BranchInventory);

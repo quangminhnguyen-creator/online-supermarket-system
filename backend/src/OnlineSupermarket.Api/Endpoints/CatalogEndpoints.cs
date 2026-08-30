@@ -55,7 +55,15 @@ public static class CatalogEndpoints
             .AsQueryable();
 
         if (categoryId.HasValue)
-            query = query.Where(p => p.CategoryId == categoryId.Value);
+        {
+            var includedCategoryIds = await dbContext.Categories
+                .Where(c => c.IsActive &&
+                    (c.Id == categoryId.Value || c.ParentCategoryId == categoryId.Value))
+                .Select(c => c.Id)
+                .ToListAsync(cancellationToken);
+
+            query = query.Where(p => includedCategoryIds.Contains(p.CategoryId));
+        }
 
         if (brandId.HasValue)
             query = query.Where(p => p.BrandId == brandId.Value);
@@ -83,7 +91,9 @@ public static class CatalogEndpoints
                 p.Sku,
                 p.BasePrice,
                 p.ImageUrl,
+                p.CategoryId,
                 p.Category!.Name,
+                p.Category.Slug,
                 p.Brand!.Name))
             .ToListAsync(cancellationToken);
 
@@ -135,6 +145,7 @@ public static class CatalogEndpoints
             product.ImageUrl,
             product.CategoryId,
             product.Category!.Name,
+            product.Category.Slug,
             product.BrandId,
             product.Brand!.Name,
             inventory);
