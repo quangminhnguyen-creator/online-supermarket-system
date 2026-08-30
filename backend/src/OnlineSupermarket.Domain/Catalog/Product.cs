@@ -62,6 +62,51 @@ public sealed class Product : Entity
     public string? ImageUrl { get; private set; }
     public bool IsActive { get; private set; } = true;
 
+    public void Update(
+        Guid categoryId,
+        Guid brandId,
+        string sku,
+        string name,
+        string slug,
+        string? description,
+        decimal basePrice,
+        string unit,
+        string? imageUrl)
+    {
+        if (basePrice < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(basePrice));
+        }
+
+        if (categoryId == Guid.Empty)
+        {
+            throw new ArgumentException("Category id is required.", nameof(categoryId));
+        }
+
+        if (brandId == Guid.Empty)
+        {
+            throw new ArgumentException("Brand id is required.", nameof(brandId));
+        }
+
+        var newSku = Guard.Required(sku, nameof(sku));
+        var newName = Guard.Required(name, nameof(name));
+        var newSlug = Guard.Required(slug, nameof(slug));
+        var newUnit = Guard.Required(unit, nameof(unit));
+
+        CategoryId = categoryId;
+        BrandId = brandId;
+        Sku = newSku;
+        Name = newName;
+        Slug = newSlug;
+        Description = description?.Trim();
+        BasePrice = basePrice;
+        Unit = newUnit;
+        ImageUrl = imageUrl?.Trim();
+    }
+
+    public void Activate() => IsActive = true;
+    public void Deactivate() => IsActive = false;
+
     // Navigation properties (EF Core managed)
     public Category? Category { get; private set; }
     public Brand? Brand { get; private set; }

@@ -18,4 +18,13 @@ public sealed class Brand : Entity
     public string Name { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;
     public bool IsActive { get; private set; } = true;
+
+    public void Update(string name, string slug)
+    {
+        Name = Guard.Required(name, nameof(name));
+        Slug = Guard.Required(slug, nameof(slug));
+    }
+
+    public void Activate() => IsActive = true;
+    public void Deactivate() => IsActive = false;
 }
