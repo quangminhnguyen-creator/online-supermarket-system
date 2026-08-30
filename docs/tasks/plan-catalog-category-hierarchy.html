@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementation Plan: Catalog Category Hierarchy</title>
+    <style>
+        :root {
+            --forest: #0b3d2e;
+            --leaf: #1f7a4d;
+            --mist: #e8f1ed;
+            --paper: #f9fbf4;
+            --label: #f49b45;
+            --ink: #132a23;
+            --danger: #b9382a;
+            --blue: #245f8f;
+            --muted: #5f6f69;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--ink);
+            background: #f3f6f4;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1160px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 3px 24px rgba(0, 0, 0, .09);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--forest), var(--leaf));
+            color: white;
+            padding: 34px;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        .header p { opacity: .92; font-size: 14px; }
+        .status-bar {
+            background: var(--leaf);
+            color: white;
+            padding: 16px 34px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .progress-container { flex: 1; max-width: 390px; }
+        .progress-bar {
+            height: 9px;
+            background: rgba(255, 255, 255, .3);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0;
+            background: white;
+            transition: width .25s ease;
+        }
+        .progress-text { font-size: 13px; margin-top: 4px; }
+        .content { padding: 32px; }
+        .overview {
+            background: var(--paper);
+            border: 1px solid var(--mist);
+            border-left: 5px solid var(--label);
+            border-radius: 10px;
+            padding: 22px;
+            margin-bottom: 28px;
+        }
+        .overview h2 { color: var(--forest); font-size: 20px; margin-bottom: 10px; }
+        .overview h3 { color: var(--forest); font-size: 16px; margin: 18px 0 8px; }
+        .overview p, .overview li { font-size: 14px; }
+        .overview ul { margin-left: 22px; }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px 24px;
+            margin-top: 15px;
+        }
+        a { color: var(--blue); }
+        code {
+            background: var(--mist);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--forest);
+            font-size: 13px;
+        }
+        pre {
+            background: #17232a;
+            color: #d9edf0;
+            padding: 14px 16px;
+            border-radius: 7px;
+            overflow-x: auto;
+            font: 12px/1.55 "Cascadia Code", Consolas, monospace;
+            margin: 9px 0;
+            white-space: pre-wrap;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 13px;
+        }
+        .data-table th {
+            background: var(--forest);
+            color: white;
+            padding: 9px 11px;
+            text-align: left;
+        }
+        .data-table td {
+            padding: 8px 11px;
+            border-bottom: 1px solid var(--mist);
+            vertical-align: top;
+        }
+        .data-table tr:nth-child(even) { background: var(--paper); }
+        .section {
+            margin-bottom: 24px;
+            border: 1px solid var(--mist);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .section-header {
+            width: 100%;
+            border: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--paper);
+            cursor: pointer;
+            text-align: left;
+            color: inherit;
+            border-bottom: 1px solid var(--mist);
+        }
+        .section-header:hover { background: var(--mist); }
+        .section-number {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            background: var(--forest);
+            color: white;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 750;
+        }
+        .section-number.done { background: var(--leaf); }
+        .section-title { font-size: 17px; font-weight: 700; color: var(--forest); flex: 1; }
+        .section-toggle { font-size: 18px; color: #718079; transition: transform .2s; }
+        .section.collapsed .section-toggle { transform: rotate(-90deg); }
+        .section.collapsed .section-content { display: none; }
+        .section-content { padding: 20px; }
+        .interfaces {
+            background: #f6faf8;
+            border: 1px dashed rgba(11, 61, 46, .32);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            font-size: 13px;
+        }
+        .interfaces p + p { margin-top: 4px; }
+        .task-list { list-style: none; }
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            margin-bottom: 9px;
+            background: var(--paper);
+            border: 1px solid var(--mist);
+            border-radius: 8px;
+        }
+        .task-item:hover { border-color: var(--leaf); }
+        .task-item.checked { opacity: .62; background: #f0f2f1; }
+        .task-item.checked .task-text > p:first-child { text-decoration: line-through; }
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: var(--leaf);
+        }
+        .task-text { flex: 1; min-width: 0; }
+        .task-text p { margin: 3px 0; }
+        .task-text ul { margin: 7px 0 0 22px; }
+        .expected { color: var(--blue); font-size: 13px; font-weight: 650; }
+        .warning { color: var(--danger); font-size: 13px; font-weight: 650; }
+        .files-summary {
+            background: var(--mist);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 24px;
+        }
+        .files-summary h3 { color: var(--forest); margin-bottom: 10px; }
+        .files-summary ul { list-style: none; font-size: 13px; }
+        .files-summary li { padding: 4px 0; }
+        .files-summary li::before { display: inline-block; width: 25px; font-weight: 750; }
+        .files-summary li.new::before { content: "+"; color: var(--leaf); }
+        .files-summary li.edit::before { content: "*"; color: var(--blue); }
+        .files-summary li.test::before { content: "T"; color: var(--label); }
+        .footer {
+            background: var(--mist);
+            padding: 24px 32px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .footer button {
+            border: 0;
+            border-radius: 7px;
+            background: var(--leaf);
+            color: white;
+            padding: 10px 22px;
+            margin: 12px 4px 0;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .footer button.reset { background: var(--danger); }
+        :focus-visible { outline: 3px solid var(--label); outline-offset: 2px; }
+        @media (max-width: 720px) {
+            body { padding: 14px 8px; }
+            .content, .header, .status-bar { padding-left: 17px; padding-right: 17px; }
+            .status-bar { flex-direction: column; align-items: stretch; }
+            .progress-container { max-width: none; }
+            .meta-grid { grid-template-columns: 1fr; }
+            .section-content { padding: 13px; }
+            .task-item { padding: 12px; }
+            .data-table { display: block; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Catalog Category Hierarchy</h1>
+            <p>Danh mục cha–con toàn catalog | 9 root nodes | 14 child leaves | 28 SKU mapping</p>
+        </header>
+
+        <div class="status-bar">
+            <div><strong>Tiến độ:</strong> <span id="progress-percent">0%</span></div>
+            <div class="progress-container">
+                <div class="progress-bar" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+                <div class="progress-text"><span id="checked-count">0</span> / <span id="total-count">0</span> bước hoàn thành</div>
+            </div>
+        </div>
+
+        <main class="content">
+            <section class="overview">
+                <h2>Implementation Task Tracker</h2>
+                <p><strong>Mục tiêu:</strong> Chuẩn hóa toàn bộ catalog theo category cha–con, bắt buộc sản phẩm thuộc category lá và dùng <code>uncategorized</code> khi seed/import không xác định được category.</p>
+                <div class="meta-grid">
+                    <p><strong>Plan:</strong> <a href="../superpowers/plans/2026-08-30-catalog-category-hierarchy.md">catalog-category-hierarchy.md</a></p>
+                    <p><strong>Spec:</strong> <a href="../superpowers/specs/2026-08-30-catalog-category-hierarchy-design.md">catalog-category-hierarchy-design.md</a></p>
+                    <p><strong>Architecture:</strong> Taxonomy tập trung → seed/reconcile → API parent/leaf → nested filter → compare theo leaf.</p>
+                    <p><strong>Workflow:</strong> RED → GREEN → REFACTOR → COMMIT, chỉ stage file thuộc task.</p>
+                </div>
+
+                <h3>Bất biến toàn hệ thống</h3>
+                <ul>
+                    <li><code>Product.CategoryId</code> bắt buộc, khác <code>Guid.Empty</code> và có foreign key hợp lệ.</li>
+                    <li>Category có child chỉ dùng điều hướng; product seed/import phải thuộc leaf.</li>
+                    <li><code>uncategorized</code> là standalone root leaf và luôn nằm cuối category select.</li>
+                    <li>Chỉ reconcile 28 SKU chính thức; không ghi đè category của SKU lạ đang tồn tại.</li>
+                    <li>Product <code>uncategorized</code> được lọc thấy nhưng không được compare.</li>
+                    <li>Không tạo migration schema và không hỗ trợ cây sâu hơn một cấp.</li>
+                </ul>
+
+                <h3>Taxonomy đã khóa</h3>
+                <table class="data-table">
+                    <thead><tr><th>Root</th><th>Child leaves</th><th>SKU chính</th></tr></thead>
+                    <tbody>
+                        <tr><td>Điện thoại &amp; Tablet</td><td>Điện thoại, Máy tính bảng</td><td>DT-*</td></tr>
+                        <tr><td>Laptop &amp; Máy tính</td><td>Laptop</td><td>LT-*</td></tr>
+                        <tr><td>TV &amp; Màn hình</td><td>TV, Màn hình máy tính</td><td>TV-*, MH-*</td></tr>
+                        <tr><td>Thiết bị gia dụng</td><td>Máy lạnh, Tủ lạnh, Máy giặt</td><td>GD-*</td></tr>
+                        <tr><td>Âm thanh &amp; Loa</td><td>Tai nghe, Loa</td><td>AT-*, PK-APP-001</td></tr>
+                        <tr><td>Phụ kiện</td><td>Chuột</td><td>PK-APP-002</td></tr>
+                        <tr><td>Game &amp; Gaming</td><td>Máy chơi game</td><td>GM-*</td></tr>
+                        <tr><td>Camera &amp; An ninh</td><td>Máy ảnh, Camera an ninh</td><td>CAM-*</td></tr>
+                        <tr><td>Chưa phân loại</td><td>Standalone root leaf</td><td>Fallback cho SKU không mapping</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="section" id="section-1">
+                <button class="section-header" type="button" data-section-toggle="1" aria-expanded="true">
+                    <span class="section-number" id="section-num-1">1</span>
+                    <span class="section-title">Task 1 — Bảo vệ CategoryId trong domain</span>
+                    <span class="section-toggle" aria-hidden="true">▼</span>
+                </button>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> <code>Product.cs</code>, <code>CatalogEntityTests.cs</code>.</p>
+                        <p><strong>Produces:</strong> constructor từ chối <code>Guid.Empty</code>; <code>ChangeCategory(Guid)</code>.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-1" data-section="1"><div class="task-text"><p><strong>Step 1: Viết failing tests</strong></p><p>Test constructor với category rỗng, đổi sang leaf hợp lệ và đổi sang GUID rỗng.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-2" data-section="1"><div class="task-text"><p><strong>Step 2: Chạy RED</strong></p><pre>dotnet test backend/tests/OnlineSupermarket.Domain.Tests/OnlineSupermarket.Domain.Tests.csproj --no-restore --filter "FullyQualifiedName~CatalogEntityTests"</pre><p class="expected">Expected: constructor chưa throw và ChangeCategory chưa tồn tại.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-3" data-section="1"><div class="task-text"><p><strong>Step 3: Cài validation tối thiểu</strong></p><pre>if (categoryId == Guid.Empty)
+    throw new ArgumentException("Category id is required.", nameof(categoryId));
+
+public void ChangeCategory(Guid categoryId) { /* same guard, then assign */ }</pre></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s1-4" data-section="1"><div class="task-text"><p><strong>Step 4: Chạy GREEN và commit</strong></p><pre>dotnet test backend/tests/OnlineSupermarket.Domain.Tests/OnlineSupermarket.Domain.Tests.csproj --no-restore --filter "FullyQualifiedName~CatalogEntityTests"
+git add backend/src/OnlineSupermarket.Domain/Catalog/Product.cs backend/tests/OnlineSupermarket.Domain.Tests/Catalog/CatalogEntityTests.cs
+git commit -m "feat(catalog): enforce required product category"</pre></div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-2">
+                <button class="section-header" type="button" data-section-toggle="2" aria-expanded="true">
+                    <span class="section-number" id="section-num-2">2</span>
+                    <span class="section-title">Task 2 — Khai báo taxonomy và fallback tập trung</span>
+                    <span class="section-toggle" aria-hidden="true">▼</span>
+                </button>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Create:</strong> <code>Persistence/SeedData/CatalogSeedTaxonomy.cs</code>.</p>
+                        <p><strong>Produces:</strong> 23 category definitions, 28 SKU mappings, <code>ResolveProductCategorySlug</code>, <code>ResolveProductCategoryId</code>.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-1" data-section="2"><div class="task-text"><p><strong>Step 1: Viết taxonomy structure test</strong></p><p>Assert 23 definitions; 9 roots; 8 navigation parents; 14 children; <code>uncategorized</code> là standalone root leaf.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-2" data-section="2"><div class="task-text"><p><strong>Step 2: Viết mapping và fallback tests</strong></p><p>Kiểm tra TV, monitor, headphone, speaker, UNKNOWN-SKU và null. Test helper ID trả đúng ID của <code>uncategorized</code>.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-3" data-section="2"><div class="task-text"><p><strong>Step 3: Chạy RED</strong></p><pre>dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --no-restore --filter "FullyQualifiedName~DataSeederTests"</pre></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-4" data-section="2"><div class="task-text"><p><strong>Step 4: Tạo taxonomy source of truth</strong></p><ul><li>Khai báo đủ 8 root navigation categories.</li><li>Khai báo 14 child leaves và standalone <code>uncategorized</code>.</li><li>Mapping đủ 28 SKU theo bảng trong spec.</li><li>Resolver thiếu mapping trả <code>uncategorized</code>; thiếu system category throw rõ ràng.</li></ul></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s2-5" data-section="2"><div class="task-text"><p><strong>Step 5: Chạy GREEN và commit</strong></p><pre>dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --no-restore --filter "FullyQualifiedName~DataSeederTests"
+git add backend/src/OnlineSupermarket.Infrastructure/Persistence/SeedData/CatalogSeedTaxonomy.cs backend/tests/OnlineSupermarket.Infrastructure.Tests/DataSeederTests.cs
+git commit -m "feat(seed): define catalog category taxonomy"</pre></div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-3">
+                <button class="section-header" type="button" data-section-toggle="3" aria-expanded="true">
+                    <span class="section-number" id="section-num-3">3</span>
+                    <span class="section-title">Task 3 — Seed cây category và reconcile dữ liệu</span>
+                    <span class="section-toggle" aria-hidden="true">▼</span>
+                </button>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Modify/Test:</strong> <code>DataSeeder.cs</code>, <code>DataSeederTests.cs</code>.</p>
+                        <p><strong>Execution order:</strong> giữ early return trong <code>SeedProductsAsync</code>; <code>SeedAllAsync</code> luôn gọi reconcile ở dòng kế tiếp.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-1" data-section="3"><div class="task-text"><p><strong>Step 1: Thay assertion category cũ</strong></p><p>Assert đủ 23 category, quan hệ TV/monitor, audio/headphone/speaker và <code>uncategorized.ParentCategoryId == null</code>.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-2" data-section="3"><div class="task-text"><p><strong>Step 2: Test mọi product mẫu nằm ở leaf</strong></p><pre>Assert.DoesNotContain(products, product =&gt; parentIds.Contains(product.CategoryId));
+foreach (var product in products)
+    Assert.Equal(bySlug[ResolveProductCategorySlug(product.Sku)].Id, product.CategoryId);</pre></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-3" data-section="3"><div class="task-text"><p><strong>Step 3: Test persisted fallback</strong></p><p>Tạo <code>UNMAPPED-SKU</code> bằng <code>ResolveProductCategoryId</code>, lưu vào InMemory DB và assert product trỏ đúng <code>uncategorized</code>.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-4" data-section="3"><div class="task-text"><p><strong>Step 4: Test reconcile database cũ</strong></p><p>Chuyển TV, monitor, headphone và speaker về parent; chạy seed lần hai; assert giữ nguyên Product.Id và trở về đúng leaf.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-5" data-section="3"><div class="task-text"><p><strong>Step 5: Chạy RED</strong></p><pre>dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --no-restore --filter "FullyQualifiedName~DataSeederTests"</pre></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-6" data-section="3"><div class="task-text"><p><strong>Step 6: Ensure category theo hai lượt</strong></p><p>Bỏ early return của <code>SeedCategoriesAsync</code>; ensure roots theo slug, SaveChanges, rồi ensure children bằng ParentId.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-7" data-section="3"><div class="task-text"><p><strong>Step 7: Gán leaf khi tạo 28 products</strong></p><pre>Guid CategoryIdFor(string sku) =&gt;
+    CatalogSeedTaxonomy.ResolveProductCategoryId(sku, categories);</pre><p>Không còn constructor nào truy cập trực tiếp root slug.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-8" data-section="3"><div class="task-text"><p><strong>Step 8: Reconcile SKU mẫu đã tồn tại</strong></p><pre>await SeedProductsAsync(context);                  // có thể early return
+await ReconcileSeedProductCategoriesAsync(context); // vẫn luôn chạy</pre><p class="warning">Không đặt reconcile bên trong SeedProductsAsync.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s3-9" data-section="3"><div class="task-text"><p><strong>Step 9: Chạy GREEN và commit</strong></p><pre>dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --no-restore --filter "FullyQualifiedName~DataSeederTests"
+git add backend/src/OnlineSupermarket.Infrastructure/Persistence/DataSeeder.cs backend/tests/OnlineSupermarket.Infrastructure.Tests/DataSeederTests.cs
+git commit -m "fix(seed): assign products to leaf categories"</pre></div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-4">
+                <button class="section-header" type="button" data-section-toggle="4" aria-expanded="true">
+                    <span class="section-number" id="section-num-4">4</span>
+                    <span class="section-title">Task 4 — Parent/leaf filtering và categorySlug API</span>
+                    <span class="section-toggle" aria-hidden="true">▼</span>
+                </button>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> <code>CatalogContracts.cs</code>, <code>CatalogEndpoints.cs</code>, new <code>CatalogEndpointsTests.cs</code>.</p>
+                        <p><strong>Contract:</strong> parent = self + direct children; leaf = exact; summary/detail thêm <code>categorySlug</code>.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-1" data-section="4"><div class="task-text"><p><strong>Step 1: Integration test parent TV &amp; Màn hình</strong></p><p>Response chứa cả <code>TV-SAM-001</code> và <code>MH-SAM-001</code>, không chứa audio product.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-2" data-section="4"><div class="task-text"><p><strong>Step 2: Integration test leaf và categorySlug</strong></p><p>Chọn TV không trả monitor; summary và detail đều trả <code>categorySlug = "tivi"</code>.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-3" data-section="4"><div class="task-text"><p><strong>Step 3: Chạy RED</strong></p><pre>dotnet test backend/tests/OnlineSupermarket.Api.Tests/OnlineSupermarket.Api.Tests.csproj --no-restore --filter "FullyQualifiedName~CatalogEndpointsTests"</pre></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-4" data-section="4"><div class="task-text"><p><strong>Step 4: Mở rộng category filter</strong></p><pre>c.IsActive &amp;&amp; (c.Id == categoryId.Value || c.ParentCategoryId == categoryId.Value)</pre><p>Không thay đổi brand/search/price/branch/paging filters.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-5" data-section="4"><div class="task-text"><p><strong>Step 5: Project categorySlug</strong></p><p>Thêm <code>CategorySlug</code> vào C# summary/detail records và truyền <code>p.Category.Slug</code> đúng thứ tự.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s4-6" data-section="4"><div class="task-text"><p><strong>Step 6: Chạy GREEN, OpenAPI test và commit</strong></p><pre>dotnet test backend/tests/OnlineSupermarket.Api.Tests/OnlineSupermarket.Api.Tests.csproj --no-restore --filter "FullyQualifiedName~CatalogEndpointsTests|FullyQualifiedName~OpenApiContractTests"
+git add backend/src/OnlineSupermarket.Api/Contracts/Catalog/CatalogContracts.cs backend/src/OnlineSupermarket.Api/Endpoints/CatalogEndpoints.cs backend/tests/OnlineSupermarket.Api.Tests/Endpoints/CatalogEndpointsTests.cs
+git commit -m "feat(catalog): filter hierarchy and expose category slug"</pre></div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-5">
+                <button class="section-header" type="button" data-section-toggle="5" aria-expanded="true">
+                    <span class="section-number" id="section-num-5">5</span>
+                    <span class="section-title">Task 5 — Hiển thị category cha–con trên frontend</span>
+                    <span class="section-toggle" aria-hidden="true">▼</span>
+                </button>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> <code>catalogApi.ts/test</code>, <code>FilterSidebar.tsx</code>, <code>ProductBrowse.test.tsx</code>.</p>
+                        <p><strong>Ordering:</strong> tên tiếng Việt; children ngay sau parent; <code>uncategorized</code> cuối danh sách.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-1" data-section="5"><div class="task-text"><p><strong>Step 1: Viết DTO fixture và nested-filter test</strong></p><p>Expected order: Tất cả → TV &amp; Màn hình → Màn hình máy tính → TV → Chưa phân loại. Chọn monitor gửi đúng categoryId.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-2" data-section="5"><div class="task-text"><p><strong>Step 2: Chạy RED</strong></p><pre>Set-Location frontend
+npm.cmd test -- --run src/api/catalogApi.test.ts src/features/products/ProductBrowse.test.tsx</pre></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-3" data-section="5"><div class="task-text"><p><strong>Step 3: Đồng bộ TypeScript DTO</strong></p><pre>categorySlug: string</pre><p>Thêm vào cả <code>ProductSummaryDto</code> và <code>ProductDetailDto</code>, cập nhật API fixtures.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-4" data-section="5"><div class="task-text"><p><strong>Step 4: Dựng và sort option list</strong></p><pre>const compareCategoryName = (a, b) =&gt; {
+  if (a.slug === 'uncategorized') return 1
+  if (b.slug === 'uncategorized') return -1
+  return a.name.localeCompare(b.name, 'vi')
+}</pre><p>Sort cả roots và children trước khi <code>flatMap</code>.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s5-5" data-section="5"><div class="task-text"><p><strong>Step 5: Chạy GREEN, build và commit</strong></p><pre>npm.cmd test -- --run src/api/catalogApi.test.ts src/features/products/ProductBrowse.test.tsx
+npm.cmd run build
+git add src/api/catalogApi.ts src/api/catalogApi.test.ts src/features/products/FilterSidebar.tsx src/features/products/ProductBrowse.test.tsx
+git commit -m "feat(frontend): display catalog category hierarchy"</pre></div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-6">
+                <button class="section-header" type="button" data-section-toggle="6" aria-expanded="true">
+                    <span class="section-number" id="section-num-6">6</span>
+                    <span class="section-title">Task 6 — Compare theo leaf và chặn uncategorized</span>
+                    <span class="section-toggle" aria-hidden="true">▼</span>
+                </button>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Files:</strong> <code>CompareContext.tsx/test</code>, <code>CompareModal.test.tsx</code>, <code>ProductCard.tsx</code>, <code>ProductDetailPage.tsx/test</code>.</p>
+                        <p><strong>Rules:</strong> cùng leaf mới được compare; <code>uncategorized</code> luôn bị chặn kể cả item đầu tiên.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-1" data-section="6"><div class="task-text"><p><strong>Step 1: Cập nhật fixtures và harness</strong></p><p>Thêm <code>categorySlug</code>, buttons <code>add-tablet</code>/<code>add-unknown</code>, spans <code>warning</code>/<code>unknown-warning</code>.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-2" data-section="6"><div class="task-text"><p><strong>Step 2: Viết cross-leaf và uncategorized tests</strong></p><ul><li>Phone + tablet: count giữ 1, cảnh báo “cùng loại”.</li><li>Uncategorized là item đầu tiên: count giữ 0, cảnh báo “chưa được phân loại”.</li></ul></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-3" data-section="6"><div class="task-text"><p><strong>Step 3: Chạy RED</strong></p><pre>npm.cmd test -- --run src/features/compare/CompareContext.test.tsx src/features/compare/CompareModal.test.tsx src/features/products/ProductBrowse.test.tsx src/features/products/ProductDetail.test.tsx</pre></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-4" data-section="6"><div class="task-text"><p><strong>Step 4: Tạo pure comparison rule</strong></p><pre>if (candidate.categorySlug === 'uncategorized' || existing?.categorySlug === 'uncategorized')
+  return 'Sản phẩm chưa được phân loại nên chưa thể so sánh.'
+if (existing &amp;&amp; existing.categoryId !== candidate.categoryId)
+  return 'Chỉ có thể so sánh các sản phẩm cùng loại.'</pre><p>Dùng cùng helper cho warning và addToCompare.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-5" data-section="6"><div class="task-text"><p><strong>Step 5: Truyền categorySlug từ card và detail</strong></p><p>Cả ProductCard và hai vị trí compare trong ProductDetailPage phải truyền <code>id/categoryId/categoryName/categorySlug</code>.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s6-6" data-section="6"><div class="task-text"><p><strong>Step 6: Chạy GREEN, build và commit</strong></p><pre>npm.cmd test -- --run src/features/compare/CompareContext.test.tsx src/features/compare/CompareModal.test.tsx src/features/products/ProductBrowse.test.tsx src/features/products/ProductDetail.test.tsx
+npm.cmd run build
+git add src/features/compare src/features/products/ProductCard.tsx src/features/products/ProductDetailPage.tsx src/features/products/ProductDetail.test.tsx src/features/products/ProductBrowse.test.tsx
+git commit -m "fix(compare): require comparable leaf category"</pre></div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section" id="section-7">
+                <button class="section-header" type="button" data-section-toggle="7" aria-expanded="true">
+                    <span class="section-number" id="section-num-7">7</span>
+                    <span class="section-title">Task 7 — Full verification và GUI acceptance</span>
+                    <span class="section-toggle" aria-hidden="true">▼</span>
+                </button>
+                <div class="section-content">
+                    <div class="interfaces">
+                        <p><strong>Scope:</strong> verify toàn bộ Tasks 1–6; không xóa database Development.</p>
+                        <p><strong>Definition of Done:</strong> automated suites/build pass, dữ liệu đúng taxonomy, GUI filter/compare đúng.</p>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-1" data-section="7"><div class="task-text"><p><strong>Step 1: Full backend tests</strong></p><pre>Set-Location C:\Users\manh\Documents\Project3\online-supermarket-system
+dotnet test OnlineSupermarket.slnx --no-restore</pre></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-2" data-section="7"><div class="task-text"><p><strong>Step 2: Full frontend tests và build</strong></p><pre>Set-Location frontend
+npm.cmd test -- --run
+npm.cmd run build</pre></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-3" data-section="7"><div class="task-text"><p><strong>Step 3: Khởi động API với database hiện có</strong></p><p>Không xóa database; xác nhận seeder/reconcile không báo lỗi unique slug hoặc foreign key.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-4" data-section="7"><div class="task-text"><p><strong>Step 4: Kiểm tra dữ liệu</strong></p><pre>Category total = 23
+Root nodes = 9 (8 navigation parents + uncategorized)
+Child leaves = 14
+Products assigned to parent = 0
+Wrong mapped SKU = 0
+Duplicate slug = 0</pre></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-5" data-section="7"><div class="task-text"><p><strong>Step 5: GUI category filter</strong></p><table class="data-table"><thead><tr><th>Thao tác</th><th>Kết quả</th></tr></thead><tbody><tr><td>Điện thoại &amp; Tablet</td><td>Thấy điện thoại và tablet; chọn Điện thoại không thấy Galaxy Tab/iPad.</td></tr><tr><td>TV &amp; Màn hình</td><td>Thấy TV và Samsung M8; chọn TV không thấy M8; chọn monitor chỉ thấy M8.</td></tr><tr><td>Thiết bị gia dụng</td><td>Thấy máy lạnh, tủ lạnh và máy giặt.</td></tr><tr><td>Âm thanh &amp; Loa</td><td>Thấy tai nghe và loa.</td></tr><tr><td>Camera &amp; An ninh</td><td>Thấy máy ảnh và camera giám sát.</td></tr><tr><td>Chưa phân loại</td><td>Hiện empty state nếu chưa có fallback product; không lỗi API/UI.</td></tr></tbody></table></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-6" data-section="7"><div class="task-text"><p><strong>Step 6: GUI compare</strong></p><table class="data-table"><thead><tr><th>Cặp</th><th>Kết quả</th></tr></thead><tbody><tr><td>Hai điện thoại / hai TV / hai tai nghe</td><td>Cho phép.</td></tr><tr><td>Điện thoại + tablet</td><td>Chặn.</td></tr><tr><td>TV + màn hình máy tính</td><td>Chặn.</td></tr><tr><td>Tai nghe + loa</td><td>Chặn.</td></tr><tr><td>Máy ảnh + camera an ninh</td><td>Chặn.</td></tr><tr><td>Uncategorized là item đầu tiên</td><td>Chặn với cảnh báo chưa phân loại.</td></tr></tbody></table></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-7" data-section="7"><div class="task-text"><p><strong>Step 7: Filter kết hợp và idempotency</strong></p><p>Request cuối chứa đồng thời <code>categoryId + brandId + branchId + minPrice + maxPrice</code>; thao tác sau không reset filter trước. Refresh và restart API không tăng category/product count.</p></div></li>
+                        <li class="task-item"><input class="task-checkbox" type="checkbox" data-task="s7-8" data-section="7"><div class="task-text"><p><strong>Step 8: Ghi nhận nghiệm thu</strong></p><p>Không tạo empty commit. Nếu có refinement, chạy lại test liên quan và chỉ stage file đã sửa.</p></div></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="files-summary">
+                <h3>File map</h3>
+                <ul>
+                    <li class="new"><code>backend/src/OnlineSupermarket.Infrastructure/Persistence/SeedData/CatalogSeedTaxonomy.cs</code></li>
+                    <li class="new"><code>backend/tests/OnlineSupermarket.Api.Tests/Endpoints/CatalogEndpointsTests.cs</code></li>
+                    <li class="edit"><code>backend/src/OnlineSupermarket.Domain/Catalog/Product.cs</code></li>
+                    <li class="edit"><code>backend/src/OnlineSupermarket.Infrastructure/Persistence/DataSeeder.cs</code></li>
+                    <li class="edit"><code>backend/src/OnlineSupermarket.Api/Contracts/Catalog/CatalogContracts.cs</code></li>
+                    <li class="edit"><code>backend/src/OnlineSupermarket.Api/Endpoints/CatalogEndpoints.cs</code></li>
+                    <li class="edit"><code>frontend/src/api/catalogApi.ts</code></li>
+                    <li class="edit"><code>frontend/src/features/products/FilterSidebar.tsx</code></li>
+                    <li class="edit"><code>frontend/src/features/compare/CompareContext.tsx</code></li>
+                    <li class="test">Domain, Infrastructure, API, Browse, Detail và Compare tests được cập nhật.</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p><strong>Risk:</strong> MEDIUM | <strong>Scope:</strong> Domain + Seed + API + Frontend | <strong>Schema migration:</strong> Không</p>
+            <p>Definition of Done: 23 categories, 28 SKU đúng leaf, parent filter đúng, nested UI đúng, compare an toàn, full suites/build pass.</p>
+            <button type="button" id="check-all">Check All</button>
+            <button type="button" class="reset" id="reset-all">Reset Progress</button>
+        </footer>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'catalog-category-hierarchy-progress-v1';
+        const SECTION_COUNT = 7;
+
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return {};
+            try { return JSON.parse(saved); } catch { return {}; }
+        }
+
+        function saveProgress(progress) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+        }
+
+        function updateUI() {
+            const progress = loadProgress();
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            const sectionTotal = {};
+            const sectionChecked = {};
+            let checkedCount = 0;
+
+            checkboxes.forEach((checkbox) => {
+                const taskId = checkbox.dataset.task;
+                const section = checkbox.dataset.section;
+                sectionTotal[section] = (sectionTotal[section] || 0) + 1;
+                checkbox.checked = Boolean(progress[taskId]);
+                const item = checkbox.closest('.task-item');
+
+                if (checkbox.checked) {
+                    checkedCount += 1;
+                    sectionChecked[section] = (sectionChecked[section] || 0) + 1;
+                    item?.classList.add('checked');
+                } else {
+                    item?.classList.remove('checked');
+                }
+            });
+
+            for (let section = 1; section <= SECTION_COUNT; section += 1) {
+                const number = document.getElementById(`section-num-${section}`);
+                const done = sectionTotal[section] > 0 && sectionChecked[section] === sectionTotal[section];
+                if (number) {
+                    number.classList.toggle('done', done);
+                    number.textContent = done ? '✓' : String(section);
+                }
+            }
+
+            const total = checkboxes.length;
+            const percent = total ? Math.round((checkedCount / total) * 100) : 0;
+            document.getElementById('progress-percent').textContent = `${percent}%`;
+            document.getElementById('progress-fill').style.width = `${percent}%`;
+            document.getElementById('checked-count').textContent = String(checkedCount);
+            document.getElementById('total-count').textContent = String(total);
+        }
+
+        document.querySelectorAll('[data-section-toggle]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const section = document.getElementById(`section-${button.dataset.sectionToggle}`);
+                const collapsed = section?.classList.toggle('collapsed') ?? false;
+                button.setAttribute('aria-expanded', String(!collapsed));
+            });
+        });
+
+        document.querySelectorAll('.task-checkbox').forEach((checkbox) => {
+            checkbox.addEventListener('change', () => {
+                const progress = loadProgress();
+                progress[checkbox.dataset.task] = checkbox.checked;
+                saveProgress(progress);
+                updateUI();
+            });
+        });
+
+        document.getElementById('check-all').addEventListener('click', () => {
+            const progress = {};
+            document.querySelectorAll('.task-checkbox').forEach((checkbox) => {
+                progress[checkbox.dataset.task] = true;
+            });
+            saveProgress(progress);
+            updateUI();
+        });
+
+        document.getElementById('reset-all').addEventListener('click', () => {
+            if (!window.confirm('Reset toàn bộ tiến độ của plan này?')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            updateUI();
+        });
+
+        updateUI();
+    </script>
+</body>
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theo dõi tiến độ 4 thành viên | AptechMart</title>
+    <style>
+        :root {
+            --ink: #18212f;
+            --muted: #5f6f86;
+            --line: #d9e1ec;
+            --paper: #f7f9fc;
+            --panel: #ffffff;
+            --blue: #2563eb;
+            --teal: #0f9f8f;
+            --amber: #d88913;
+            --rose: #d94a64;
+            --green: #15945f;
+            --violet: #6d5bd0;
+            --done-bg: #e9f8f1;
+            --doing-bg: #eaf3ff;
+            --plan-bg: #fff7e7;
+            --hold-bg: #fff0f3;
+            --shadow: 0 12px 28px rgba(24, 33, 47, 0.09);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.55;
+        }
+
+        .page {
+            width: min(1240px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 24px 0 42px;
+        }
+
+        header {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 24px;
+            align-items: stretch;
+            margin-bottom: 22px;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            min-height: 310px;
+            padding: 32px;
+            color: #fff;
+            background:
+                linear-gradient(120deg, rgba(15, 23, 42, 0.95), rgba(37, 99, 235, 0.78)),
+                url("https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?auto=format&fit=crop&w=1500&q=80");
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: auto 0 0;
+            height: 96px;
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.14) 0,
+                rgba(255, 255, 255, 0.14) 2px,
+                transparent 2px,
+                transparent 72px
+            );
+        }
+
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: 14px;
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.42);
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin: 0;
+            font-size: clamp(34px, 5vw, 64px);
+            line-height: 0.98;
+            letter-spacing: 0;
+        }
+
+        .lead {
+            position: relative;
+            z-index: 1;
+            max-width: 760px;
+            margin: 18px 0 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 17px;
+        }
+
+        .summary-card {
+            display: grid;
+            gap: 14px;
+            padding: 24px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .summary-card h2,
+        .section h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .release-line {
+            display: grid;
+            gap: 8px;
+        }
+
+        .release-line span {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .meter {
+            height: 12px;
+            overflow: hidden;
+            background: #e9eef6;
+            border-radius: 999px;
+        }
+
+        .meter > i {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, var(--green), var(--teal), var(--blue));
+            border-radius: inherit;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .kpi,
+        .member,
+        .section {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .kpi {
+            padding: 16px;
+        }
+
+        .kpi strong {
+            display: block;
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .kpi span {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .members {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .member {
+            overflow: hidden;
+        }
+
+        .member-top {
+            padding: 16px;
+            border-top: 5px solid var(--accent);
+        }
+
+        .member h3 {
+            margin: 0 0 6px;
+            font-size: 18px;
+        }
+
+        .role {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .percent {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+            font-weight: 700;
+        }
+
+        .member ul {
+            margin: 0;
+            padding: 0 16px 16px 34px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .section {
+            margin-top: 18px;
+            padding: 22px;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #eef3f9;
+            color: #304057;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .done {
+            background: var(--done-bg);
+            color: #0f6845;
+        }
+
+        .doing {
+            background: var(--doing-bg);
+            color: #1d55a6;
+        }
+
+        .plan {
+            background: var(--plan-bg);
+            color: #8a570d;
+        }
+
+        .hold {
+            background: var(--hold-bg);
+            color: #9f263d;
+        }
+
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .lane {
+            min-height: 150px;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fbfcfe;
+        }
+
+        .lane h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+        }
+
+        .lane p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .links a {
+            color: var(--blue);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            margin-top: 24px;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 980px) {
+            header,
+            .members,
+            .timeline {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .page {
+                width: min(100% - 20px, 1240px);
+                padding-top: 10px;
+            }
+
+            header,
+            .members,
+            .timeline,
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero,
+            .summary-card,
+            .section {
+                padding: 18px;
+            }
+
+            .section-head {
+                display: block;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header>
+            <section class="hero">
+                <span class="eyebrow">AptechMart project control</span>
+                <h1>Bảng theo dõi tiến độ toàn bộ dự án</h1>
+                <p class="lead">Theo dõi mức hoàn thành của hệ thống siêu thị điện tử đa chi nhánh theo phần việc của 4 thành viên: backend, dữ liệu, giao dịch, giao diện và nghiệm thu.</p>
+            </section>
+
+            <aside class="summary-card">
+                <h2>Tổng quan release</h2>
+                <div class="release-line">
+                    <span><b>Tiến độ MVP</b><b>79%</b></span>
+                    <div class="meter"><i style="width: 79%;"></i></div>
+                </div>
+                <div class="release-line">
+                    <span><b>Functional Requirements</b><b>15 / 24 đã triển khai</b></span>
+                    <div class="meter"><i style="width: 63%;"></i></div>
+                </div>
+                <div class="release-line">
+                    <span><b>Kiểm thử đã xác minh</b><b>184 tests</b></span>
+                    <div class="meter"><i style="width: 82%;"></i></div>
+                </div>
+                <p class="role">Cập nhật ngày 28/08/2026. Các số liệu dựa trên tài liệu yêu cầu, README và báo cáo tiến độ hiện có trong thư mục docs.</p>
+            </aside>
+        </header>
+
+        <section class="kpi-grid" aria-label="Chỉ số dự án">
+            <div class="kpi"><strong>4</strong><span>thành viên theo dõi độc lập</span></div>
+            <div class="kpi"><strong>15</strong><span>FR đã triển khai trong MVP hiện tại</span></div>
+            <div class="kpi"><strong>9</strong><span>FR đang nằm ở chu kỳ mở rộng</span></div>
+            <div class="kpi"><strong>5</strong><span>scope drift đã phân loại rõ</span></div>
+        </section>
+
+        <section class="members" aria-label="Tiến độ theo thành viên">
+            <article class="member" style="--accent: var(--blue);">
+                <div class="member-top">
+                    <h3>Thành viên 1</h3>
+                    <p class="role">Catalog, chi nhánh, tồn kho và giỏ hàng</p>
+                    <div class="percent"><span>Hoàn thành</span><span>100%</span></div>
+                    <div class="meter"><i style="width: 100%;"></i></div>
+                </div>
+                <ul>
+                    <li>Duyệt sản phẩm, lọc, tìm kiếm và phân trang.</li>
+                    <li>Giá bán và tồn kho độc lập theo chi nhánh.</li>
+                    <li>Giỏ hàng theo user và branch, kiểm tra tồn kho tức thì.</li>
+                </ul>
+            </article>
+
+            <article class="member" style="--accent: var(--teal);">
+                <div class="member-top">
+                    <h3>Thành viên 2</h3>
+                    <p class="role">Xác thực, tài khoản và quản trị người dùng</p>
+                    <div class="percent"><span>Hoàn thành</span><span>92%</span></div>
+                    <div class="meter"><i style="width: 92%;"></i></div>
+                </div>
+                <ul>
+                    <li>Đăng ký, đăng nhập JWT, refresh token và đăng xuất.</li>
+                    <li>Hồ sơ cá nhân, đổi mật khẩu, quên mật khẩu.</li>
+                    <li>CRUD địa chỉ giao hàng và khóa/mở tài khoản admin.</li>
+                </ul>
+            </article>
+
+            <article class="member" style="--accent: var(--amber);">
+                <div class="member-top">
+                    <h3>Thành viên 3</h3>
+                    <p class="role">Checkout, thanh toán và đơn hàng</p>
+                    <div class="percent"><span>Hoàn thành</span><span>100%</span></div>
+                    <div class="meter"><i style="width: 100%;"></i></div>
+                </div>
+                <ul>
+                    <li>Checkout transactional, reserve stock và snapshot đơn hàng.</li>
+                    <li>COD, VNPay, MoMo sandbox và callback idempotency.</li>
+                    <li>Lịch sử đơn hàng, chi tiết đơn, admin cập nhật trạng thái.</li>
+                </ul>
+            </article>
+
+            <article class="member" style="--accent: var(--rose);">
+                <div class="member-top">
+                    <h3>Thành viên 4</h3>
+                    <p class="role">Frontend, tài liệu, kiểm thử và mở rộng</p>
+                    <div class="percent"><span>Hoàn thành</span><span>68%</span></div>
+                    <div class="meter"><i style="width: 68%;"></i></div>
+                </div>
+                <ul>
+                    <li>React storefront: auth, account, catalog, cart, checkout, orders.</li>
+                    <li>Tài liệu kiến trúc, OpenAPI, sitemap, DFD và ERD.</li>
+                    <li>Các module mở rộng: coupon, review, report, forecast, AI.</li>
+                </ul>
+            </article>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <h2>Bảng phân công chi tiết</h2>
+                <span class="tag doing">Theo dõi theo FR / module</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thành viên</th>
+                        <th>Phần việc</th>
+                        <th>FR liên quan</th>
+                        <th>Kết quả hiện tại</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Thành viên 1</b></td>
+                        <td>Catalog, branches, inventory, cart</td>
+                        <td>FR-101, FR-102, FR-103, FR-107, FR-203</td>
+                        <td>API catalog, tồn kho đa chi nhánh, cart mutation và cập nhật inventory admin đã sẵn sàng.</td>
+                        <td><span class="tag done">Hoàn thành</span></td>
+                    </tr>
+                    <tr>
+                        <td><b>Thành viên 2</b></td>
+                        <td>Identity, user profile, address book</td>
+                        <td>FR-105, FR-106, FR-114, FR-115, FR-206</td>
+                        <td>JWT, refresh token, quản lý hồ sơ, địa chỉ giao hàng và quản trị người dùng đã triển khai.</td>
+                        <td><span class="tag done">Hoàn thành</span></td>
+                    </tr>
+                    <tr>
+                        <td><b>Thành viên 3</b></td>
+                        <td>Checkout, payment, order management</td>
+                        <td>FR-108, FR-109, FR-110, FR-112, FR-205</td>
+                        <td>Đặt hàng transactional, thanh toán sandbox, callback và luồng trạng thái đơn hàng đã hoàn thiện.</td>
+                        <td><span class="tag done">Hoàn thành</span></td>
+                    </tr>
+                    <tr>
+                        <td><b>Thành viên 4</b></td>
+                        <td>Frontend, documentation, QA, planned features</td>
+                        <td>FR-104, FR-111, FR-113, FR-201, FR-202, FR-204, FR-207, FR-208, FR-209</td>
+                        <td>Storefront đã có các màn hình MVP; phần admin mở rộng, coupon, review, báo cáo và AI đang ở planned cycle.</td>
+                        <td><span class="tag doing">Đang mở rộng</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <h2>Tiến độ theo mốc</h2>
+                <span class="tag done">MVP backend và storefront đã ghép luồng chính</span>
+            </div>
+            <div class="timeline">
+                <article class="lane">
+                    <h3>1. Nền tảng dữ liệu</h3>
+                    <p><span class="tag done">Hoàn thành</span></p>
+                    <p>Domain entities, EF Core configuration, migrations, seed data, branch inventory và identity foundation.</p>
+                </article>
+                <article class="lane">
+                    <h3>2. Luồng mua hàng</h3>
+                    <p><span class="tag done">Hoàn thành</span></p>
+                    <p>Catalog, product detail, branch switching, cart, checkout, payment và order tracking.</p>
+                </article>
+                <article class="lane">
+                    <h3>3. Kiểm thử nghiệm thu</h3>
+                    <p><span class="tag doing">Đang xác minh</span></p>
+                    <p>Frontend Vitest, Domain tests và Infrastructure tests đã pass; API integration cần chạy lại khi không còn khóa DLL.</p>
+                </article>
+                <article class="lane">
+                    <h3>4. Chu kỳ tiếp theo</h3>
+                    <p><span class="tag plan">Kế hoạch</span></p>
+                    <p>So sánh sản phẩm, admin CRUD, coupon, review, báo cáo doanh số, forecast và recommendation.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <h2>Checklist nghiệm thu</h2>
+                <span class="tag doing">Dùng khi họp nhóm hoặc báo cáo đồ án</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hạng mục</th>
+                        <th>Người chính</th>
+                        <th>Tiêu chí nghiệm thu</th>
+                        <th>Tình trạng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Danh mục và tồn kho chi nhánh</td>
+                        <td>Thành viên 1</td>
+                        <td>Lọc sản phẩm đúng; giá/tồn kho đổi theo branch; không bán vượt tồn khả dụng.</td>
+                        <td><span class="tag done">Đạt</span></td>
+                    </tr>
+                    <tr>
+                        <td>Tài khoản và địa chỉ</td>
+                        <td>Thành viên 2</td>
+                        <td>Đăng nhập an toàn; refresh token xoay vòng; mỗi user chỉ có một địa chỉ mặc định.</td>
+                        <td><span class="tag done">Đạt</span></td>
+                    </tr>
+                    <tr>
+                        <td>Checkout và thanh toán</td>
+                        <td>Thành viên 3</td>
+                        <td>Transaction reserve stock; callback chống lặp; thất bại thì giải phóng tồn kho.</td>
+                        <td><span class="tag done">Đạt</span></td>
+                    </tr>
+                    <tr>
+                        <td>Frontend và tài liệu</td>
+                        <td>Thành viên 4</td>
+                        <td>Giao diện bao phủ luồng MVP; tài liệu kiến trúc liên kết được; build frontend pass.</td>
+                        <td><span class="tag done">Đạt MVP</span></td>
+                    </tr>
+                    <tr>
+                        <td>Backend API integration suite</td>
+                        <td>Cả nhóm</td>
+                        <td>Chạy lại full solution test sau khi tắt tiến trình đang khóa DLL.</td>
+                        <td><span class="tag hold">Cần xác minh lại</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <h2>Tài liệu liên quan</h2>
+            </div>
+            <div class="links">
+                <a href="project-spec.html">Project spec</a>
+                <a href="progress-member-1-3.html">Tiến độ thành viên 1 & 3</a>
+                <a href="requirements/functional-requirements.md">Functional requirements</a>
+                <a href="architecture/erd.md">ERD</a>
+                <a href="architecture/dfd.md">DFD</a>
+                <a href="architecture/sitemap.md">Sitemap</a>
+                <a href="api/openapi.json">OpenAPI</a>
+            </div>
+        </section>
+
+        <footer>
+            Online Supermarket System - bảng theo dõi tiến độ 4 thành viên, dùng cho báo cáo nội bộ và nghiệm thu đồ án.
+        </footer>
+    </main>
+</body>
+</html>

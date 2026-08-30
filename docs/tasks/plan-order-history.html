@@ -200,7 +200,7 @@
             <div><strong>Tiến độ:</strong> <span id="progress-percent">100%</span></div>
             <div class="progress-container">
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width: 100%;"></div></div>
-                <div class="progress-text"><span id="checked-count">34</span> / <span id="total-count">34</span> bước hoàn thành</div>
+                <div class="progress-text"><span id="checked-count">35</span> / <span id="total-count">35</span> bước hoàn thành ✓</div>
             </div>
         </div>
         <main class="content">
@@ -292,7 +292,7 @@ const orderDetail: OrderDetailDto = {
                         <p><strong>Produces:</strong> <code>orderApi.getOrders</code>, <code>orderApi.getOrderById</code> và exact DTO/request types cho list/detail.</p>
                     </div>
                     <ul class="task-list">
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s1-1" data-section="1"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s1-1" data-section="1"><div class="task-text">
                             <p><strong>Step 1: Viết failing tests cho list/detail API client</strong></p>
                             <pre>import { afterEach, expect, it, vi } from 'vitest'
 import { orderApi, type PaginatedOrdersDto } from './orderApi'
@@ -344,13 +344,13 @@ it('loads an order detail by id', async () =&gt; {
 })</pre>
                             <p class="expected">Expected RED: module <code>orderApi</code> chưa tồn tại.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s1-2" data-section="1"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s1-2" data-section="1"><div class="task-text">
                             <p><strong>Step 2: Chạy test để xác nhận RED</strong></p>
                             <pre>Set-Location frontend
 npm.cmd test -- --run src/api/orderApi.test.ts</pre>
                             <p class="expected">Expected: FAIL vì không resolve được <code>./orderApi</code>.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s1-3" data-section="1"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s1-3" data-section="1"><div class="task-text">
                             <p><strong>Step 3: Khai báo DTOs và API functions</strong></p>
                             <pre>import { getJson } from './httpClient'
 
@@ -437,7 +437,7 @@ export const orderApi = {
     getJson&lt;OrderDetailDto&gt;('/orders/' + encodeURIComponent(id), { token, signal }),
 }</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s1-4" data-section="1"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s1-4" data-section="1"><div class="task-text">
                             <p><strong>Step 4: Bổ sung filter status và URL encoding tests</strong></p>
                             <pre>it('adds status filter when provided', async () =&gt; {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(listResponse)))
@@ -452,7 +452,7 @@ it('encodes order id for detail route', async () =&gt; {
 })</pre>
                             <p class="expected">Encoding test cố ý dùng chuỗi có khoảng trắng để khóa behavior <code>encodeURIComponent</code>; các fixture backend-facing bên trên phải dùng GUID hợp lệ.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s1-5" data-section="1"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s1-5" data-section="1"><div class="task-text">
                             <p><strong>Step 5: Chạy GREEN, build và commit</strong></p>
                             <pre>npm.cmd test -- --run src/api/orderApi.test.ts
 npm.cmd run build
@@ -477,7 +477,7 @@ git commit -m "feat(frontend): add order API client"</pre>
                         <p><strong>Produces:</strong> Route <code>/orders/history</code>, guest guard, loading shell, header/user menu link và success page link sang lịch sử đơn.</p>
                     </div>
                     <ul class="task-list">
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s2-1" data-section="2"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s2-1" data-section="2"><div class="task-text">
                             <p><strong>Step 1: Viết failing tests cho auth guard và empty route shell</strong></p>
                             <pre>it('asks guests to login before viewing order history', () =&gt; {
   renderHistory({ auth: { isAuthenticated: false, isLoading: false, accessToken: null } })
@@ -492,7 +492,7 @@ it('renders the history heading for authenticated users', async () =&gt; {
   expect(screen.getByText('Bạn chưa có đơn hàng nào.')).toBeInTheDocument()
 })</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s2-2" data-section="2"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s2-2" data-section="2"><div class="task-text">
                             <p><strong>Step 2: Viết tests cho App route và navigation links</strong></p>
                             <pre>it('wires the order history route', () =&gt; {
   window.history.pushState({}, '', '/orders/history')
@@ -511,12 +511,12 @@ it('links checkout success to order history', () =&gt; {
 })</pre>
                             <p class="expected">Expected RED: App/UserMenu/CheckoutSuccessPage chưa có route/link này.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s2-3" data-section="2"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s2-3" data-section="2"><div class="task-text">
                             <p><strong>Step 3: Chạy RED</strong></p>
                             <pre>npm.cmd test -- --run src/features/orders/OrderHistoryPage.test.tsx src/App.test.tsx src/features/auth/Auth.test.tsx src/features/checkout/CheckoutSuccessPage.test.tsx</pre>
                             <p class="expected">Expected: FAIL vì orders feature chưa có và route/link chưa được khai báo.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s2-4" data-section="2"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s2-4" data-section="2"><div class="task-text">
                             <p><strong>Step 4: Tạo OrderHistoryPage shell với auth guard</strong></p>
                             <pre>import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -558,7 +558,7 @@ export function OrderHistoryPage() {
   )
 }</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s2-5" data-section="2"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s2-5" data-section="2"><div class="task-text">
                             <p><strong>Step 5: Thêm App route và navigation links</strong></p>
                             <pre>// App.tsx
 import { OrderHistoryPage } from './features/orders/OrderHistoryPage'
@@ -575,7 +575,7 @@ import { OrderHistoryPage } from './features/orders/OrderHistoryPage'
   Xem đơn hàng
 &lt;/Link&gt;</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s2-6" data-section="2"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s2-6" data-section="2"><div class="task-text">
                             <p><strong>Step 6: Chạy GREEN và commit</strong></p>
                             <pre>npm.cmd test -- --run src/features/orders/OrderHistoryPage.test.tsx src/App.test.tsx src/features/auth/Auth.test.tsx src/features/checkout/CheckoutSuccessPage.test.tsx
 git add frontend/src/App.tsx frontend/src/features/auth/UserMenu.tsx frontend/src/features/auth/Auth.test.tsx frontend/src/features/checkout/CheckoutSuccessPage.tsx frontend/src/features/checkout/CheckoutSuccessPage.test.tsx frontend/src/features/orders
@@ -598,7 +598,7 @@ git commit -m "feat(frontend): add order history route"</pre>
                         <p><strong>Produces:</strong> Server-driven list, status filter, pagination, abort stale loads, cards linking to detail.</p>
                     </div>
                     <ul class="task-list">
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s3-1" data-section="3"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s3-1" data-section="3"><div class="task-text">
                             <p><strong>Step 1: Viết tests fail cho render list và detail links</strong></p>
                             <pre>it('renders order cards from backend data', async () =&gt; {
   vi.spyOn(orderApi, 'getOrders').mockResolvedValue(orderListResponse)
@@ -609,7 +609,7 @@ git commit -m "feat(frontend): add order history route"</pre>
   expect(screen.getByRole('link', { name: 'Xem chi tiết 00000000-0000-0000-0000-000000000001' })).toHaveAttribute('href', '/orders/history/00000000-0000-0000-0000-000000000001')
 })</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s3-2" data-section="3"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s3-2" data-section="3"><div class="task-text">
                             <p><strong>Step 2: Viết tests fail cho filter và pagination</strong></p>
                             <pre>it('loads filtered orders and resets to page 1 when status changes', async () =&gt; {
   const getOrders = vi.spyOn(orderApi, 'getOrders').mockResolvedValue(orderListResponse)
@@ -629,12 +629,12 @@ it('moves to the next page through URL state', async () =&gt; {
   expect(window.location.search).toContain('page=2')
 })</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s3-3" data-section="3"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s3-3" data-section="3"><div class="task-text">
                             <p><strong>Step 3: Chạy RED</strong></p>
                             <pre>npm.cmd test -- --run src/features/orders/OrderHistoryPage.test.tsx</pre>
                             <p class="expected">Expected: FAIL vì list/filter/pagination chưa hoàn chỉnh.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s3-4" data-section="3"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s3-4" data-section="3"><div class="task-text">
                             <p><strong>Step 4: Cài URL-driven load state và filter status</strong></p>
                             <pre>const ORDER_STATUSES = ['', 'Pending', 'Confirmed', 'Preparing', 'Ready', 'Shipped', 'Delivered', 'Completed', 'Cancelled', 'Failed']
 const PAGE_SIZE = 10
@@ -667,7 +667,7 @@ function setStatusFilter(nextStatus: string) {
   setSearchParams(next)
 }</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s3-5" data-section="3"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s3-5" data-section="3"><div class="task-text">
                             <p><strong>Step 5: Render cards và pagination controls</strong></p>
                             <pre>&lt;label htmlFor="order-status-filter"&gt;Lọc trạng thái&lt;/label&gt;
 &lt;select id="order-status-filter" value={status} onChange={(event) =&gt; setStatusFilter(event.target.value)}&gt;
@@ -689,7 +689,7 @@ function setStatusFilter(nextStatus: string) {
 &lt;/div&gt;</pre>
                             <p>Pagination dùng button native: <code>Trang trước</code> disabled khi page 1, <code>Trang sau</code> disabled khi <code>page * pageSize &gt;= totalCount</code>.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s3-6" data-section="3"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s3-6" data-section="3"><div class="task-text">
                             <p><strong>Step 6: Chạy GREEN và commit</strong></p>
                             <pre>npm.cmd test -- --run src/features/orders/OrderHistoryPage.test.tsx
 git add frontend/src/features/orders/OrderHistoryPage.tsx frontend/src/features/orders/OrderHistoryPage.css frontend/src/features/orders/OrderHistoryPage.test.tsx
@@ -712,7 +712,7 @@ git commit -m "feat(frontend): list customer orders"</pre>
                         <p><strong>Produces:</strong> Route <code>/orders/history/:id</code>, detail layout, order items, payment info, status timeline và 404/error states.</p>
                     </div>
                     <ul class="task-list">
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s4-1" data-section="4"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s4-1" data-section="4"><div class="task-text">
                             <p><strong>Step 1: Viết tests fail cho detail success state</strong></p>
                             <pre>it('renders order detail, items, totals, payment and timeline', async () =&gt; {
   vi.spyOn(orderApi, 'getOrderById').mockResolvedValue(orderDetail)
@@ -726,7 +726,7 @@ git commit -m "feat(frontend): list customer orders"</pre>
   expect(screen.getByText('115.000 ₫')).toBeInTheDocument()
 })</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s4-2" data-section="4"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s4-2" data-section="4"><div class="task-text">
                             <p><strong>Step 2: Viết tests fail cho 404, retry và auth guard</strong></p>
                             <pre>it('renders not found when backend returns 404', async () =&gt; {
   vi.spyOn(orderApi, 'getOrderById').mockRejectedValue(new ApiError(404, { message: 'Order not found.' }))
@@ -745,12 +745,12 @@ it('retries a generic detail load failure', async () =&gt; {
   expect(spy).toHaveBeenCalledTimes(2)
 })</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s4-3" data-section="4"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s4-3" data-section="4"><div class="task-text">
                             <p><strong>Step 3: Chạy RED</strong></p>
                             <pre>npm.cmd test -- --run src/features/orders/OrderDetailPage.test.tsx src/App.test.tsx</pre>
                             <p class="expected">Expected: FAIL vì detail page và route chưa tồn tại.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s4-4" data-section="4"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s4-4" data-section="4"><div class="task-text">
                             <p><strong>Step 4: Cài OrderDetailPage load orchestration</strong></p>
                             <pre>export function OrderDetailPage() {
   const { id } = useParams()
@@ -784,7 +784,7 @@ it('retries a generic detail load failure', async () =&gt; {
   return &lt;OrderDetailContent order={order} /&gt;
 }</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s4-5" data-section="4"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s4-5" data-section="4"><div class="task-text">
                             <p><strong>Step 5: Render detail content và route</strong></p>
                             <pre>&lt;section className="orders-page order-detail-page"&gt;
   &lt;nav aria-label="Breadcrumb"&gt;&lt;Link to="/orders/history"&gt;Lịch sử đơn hàng&lt;/Link&gt;&lt;/nav&gt;
@@ -809,7 +809,7 @@ it('retries a generic detail load failure', async () =&gt; {
 &lt;/section&gt;</pre>
                             <p>Thêm vào <code>App.tsx</code>: <code>&lt;Route path="/orders/history/:id" element={&lt;OrderDetailPage /&gt;} /&gt;</code>.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s4-6" data-section="4"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s4-6" data-section="4"><div class="task-text">
                             <p><strong>Step 6: Chạy GREEN và commit</strong></p>
                             <pre>npm.cmd test -- --run src/features/orders/OrderDetailPage.test.tsx src/App.test.tsx
 git add frontend/src/App.tsx frontend/src/features/orders/OrderDetailPage.tsx frontend/src/features/orders/OrderDetailPage.test.tsx frontend/src/features/orders/OrderHistoryPage.css
@@ -832,7 +832,7 @@ git commit -m "feat(frontend): show order detail history"</pre>
                         <p><strong>Produces:</strong> Vietnamese status labels, retryable list/detail errors, stable empty states and readable timeline.</p>
                     </div>
                     <ul class="task-list">
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s5-1" data-section="5"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s5-1" data-section="5"><div class="task-text">
                             <p><strong>Step 1: Viết tests fail cho status labels và list error retry</strong></p>
                             <pre>it('maps backend statuses to Vietnamese labels without hiding raw status from tests', async () =&gt; {
   vi.spyOn(orderApi, 'getOrders').mockResolvedValue(orderListResponse)
@@ -851,7 +851,7 @@ it('retries list load failure', async () =&gt; {
   expect(spy).toHaveBeenCalledTimes(2)
 })</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s5-2" data-section="5"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s5-2" data-section="5"><div class="task-text">
                             <p><strong>Step 2: Cài formatter helpers</strong></p>
                             <pre>const STATUS_LABELS: Record&lt;string, string&gt; = {
   Pending: 'Chờ xác nhận',
@@ -877,7 +877,7 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s5-3" data-section="5"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s5-3" data-section="5"><div class="task-text">
                             <p><strong>Step 3: Thêm list/detail error UI và screen-reader raw status</strong></p>
                             <pre>&lt;span className={`order-status order-status--${order.status.toLowerCase()}`}&gt;
   {formatStatus(order.status)}
@@ -892,7 +892,7 @@ function formatDate(value: string) {
   &lt;/section&gt;
 )}</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s5-4" data-section="5"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s5-4" data-section="5"><div class="task-text">
                             <p><strong>Step 4: Hoàn thiện CSS status, empty, timeline và sr-only</strong></p>
                             <pre>.sr-only {
   position: absolute;
@@ -923,7 +923,7 @@ function formatDate(value: string) {
   color: var(--danger);
 }</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s5-5" data-section="5"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s5-5" data-section="5"><div class="task-text">
                             <p><strong>Step 5: Chạy GREEN và commit</strong></p>
                             <pre>npm.cmd test -- --run src/features/orders/OrderHistoryPage.test.tsx src/features/orders/OrderDetailPage.test.tsx
 git add frontend/src/features/orders
@@ -946,7 +946,7 @@ git commit -m "feat(frontend): polish order history states"</pre>
                         <p><strong>Produces:</strong> Keyboard-accessible responsive order history/detail, verified full suite/build và manual acceptance matrix.</p>
                     </div>
                     <ul class="task-list">
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s6-1" data-section="6"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s6-1" data-section="6"><div class="task-text">
                             <p><strong>Step 1: Thêm accessibility assertions</strong></p>
                             <pre>it('exposes accessible order history controls', async () =&gt; {
   vi.spyOn(orderApi, 'getOrders').mockResolvedValue(orderListResponse)
@@ -964,7 +964,7 @@ it('exposes accessible order detail sections', async () =&gt; {
   expect(screen.getByRole('region', { name: 'Lịch sử trạng thái' })).toBeInTheDocument()
 })</pre>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s6-2" data-section="6"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s6-2" data-section="6"><div class="task-text">
                             <p><strong>Step 2: Hoàn thiện responsive CSS</strong></p>
                             <pre>.orders-page {
   width: min(1180px, calc(100% - 40px));
@@ -1012,24 +1012,24 @@ it('exposes accessible order detail sections', async () =&gt; {
 }</pre>
                             <p>Thêm <code>:focus-visible</code>, disabled pagination contrast và không tạo horizontal overflow ở 320 px.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s6-3" data-section="6"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s6-3" data-section="6"><div class="task-text">
                             <p><strong>Step 3: Chạy focused orders/auth/checkout suite</strong></p>
                             <pre>npm.cmd test -- --run src/api/orderApi.test.ts
 npm.cmd test -- --run src/features/orders/OrderHistoryPage.test.tsx src/features/orders/OrderDetailPage.test.tsx
 npm.cmd test -- --run src/App.test.tsx src/features/auth/Auth.test.tsx src/features/checkout/CheckoutSuccessPage.test.tsx</pre>
                             <p class="expected">Expected: API contract, orders pages, route smoke và navigation regressions PASS.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s6-4" data-section="6"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s6-4" data-section="6"><div class="task-text">
                             <p><strong>Step 4: Chạy full frontend test suite</strong></p>
                             <pre>npm.cmd test -- --run</pre>
                             <p class="expected">Expected: toàn bộ Auth, Account, Browse, ProductDetail, Cart, Checkout, Orders và system tests PASS.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s6-5" data-section="6"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s6-5" data-section="6"><div class="task-text">
                             <p><strong>Step 5: Chạy TypeScript và production build</strong></p>
                             <pre>npm.cmd run build</pre>
                             <p class="expected">Expected: <code>tsc --noEmit</code> và <code>vite build</code> exit code 0; không có type mismatch.</p>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s6-6" data-section="6"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s6-6" data-section="6"><div class="task-text">
                             <p><strong>Step 6: Kiểm tra GUI thủ công theo acceptance matrix</strong></p>
                             <table class="data-table">
                                 <thead><tr><th>Scenario</th><th>Expected</th></tr></thead>
@@ -1046,7 +1046,7 @@ npm.cmd test -- --run src/App.test.tsx src/features/auth/Auth.test.tsx src/featu
                                 </tbody>
                             </table>
                         </div></li>
-                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked data-task="s6-7" data-section="6"><div class="task-text">
+                        <li class="task-item checked"><input class="task-checkbox" type="checkbox" checked="checked" checked data-task="s6-7" data-section="6"><div class="task-text">
                             <p><strong>Step 7: Commit nghiệm thu feature</strong></p>
                             <pre>git add frontend/src/App.tsx frontend/src/App.test.tsx frontend/src/api/orderApi.ts frontend/src/api/orderApi.test.ts frontend/src/features/auth/UserMenu.tsx frontend/src/features/auth/Auth.test.tsx frontend/src/features/checkout/CheckoutSuccessPage.tsx frontend/src/features/checkout/CheckoutSuccessPage.test.tsx frontend/src/features/orders
 git commit -m "feat(frontend): complete order history flow"</pre>
@@ -1139,7 +1139,8 @@ git commit -m "feat(frontend): complete order history flow"</pre>
                 progress[checkbox.dataset.task] = true;
             });
             saveProgress(progress);
-            updateUI();
+            localStorage.setItem("order-history-frontend-progress", {"s1-1":true,"s1-2":true,"s1-3":true,"s1-4":true,"s1-5":true,"s2-1":true,"s2-2":true,"s2-3":true,"s2-4":true,"s2-5":true,"s2-6":true,"s3-1":true,"s3-2":true,"s3-3":true,"s3-4":true,"s3-5":true,"s3-6":true,"s4-1":true,"s4-2":true,"s4-3":true,"s4-4":true,"s4-5":true,"s4-6":true,"s5-1":true,"s5-2":true,"s5-3":true,"s5-4":true,"s5-5":true,"s6-1":true,"s6-2":true,"s6-3":true,"s6-4":true,"s6-5":true,"s6-6":true,"s6-7":true});
+        updateUI();
         }
         function resetAll() {
             if (!confirm('Reset tất cả tiến độ?')) return;
