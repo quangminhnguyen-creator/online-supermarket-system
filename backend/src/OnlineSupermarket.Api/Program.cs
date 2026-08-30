@@ -41,6 +41,9 @@ app.MapAuthEndpoints();
 // Catalog (A-1, A-2)
 app.MapCatalogEndpoints();
 
+// Admin Catalog
+app.MapAdminCatalogEndpoints();
+
 // Branch (A-3)
 app.MapBranchEndpoints();
 
