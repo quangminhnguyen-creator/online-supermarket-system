@@ -13,6 +13,12 @@ import { CheckoutPage } from './features/checkout/CheckoutPage'
 import { CheckoutSuccessPage } from './features/checkout/CheckoutSuccessPage'
 import { OrderHistoryPage } from './features/orders/OrderHistoryPage'
 import { OrderDetailPage } from './features/orders/OrderDetailPage'
+import { AdminRoute } from './features/admin/AdminRoute'
+import { AdminLayout } from './features/admin/AdminLayout'
+import { AdminCategoriesPage } from './features/admin/categories/AdminCategoriesPage'
+import { AdminBrandsPage } from './features/admin/brands/AdminBrandsPage'
+import { AdminProductsPage } from './features/admin/products/AdminProductsPage'
+import { Navigate } from 'react-router-dom'
 
 function CompareAppShell() {
   return (
@@ -32,6 +38,15 @@ function CompareAppShell() {
           <Route path="/shopping/checkout/success" element={<CheckoutSuccessPage />} />
           <Route path="/orders/history" element={<OrderHistoryPage />} />
           <Route path="/orders/history/:id" element={<OrderDetailPage />} />
+          
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="catalog/categories" replace />} />
+              <Route path="catalog/categories" element={<AdminCategoriesPage />} />
+              <Route path="catalog/brands" element={<AdminBrandsPage />} />
+              <Route path="catalog/products" element={<AdminProductsPage />} />
+            </Route>
+          </Route>
         </Routes>
       </AppShell>
       <CompareModal />

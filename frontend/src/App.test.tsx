@@ -28,6 +28,20 @@ vi.mock('./features/orders/OrderDetailPage', () => ({
   OrderDetailPage: () => <div>Order detail route</div>,
 }))
 
+vi.mock('./features/admin/AdminRoute', () => ({
+  AdminRoute: () => <div><p>AdminRoute Guard</p></div>,
+}))
+vi.mock('./features/admin/AdminLayout', () => ({
+  AdminLayout: () => <div><p>AdminLayout Route</p></div>,
+}))
+
+it('wires the admin route', () => {
+  window.history.pushState({}, '', '/admin/catalog/categories')
+  render(<App />)
+  expect(screen.getByText('AdminRoute Guard')).toBeInTheDocument()
+})
+
+
 it('wires the checkout success route', () => {
   window.history.pushState(
     {},
