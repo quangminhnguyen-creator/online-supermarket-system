@@ -51,7 +51,7 @@ public static class CatalogEndpoints
         var query = dbContext.Products
             .Include(p => p.Category)
             .Include(p => p.Brand)
-            .Where(p => p.IsActive)
+            .Where(p => p.IsActive && p.Category!.IsActive && p.Brand!.IsActive)
             .AsQueryable();
 
         if (categoryId.HasValue)
@@ -113,7 +113,7 @@ public static class CatalogEndpoints
         var product = await dbContext.Products
             .Include(p => p.Category)
             .Include(p => p.Brand)
-            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive && p.Category!.IsActive && p.Brand!.IsActive, cancellationToken);
 
         if (product == null)
             return Results.NotFound(new { message = "Product not found." });
