@@ -15,6 +15,8 @@ import { RequireAdmin } from './features/admin/RequireAdmin'
 import { AdminLayout } from './features/admin/AdminLayout'
 import { AdminOrdersPage } from './features/admin/AdminOrdersPage'
 import { AdminOrderDetailPage } from './features/admin/AdminOrderDetailPage'
+import { AdminInventoryPage } from './features/admin/AdminInventoryPage'
+import { AdminUsersPage } from './features/admin/AdminUsersPage'
 
 export default function App() {
   return (
@@ -49,6 +51,8 @@ export default function App() {
                 <Route index element={<AdminOrdersPage />} />
                 <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="orders/:id" element={<AdminOrderDetailPage />} />
+                <Route path="inventory" element={<AdminInventoryPage />} />
+                <Route path="users" element={<AdminUsersPage />} />
               </Route>
             </Routes>
           </AppShell>

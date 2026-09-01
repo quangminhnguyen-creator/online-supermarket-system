@@ -1,5 +1,14 @@
 import { getJson, putJson } from './httpClient'
 import type { OrderDetailDto, PaginatedOrdersDto } from './orderApi'
+import type { BranchProductInventoryDto } from './branchApi'
+
+export interface InventoryAdjustmentBody {
+  productId: string
+  quantityOnHand: number
+  sellingPrice?: number
+  reorderLevel?: number
+  reason?: string
+}
 
 export interface UserSummaryDto {
   id: string
@@ -56,4 +65,18 @@ export const adminApi = {
     signal?: AbortSignal,
   ) =>
     putJson<OrderDetailDto>('/admin/orders/' + encodeURIComponent(id) + '/status', body, { token, signal }),
+
+  // Inventory & price (branch-scoped). Note: this only UPDATES an existing
+  // (branch, product) inventory row; the backend returns 404 if none exists.
+  adjustInventory: (
+    branchId: string,
+    body: InventoryAdjustmentBody,
+    token: string,
+    signal?: AbortSignal,
+  ) =>
+    putJson<BranchProductInventoryDto>(
+      `/admin/branches/${encodeURIComponent(branchId)}/inventory`,
+      body,
+      { token, signal },
+    ),
 }

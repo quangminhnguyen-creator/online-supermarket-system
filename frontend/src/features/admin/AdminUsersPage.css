@@ -1,0 +1,39 @@
+/* Users page reuses the shared admin table + modal styles
+   (AdminOrdersPage.css, AdminInventoryPage.css). This file adds only the
+   role badges and the user-status badge colors. */
+
+.admin-role {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--mist, #e8f1ed);
+  color: var(--forest, #0b3d2e);
+}
+
+.admin-role--admin {
+  background: #e3dbff;
+  color: #4b2fa0;
+}
+
+.admin-role--customer {
+  background: var(--mist, #e8f1ed);
+  color: var(--forest, #0b3d2e);
+}
+
+/* User account statuses (distinct from order statuses) */
+.admin-status--active {
+  background: #c8f0d4;
+  color: #14663a;
+}
+
+.admin-status--locked {
+  background: #fff3cd;
+  color: #7a5b00;
+}
+
+.admin-status--disabled {
+  background: #ffd9d9;
+  color: #99201f;
+}

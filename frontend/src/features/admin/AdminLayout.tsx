@@ -10,12 +10,10 @@ interface NavItem {
   comingSoon?: boolean
 }
 
-// Orders is implemented in this phase. Inventory and Users land in later phases;
-// they are shown disabled so the shell communicates the full roadmap.
 const NAV_ITEMS: NavItem[] = [
   { to: '/admin/orders', label: 'Đơn hàng', icon: '🧾' },
-  { to: '/admin/inventory', label: 'Kho & Giá', icon: '📦', comingSoon: true },
-  { to: '/admin/users', label: 'Người dùng', icon: '👥', comingSoon: true },
+  { to: '/admin/inventory', label: 'Kho & Giá', icon: '📦' },
+  { to: '/admin/users', label: 'Người dùng', icon: '👥' },
 ]
 
 export function AdminLayout({ children }: PropsWithChildren) {
