@@ -47,7 +47,7 @@ public sealed record BranchInventoryDto(
     [property: JsonPropertyName("onHand")] int QuantityOnHand);
 
 public sealed record PaginatedResponse<T>(
-    [property: JsonPropertyName("data")] IReadOnlyList<T> Data,
+    [property: JsonPropertyName("items")] IReadOnlyList<T> Items,
     [property: JsonPropertyName("meta")] PaginationMeta Meta);
 
 public sealed record PaginationMeta(

@@ -1,96 +1,340 @@
-import React, { useEffect, useState } from 'react'
-import { adminCatalogApi } from '../../../api/adminCatalogApi'
+import React, { useEffect, useRef, useState, useTransition } from 'react'
+import { adminCatalogApi, AdminCategoryDto } from '../../../api/adminCatalogApi'
 import { useAuth } from '../../auth/AuthContext'
-
-interface Category {
-  id: string
-  name: string
-  slug: string
-  parentCategoryId: string | null
-  isActive: boolean
-}
+import { AdminConfirmDialog } from '../AdminConfirmDialog'
 
 export function AdminCategoriesPage() {
   const { accessToken } = useAuth()
-  const [categories, setCategories] = useState<Category[]>([])
+  const [categories, setCategories] = useState<AdminCategoryDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
+  // Form state
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [parentCategoryId, setParentCategoryId] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    loadCategories()
-  }, [accessToken])
+  // Deactivate dialog state
+  const [deactivateDialog, setDeactivateDialog] = useState<{
+    isOpen: boolean
+    category: AdminCategoryDto | null
+    isBusy: boolean
+  }>({
+    isOpen: false,
+    category: null,
+    isBusy: false,
+  })
+
+  // Action busy state for individual items
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null)
+
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const loadCategories = async () => {
     if (!accessToken) return
+    abortControllerRef.current?.abort()
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
+    setLoading(true)
+    setError(null)
     try {
-      const data = await adminCatalogApi.getCategories()
-      setCategories(data)
+      const data = await adminCatalogApi.getCategories(accessToken, controller.signal)
+      if (abortControllerRef.current === controller && !controller.signal.aborted) {
+        setCategories(data)
+        setLoading(false)
+      }
     } catch (err: any) {
-      setError(err.message || 'Lỗi tải danh mục')
-    } finally {
-      setLoading(false)
+      if (abortControllerRef.current === controller && !controller.signal.aborted && err.name !== 'AbortError') {
+        setError(err.data?.message || err.message || 'Lỗi tải danh mục')
+        setCategories([])
+        setLoading(false)
+      }
     }
   }
 
-  const handleCreate = async (e: React.FormEvent) => {
+  useEffect(() => {
+    loadCategories()
+    return () => {
+      abortControllerRef.current?.abort()
+    }
+  }, [accessToken])
+
+  // Helper to compute invalid parent IDs (self and all descendants)
+  const getInvalidParentIds = (currentId: string): Set<string> => {
+    const invalid = new Set<string>([currentId])
+    let added = true
+    while (added) {
+      added = false
+      for (const cat of categories) {
+        if (cat.parentCategoryId && invalid.has(cat.parentCategoryId) && !invalid.has(cat.id)) {
+          invalid.add(cat.id)
+          added = true
+        }
+      }
+    }
+    return invalid
+  }
+
+  const invalidParentIds = editingId ? getInvalidParentIds(editingId) : new Set<string>()
+
+  const handleStartEdit = (cat: AdminCategoryDto) => {
+    setEditingId(cat.id)
+    setName(cat.name)
+    setSlug(cat.slug)
+    setParentCategoryId(cat.parentCategoryId || '')
+    setFormError(null)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setName('')
+    setSlug('')
+    setParentCategoryId('')
+    setFormError(null)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!accessToken) return
+    if (!accessToken || isSubmitting) return
+
+    const trimmedName = name.trim()
+    const trimmedSlug = slug.trim()
+
+    if (!trimmedName || !trimmedSlug) {
+      setFormError('Vui lòng nhập đầy đủ tên và slug danh mục.')
+      return
+    }
+
     setIsSubmitting(true)
+    setFormError(null)
     setError(null)
+
+    const payload = {
+      name: trimmedName,
+      slug: trimmedSlug,
+      parentCategoryId: parentCategoryId ? parentCategoryId : null,
+    }
+
     try {
-      const parentId = parentCategoryId.trim() === '' ? null : parentCategoryId
-      await adminCatalogApi.createCategory({ name, slug, parentCategoryId: parentId })
-      setName('')
-      setSlug('')
-      setParentCategoryId('')
+      if (editingId) {
+        await adminCatalogApi.updateCategory(editingId, payload, accessToken)
+      } else {
+        await adminCatalogApi.createCategory(payload, accessToken)
+      }
+      handleCancelEdit()
       await loadCategories()
     } catch (err: any) {
-      setError(err.data?.message || err.message || 'Lỗi thêm danh mục')
+      setFormError(err.data?.message || err.message || 'Lỗi lưu danh mục')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  if (loading) return <div>Loading...</div>
+  const handleOpenDeactivate = (cat: AdminCategoryDto) => {
+    setDeactivateDialog({
+      isOpen: true,
+      category: cat,
+      isBusy: false,
+    })
+  }
+
+  const handleConfirmDeactivate = async () => {
+    if (!accessToken || !deactivateDialog.category) return
+
+    setDeactivateDialog(prev => ({ ...prev, isBusy: true }))
+    try {
+      await adminCatalogApi.updateCategoryStatus(
+        deactivateDialog.category.id,
+        { isActive: false },
+        accessToken
+      )
+      setDeactivateDialog({ isOpen: false, category: null, isBusy: false })
+      await loadCategories()
+    } catch (err: any) {
+      setError(err.data?.message || err.message || 'Lỗi vô hiệu hóa danh mục')
+      setDeactivateDialog(prev => ({ ...prev, isBusy: false, isOpen: false }))
+    }
+  }
+
+  const handleRestore = async (cat: AdminCategoryDto) => {
+    if (!accessToken || actionBusyId) return
+
+    setActionBusyId(cat.id)
+    setError(null)
+    try {
+      await adminCatalogApi.updateCategoryStatus(cat.id, { isActive: true }, accessToken)
+      await loadCategories()
+    } catch (err: any) {
+      setError(err.data?.message || err.message || 'Lỗi kích hoạt lại danh mục')
+    } finally {
+      setActionBusyId(null)
+    }
+  }
+
+  // Parent name map for display
+  const categoryMap = new Map(categories.map(c => [c.id, c.name]))
 
   return (
     <div className="admin-page">
-      <h1>Admin Categories Page</h1>
-      {error && <div role="alert" className="error">{error}</div>}
-      
-      <form onSubmit={handleCreate} className="admin-form">
-        <label>
-          Tên:
-          <input value={name} onChange={e => setName(e.target.value)} required />
-        </label>
-        <label>
-          Slug:
-          <input value={slug} onChange={e => setSlug(e.target.value)} required />
-        </label>
-        <label>
-          Danh mục cha:
-          <select value={parentCategoryId} onChange={e => setParentCategoryId(e.target.value)}>
-            <option value="">Không có</option>
-            {categories.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" disabled={isSubmitting}>Thêm</button>
-      </form>
+      <header className="admin-header">
+        <h1>Quản lý danh mục</h1>
+      </header>
 
-      <ul className="admin-list">
-        {categories.map(c => (
-          <li key={c.id}>
-            {c.name} ({c.slug}) - {c.isActive ? 'Active' : 'Inactive'}
-          </li>
-        ))}
-      </ul>
+      {error && (
+        <div role="alert" className="admin-error-alert">
+          <span>{error}</span>
+          <button type="button" onClick={loadCategories}>Thử lại</button>
+        </div>
+      )}
+
+      <div className="admin-card">
+        <h2>{editingId ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'}</h2>
+        {formError && <div role="alert" className="admin-error-alert">{formError}</div>}
+
+        <form onSubmit={handleSubmit} className="admin-form">
+          <div className="form-group">
+            <label htmlFor="cat-name">Tên danh mục:</label>
+            <input
+              id="cat-name"
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              disabled={isSubmitting}
+              placeholder="VD: Điện thoại, Rau củ..."
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="cat-slug">Slug:</label>
+            <input
+              id="cat-slug"
+              type="text"
+              value={slug}
+              onChange={e => setSlug(e.target.value)}
+              disabled={isSubmitting}
+              placeholder="VD: dien-thoai, rau-cu..."
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="cat-parent">Danh mục cha:</label>
+            <select
+              id="cat-parent"
+              value={parentCategoryId}
+              onChange={e => setParentCategoryId(e.target.value)}
+              disabled={isSubmitting}
+            >
+              <option value="">-- Không có (Danh mục gốc) --</option>
+              {categories
+                .filter(c => !invalidParentIds.has(c.id))
+                .map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.slug}) {!c.isActive ? '[Vô hiệu]' : ''}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          <div className="form-actions">
+            <button type="submit" disabled={isSubmitting} className="btn btn-primary">
+              {isSubmitting ? 'Đang lưu...' : editingId ? 'Cập nhật' : 'Thêm danh mục'}
+            </button>
+            {editingId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                disabled={isSubmitting}
+                className="btn btn-secondary"
+              >
+                Hủy chỉnh sửa
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      <div className="admin-card">
+        <h2>Danh sách danh mục</h2>
+        {loading ? (
+          <div className="admin-loading">Đang tải danh mục...</div>
+        ) : categories.length === 0 ? (
+          <div className="admin-empty">Không có danh mục nào.</div>
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Tên danh mục</th>
+                <th>Slug</th>
+                <th>Danh mục cha</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map(c => {
+                const isItemBusy = actionBusyId === c.id || isSubmitting
+                return (
+                  <tr key={c.id} className={!c.isActive ? 'row-inactive' : ''}>
+                    <td><strong>{c.name}</strong></td>
+                    <td><code>{c.slug}</code></td>
+                    <td>{c.parentCategoryId ? categoryMap.get(c.parentCategoryId) || c.parentCategoryId : '—'}</td>
+                    <td>
+                      <span className={`badge ${c.isActive ? 'badge-active' : 'badge-inactive'}`}>
+                        {c.isActive ? 'Hoạt động' : 'Vô hiệu hóa'}
+                      </span>
+                    </td>
+                    <td className="table-actions">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(c)}
+                        disabled={isItemBusy}
+                        className="btn btn-sm btn-secondary"
+                      >
+                        Sửa
+                      </button>
+                      {c.isActive ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDeactivate(c)}
+                          disabled={isItemBusy}
+                          className="btn btn-sm btn-danger"
+                        >
+                          Vô hiệu hóa
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleRestore(c)}
+                          disabled={isItemBusy}
+                          className="btn btn-sm btn-success"
+                        >
+                          Kích hoạt lại
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <AdminConfirmDialog
+        isOpen={deactivateDialog.isOpen}
+        title="Vô hiệu hóa danh mục"
+        message={`Bạn có chắc chắn muốn vô hiệu hóa danh mục "${deactivateDialog.category?.name}"?`}
+        confirmLabel="Vô hiệu hóa"
+        isBusy={deactivateDialog.isBusy}
+        onCancel={() => setDeactivateDialog({ isOpen: false, category: null, isBusy: false })}
+        onConfirm={handleConfirmDeactivate}
+      />
     </div>
   )
 }

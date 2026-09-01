@@ -7,9 +7,9 @@ export function AdminLayout() {
     <div className="admin-layout">
       <nav className="admin-nav">
         <ul>
-          <li><NavLink to="catalog/categories">Categories</NavLink></li>
-          <li><NavLink to="catalog/brands">Brands</NavLink></li>
-          <li><NavLink to="catalog/products">Products</NavLink></li>
+          <li><NavLink to="catalog/categories">Danh mục</NavLink></li>
+          <li><NavLink to="catalog/brands">Thương hiệu</NavLink></li>
+          <li><NavLink to="catalog/products">Sản phẩm</NavLink></li>
         </ul>
       </nav>
       <main className="admin-main">

@@ -280,7 +280,7 @@ describe('Product Browse Feature', () => {
       vi.spyOn(catalogApi, 'getBrands').mockResolvedValue(mockBrands)
       vi.spyOn(branchApi, 'getBranches').mockResolvedValue(mockBranches)
       vi.spyOn(catalogApi, 'getProducts').mockResolvedValue({
-        data: [mockProduct],
+        items: [mockProduct],
         meta: {
           totalCount: 1,
           page: 1,

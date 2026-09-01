@@ -27,8 +27,8 @@ Phạm vi: 24 canonical Functional Requirements (FR-101..FR-115, FR-201..FR-209)
 | FR-113 | Customer | Đánh giá sản phẩm đã mua (1–5 sao + comment) | MEDIUM | DRAFT | Order Completed; per item tối đa 1 review; verified purchase enforce | POST /api/reviews | PLANNED_CYCLE_5 | Dev | Rev |
 | FR-114 | Customer | Đăng ký tài khoản bằng email + password | HIGH | ✅ IMPLEMENTED | User tạo; mật khẩu hash an toàn; phân quyền Customer | POST /api/auth/register | DONE | Dev | Rev |
 | FR-115 | Customer | Đăng nhập, refresh token, đăng xuất, quên mật khẩu | HIGH | ✅ IMPLEMENTED | JWT access token + refresh token rotation + password reset email | POST /api/auth/login | DONE | Dev | Rev |
-| FR-201 | Admin | CRUD danh mục, thương hiệu | MEDIUM | ✅ IMPLEMENTED | Tạo, sửa, xóa; hỗ trợ cây cha-con; slug duy nhất | POST /api/admin/categories | DONE | Dev | Rev |
-| FR-202 | Admin | CRUD sản phẩm, upload hình | MEDIUM | ✅ IMPLEMENTED | Tạo, sửa, xóa (soft); SKU duy nhất; image_url lưu ảnh | POST /api/admin/products | DONE | Dev | Rev |
+| FR-201 | Admin | CRUD danh mục, thương hiệu | MEDIUM | ✅ IMPLEMENTED | Tạo, sửa, xóa (soft); hỗ trợ cây cha-con; slug duy nhất | POST /api/admin/catalog/categories | DONE | Dev | Rev |
+| FR-202 | Admin | CRUD sản phẩm, quản lý URL hình ảnh | MEDIUM | ✅ IMPLEMENTED | Tạo, sửa, xóa (soft); SKU duy nhất; image_url lưu ảnh | POST /api/admin/catalog/products | DONE | Dev | Rev |
 | FR-203 | Admin | Quản lý chi nhánh, tồn kho, giá per branch | HIGH | ✅ IMPLEMENTED | Quản lý tồn kho & giá chi nhánh; cập nhật stock và reorder level | PUT /api/admin/branches/:branchId/inventory | DONE | Dev | Rev |
 | FR-204 | Admin | CRUD khuyến mãi (discount type, value, usage limit, time) | MEDIUM | DRAFT | Tạo, sửa, deactivate; code coupon | POST /api/admin/promotions | PLANNED_CYCLE_5 | Dev | Rev |
 | FR-205 | Admin | Quản lý đơn hàng, cập nhật trạng thái, ghi lịch sử | MEDIUM | ✅ IMPLEMENTED | Danh sách, filter; transition status; ghi lịch sử chuyển trạng thái | GET /api/admin/orders | DONE | Dev | Rev |

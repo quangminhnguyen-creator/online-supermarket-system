@@ -5,7 +5,7 @@ import test from 'node:test'
 import { JSDOM } from 'jsdom'
 
 const boardUrl = new URL('../../../docs/tasks/admin-catalog-task-board.html', import.meta.url)
-const storageKey = 'adminCatalogTaskBoard:v1'
+const storageKey = 'adminCatalogTaskBoard:v2'
 
 async function openBoard(savedState) {
   const html = await readFile(boardUrl, 'utf8')
@@ -33,46 +33,49 @@ test('renders all nine sequential implementation tasks', async () => {
   assert.match(cards[8].textContent, /Final verification/)
 })
 
+test('opens the fully verified board with all nine tasks done (100%)', async () => {
+  const dom = await openBoard()
+  const document = dom.window.document
+
+  const statuses = [...document.querySelectorAll('[data-task-status]')].map((s) => s.value)
+  assert.deepEqual(statuses, ['done', 'done', 'done', 'done', 'done', 'done', 'done', 'done', 'done'])
+  assert.match(document.querySelector('[data-progress-label]').textContent, /9\/9 task/)
+  assert.equal(document.querySelector('[data-progress-percent]').textContent, '100%')
+})
+
 test('persists task status and restores it on the next open', async () => {
   const first = await openBoard()
-  const select = first.window.document.querySelector('[data-task-id="1"] [data-task-status]')
-  select.value = 'done'
+  const select = first.window.document.querySelector('[data-task-id="2"] [data-task-status]')
+  select.value = 'doing'
   select.dispatchEvent(new first.window.Event('change', { bubbles: true }))
 
-  assert.match(first.window.document.querySelector('[data-progress-label]').textContent, /1\/9 task/)
+  assert.match(first.window.document.querySelector('[data-progress-label]').textContent, /8\/9 task/)
   const savedState = first.window.localStorage.getItem(storageKey)
   assert.ok(savedState)
 
   const second = await openBoard(savedState)
   assert.equal(
-    second.window.document.querySelector('[data-task-id="1"] [data-task-status]').value,
-    'done'
+    second.window.document.querySelector('[data-task-id="2"] [data-task-status]').value,
+    'doing'
   )
 })
 
 test('filters task cards by status', async () => {
   const dom = await openBoard()
   const document = dom.window.document
-  const firstStatus = document.querySelector('[data-task-id="1"] [data-task-status]')
-  firstStatus.value = 'doing'
-  firstStatus.dispatchEvent(new dom.window.Event('change', { bubbles: true }))
 
   const filter = document.querySelector('[data-status-filter]')
-  filter.value = 'doing'
+  filter.value = 'done'
   filter.dispatchEvent(new dom.window.Event('change', { bubbles: true }))
 
   const visibleCards = [...document.querySelectorAll('[data-task-card]')]
     .filter((card) => !card.hidden)
-  assert.equal(visibleCards.length, 1)
-  assert.equal(visibleCards[0].getAttribute('data-task-id'), '1')
+  assert.equal(visibleCards.length, 9)
 })
 
 test('reset clears saved progress and returns every task to not started', async () => {
   const dom = await openBoard()
   const document = dom.window.document
-  const firstStatus = document.querySelector('[data-task-id="1"] [data-task-status]')
-  firstStatus.value = 'done'
-  firstStatus.dispatchEvent(new dom.window.Event('change', { bubbles: true }))
 
   document.querySelector('[data-reset-board]').click()
 

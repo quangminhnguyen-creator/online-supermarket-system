@@ -21,8 +21,11 @@ public sealed class Brand : Entity
 
     public void Update(string name, string slug)
     {
-        Name = Guard.Required(name, nameof(name));
-        Slug = Guard.Required(slug, nameof(slug));
+        var validatedName = Guard.Required(name, nameof(name));
+        var validatedSlug = Guard.Required(slug, nameof(slug));
+
+        Name = validatedName;
+        Slug = validatedSlug;
     }
 
     public void Activate() => IsActive = true;

@@ -1,3 +1,8 @@
+import { getJson, postJson, putJson, patchJson } from './httpClient'
+import type { PaginatedResponse, PaginationMeta } from './catalogApi'
+
+export type { PaginatedResponse, PaginationMeta }
+
 export interface AdminCategoryDto {
   id: string
   name: string
@@ -56,16 +61,6 @@ export interface UpdateCatalogStatusRequest {
   isActive: boolean
 }
 
-export interface PaginatedResponse<T> {
-  items: T[]
-  meta: {
-    totalCount: number
-    currentPage: number
-    pageSize: number
-    totalPages: number
-  }
-}
-
 export interface AdminProductListParams {
   page?: number
   pageSize?: number
@@ -75,27 +70,39 @@ export interface AdminProductListParams {
   isActive?: boolean
 }
 
-import { getJson, postJson, putJson, patchJson } from './httpClient'
-
 export const adminCatalogApi = {
   // Categories
-  getCategories: () => getJson<AdminCategoryDto[]>('/admin/catalog/categories', { token: 'admin' }),
-  createCategory: (req: UpsertCategoryRequest) => postJson<AdminCategoryDto>('/admin/catalog/categories', req, { token: 'admin' }),
-  updateCategory: (id: string, req: UpsertCategoryRequest) => putJson<AdminCategoryDto>(`/admin/catalog/categories/${id}`, req, { token: 'admin' }),
-  updateCategoryStatus: (id: string, req: UpdateCatalogStatusRequest) => patchJson<AdminCategoryDto>(`/admin/catalog/categories/${id}/status`, req, { token: 'admin' }),
+  getCategories: (token: string, signal?: AbortSignal) =>
+    getJson<AdminCategoryDto[]>('/admin/catalog/categories', { token, signal }),
+
+  createCategory: (req: UpsertCategoryRequest, token: string, signal?: AbortSignal) =>
+    postJson<AdminCategoryDto>('/admin/catalog/categories', req, { token, signal }),
+
+  updateCategory: (id: string, req: UpsertCategoryRequest, token: string, signal?: AbortSignal) =>
+    putJson<AdminCategoryDto>(`/admin/catalog/categories/${encodeURIComponent(id)}`, req, { token, signal }),
+
+  updateCategoryStatus: (id: string, req: UpdateCatalogStatusRequest, token: string, signal?: AbortSignal) =>
+    patchJson<AdminCategoryDto>(`/admin/catalog/categories/${encodeURIComponent(id)}/status`, req, { token, signal }),
 
   // Brands
-  getBrands: () => getJson<AdminBrandDto[]>('/admin/catalog/brands', { token: 'admin' }),
-  createBrand: (req: UpsertBrandRequest) => postJson<AdminBrandDto>('/admin/catalog/brands', req, { token: 'admin' }),
-  updateBrand: (id: string, req: UpsertBrandRequest) => putJson<AdminBrandDto>(`/admin/catalog/brands/${id}`, req, { token: 'admin' }),
-  updateBrandStatus: (id: string, req: UpdateCatalogStatusRequest) => patchJson<AdminBrandDto>(`/admin/catalog/brands/${id}/status`, req, { token: 'admin' }),
+  getBrands: (token: string, signal?: AbortSignal) =>
+    getJson<AdminBrandDto[]>('/admin/catalog/brands', { token, signal }),
+
+  createBrand: (req: UpsertBrandRequest, token: string, signal?: AbortSignal) =>
+    postJson<AdminBrandDto>('/admin/catalog/brands', req, { token, signal }),
+
+  updateBrand: (id: string, req: UpsertBrandRequest, token: string, signal?: AbortSignal) =>
+    putJson<AdminBrandDto>(`/admin/catalog/brands/${encodeURIComponent(id)}`, req, { token, signal }),
+
+  updateBrandStatus: (id: string, req: UpdateCatalogStatusRequest, token: string, signal?: AbortSignal) =>
+    patchJson<AdminBrandDto>(`/admin/catalog/brands/${encodeURIComponent(id)}/status`, req, { token, signal }),
 
   // Products
-  getProducts: (params?: AdminProductListParams) => {
+  getProducts: (params: AdminProductListParams | undefined, token: string, signal?: AbortSignal) => {
     const searchParams = new URLSearchParams()
     if (params) {
-      if (params.page) searchParams.append('page', params.page.toString())
-      if (params.pageSize) searchParams.append('pageSize', params.pageSize.toString())
+      if (params.page !== undefined) searchParams.append('page', params.page.toString())
+      if (params.pageSize !== undefined) searchParams.append('pageSize', params.pageSize.toString())
       if (params.search) searchParams.append('search', params.search)
       if (params.categoryId) searchParams.append('categoryId', params.categoryId)
       if (params.brandId) searchParams.append('brandId', params.brandId)
@@ -103,9 +110,15 @@ export const adminCatalogApi = {
     }
     const q = searchParams.toString()
     const path = q ? `/admin/catalog/products?${q}` : '/admin/catalog/products'
-    return getJson<PaginatedResponse<AdminProductDto>>(path, { token: 'admin' })
+    return getJson<PaginatedResponse<AdminProductDto>>(path, { token, signal })
   },
-  createProduct: (req: UpsertProductRequest) => postJson<AdminProductDto>('/admin/catalog/products', req, { token: 'admin' }),
-  updateProduct: (id: string, req: UpsertProductRequest) => putJson<AdminProductDto>(`/admin/catalog/products/${id}`, req, { token: 'admin' }),
-  updateProductStatus: (id: string, req: UpdateCatalogStatusRequest) => patchJson<AdminProductDto>(`/admin/catalog/products/${id}/status`, req, { token: 'admin' }),
+
+  createProduct: (req: UpsertProductRequest, token: string, signal?: AbortSignal) =>
+    postJson<AdminProductDto>('/admin/catalog/products', req, { token, signal }),
+
+  updateProduct: (id: string, req: UpsertProductRequest, token: string, signal?: AbortSignal) =>
+    putJson<AdminProductDto>(`/admin/catalog/products/${encodeURIComponent(id)}`, req, { token, signal }),
+
+  updateProductStatus: (id: string, req: UpdateCatalogStatusRequest, token: string, signal?: AbortSignal) =>
+    patchJson<AdminProductDto>(`/admin/catalog/products/${encodeURIComponent(id)}/status`, req, { token, signal }),
 }

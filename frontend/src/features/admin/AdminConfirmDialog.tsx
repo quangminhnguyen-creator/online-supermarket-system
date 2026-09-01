@@ -19,13 +19,19 @@ export function AdminConfirmDialog({
   onCancel,
   onConfirm,
 }: Props) {
+  const dialogRef = useRef<HTMLDivElement>(null)
   const cancelBtnRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (isOpen) {
       previousFocusRef.current = document.activeElement as HTMLElement
+      // Immediate and next-tick focus for test and browser compatibility
       cancelBtnRef.current?.focus()
+      const timer = setTimeout(() => {
+        cancelBtnRef.current?.focus()
+      }, 0)
+      return () => clearTimeout(timer)
     } else {
       previousFocusRef.current?.focus()
     }
@@ -33,8 +39,34 @@ export function AdminConfirmDialog({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen && !isBusy) {
+      if (!isOpen) return
+
+      if (e.key === 'Escape' && !isBusy) {
+        e.preventDefault()
         onCancel()
+        return
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+        if (focusableElements.length === 0) return
+
+        const firstElement = focusableElements[0]
+        const lastElement = focusableElements[focusableElements.length - 1]
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault()
+            lastElement.focus()
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault()
+            firstElement.focus()
+          }
+        }
       }
     }
     document.addEventListener('keydown', handleKeyDown)
@@ -46,6 +78,7 @@ export function AdminConfirmDialog({
   return (
     <div className="admin-dialog-overlay">
       <div
+        ref={dialogRef}
         className="admin-dialog"
         role="dialog"
         aria-modal="true"

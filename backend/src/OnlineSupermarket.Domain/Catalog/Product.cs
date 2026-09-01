@@ -30,14 +30,24 @@ public sealed class Product : Entity
             throw new ArgumentException("Category id is required.", nameof(categoryId));
         }
 
+        if (brandId == Guid.Empty)
+        {
+            throw new ArgumentException("Brand id is required.", nameof(brandId));
+        }
+
+        var newSku = Guard.Required(sku, nameof(sku));
+        var newName = Guard.Required(name, nameof(name));
+        var newSlug = Guard.Required(slug, nameof(slug));
+        var newUnit = Guard.Required(unit, nameof(unit));
+
         CategoryId = categoryId;
         BrandId = brandId;
-        Sku = Guard.Required(sku, nameof(sku));
-        Name = Guard.Required(name, nameof(name));
-        Slug = Guard.Required(slug, nameof(slug));
+        Sku = newSku;
+        Name = newName;
+        Slug = newSlug;
         Description = description?.Trim();
         BasePrice = basePrice;
-        Unit = Guard.Required(unit, nameof(unit));
+        Unit = newUnit;
         ImageUrl = imageUrl?.Trim();
     }
 

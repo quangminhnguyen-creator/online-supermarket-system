@@ -23,8 +23,15 @@ public sealed class Category : Entity
 
     public void Update(string name, string slug, Guid? parentCategoryId)
     {
-        Name = Guard.Required(name, nameof(name));
-        Slug = Guard.Required(slug, nameof(slug));
+        var validatedName = Guard.Required(name, nameof(name));
+        var validatedSlug = Guard.Required(slug, nameof(slug));
+        if (parentCategoryId.HasValue && parentCategoryId.Value == Id)
+        {
+            throw new ArgumentException("Parent category cannot be self.", nameof(parentCategoryId));
+        }
+
+        Name = validatedName;
+        Slug = validatedSlug;
         ParentCategoryId = parentCategoryId;
     }
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineSupermarket.Api.Contracts.Catalog;
+using OnlineSupermarket.Domain.Catalog;
 using OnlineSupermarket.Infrastructure.Persistence;
 
 namespace OnlineSupermarket.Api.Endpoints;
@@ -32,6 +33,38 @@ public static class CatalogEndpoints
         return routes;
     }
 
+    private static async Task<(List<Category> AllCategories, HashSet<Guid> ValidActiveCategoryIds)> GetValidActiveCategoryHierarchyAsync(AppDbContext dbContext, CancellationToken cancellationToken)
+    {
+        var allCategories = await dbContext.Categories.AsNoTracking().ToListAsync(cancellationToken);
+        var categoryMap = allCategories.ToDictionary(c => c.Id);
+        var validActiveIds = new HashSet<Guid>();
+
+        bool IsChainActive(Category cat)
+        {
+            var current = cat;
+            var visited = new HashSet<Guid>();
+            while (current != null)
+            {
+                if (!current.IsActive) return false;
+                if (!visited.Add(current.Id)) return false;
+                if (!current.ParentCategoryId.HasValue) return true;
+                if (!categoryMap.TryGetValue(current.ParentCategoryId.Value, out var parent)) return false;
+                current = parent;
+            }
+            return true;
+        }
+
+        foreach (var cat in allCategories)
+        {
+            if (IsChainActive(cat))
+            {
+                validActiveIds.Add(cat.Id);
+            }
+        }
+
+        return (allCategories, validActiveIds);
+    }
+
     private static async Task<IResult> GetProductsAsync(
         [FromQuery] Guid? categoryId,
         [FromQuery] Guid? brandId,
@@ -48,21 +81,44 @@ public static class CatalogEndpoints
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
 
+        var (allCategories, validCategoryIds) = await GetValidActiveCategoryHierarchyAsync(dbContext, cancellationToken);
+
         var query = dbContext.Products
             .Include(p => p.Category)
             .Include(p => p.Brand)
-            .Where(p => p.IsActive && p.Category!.IsActive && p.Brand!.IsActive)
+            .Where(p => p.IsActive && p.Brand!.IsActive && validCategoryIds.Contains(p.CategoryId))
             .AsQueryable();
 
         if (categoryId.HasValue)
         {
-            var includedCategoryIds = await dbContext.Categories
-                .Where(c => c.IsActive &&
-                    (c.Id == categoryId.Value || c.ParentCategoryId == categoryId.Value))
-                .Select(c => c.Id)
-                .ToListAsync(cancellationToken);
+            if (!validCategoryIds.Contains(categoryId.Value))
+            {
+                var emptyResponse = new PaginatedResponse<ProductSummaryDto>(
+                    new List<ProductSummaryDto>(),
+                    new PaginationMeta(0, page, pageSize, 0));
+                return Results.Ok(emptyResponse);
+            }
 
-            query = query.Where(p => includedCategoryIds.Contains(p.CategoryId));
+            var targetDescendantIds = new HashSet<Guid> { categoryId.Value };
+            bool added;
+            do
+            {
+                added = false;
+                foreach (var cat in allCategories)
+                {
+                    if (cat.ParentCategoryId.HasValue &&
+                        targetDescendantIds.Contains(cat.ParentCategoryId.Value) &&
+                        validCategoryIds.Contains(cat.Id))
+                    {
+                        if (targetDescendantIds.Add(cat.Id))
+                        {
+                            added = true;
+                        }
+                    }
+                }
+            } while (added);
+
+            query = query.Where(p => targetDescendantIds.Contains(p.CategoryId));
         }
 
         if (brandId.HasValue)
@@ -110,10 +166,12 @@ public static class CatalogEndpoints
         [FromServices] AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
+        var (_, validCategoryIds) = await GetValidActiveCategoryHierarchyAsync(dbContext, cancellationToken);
+
         var product = await dbContext.Products
             .Include(p => p.Category)
             .Include(p => p.Brand)
-            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive && p.Category!.IsActive && p.Brand!.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive && p.Brand!.IsActive && validCategoryIds.Contains(p.CategoryId), cancellationToken);
 
         if (product == null)
             return Results.NotFound(new { message = "Product not found." });
@@ -157,11 +215,13 @@ public static class CatalogEndpoints
         [FromServices] AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
-        var categories = await dbContext.Categories
-            .Where(c => c.IsActive)
+        var (allCategories, validCategoryIds) = await GetValidActiveCategoryHierarchyAsync(dbContext, cancellationToken);
+
+        var categories = allCategories
+            .Where(c => validCategoryIds.Contains(c.Id))
             .OrderBy(c => c.Name)
             .Select(c => new CategoryDto(c.Id, c.Name, c.Slug, c.ParentCategoryId, c.IsActive))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return Results.Ok(categories);
     }

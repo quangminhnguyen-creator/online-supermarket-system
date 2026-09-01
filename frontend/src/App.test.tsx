@@ -28,17 +28,55 @@ vi.mock('./features/orders/OrderDetailPage', () => ({
   OrderDetailPage: () => <div>Order detail route</div>,
 }))
 
-vi.mock('./features/admin/AdminRoute', () => ({
-  AdminRoute: () => <div><p>AdminRoute Guard</p></div>,
+vi.mock('./features/admin/AdminRoute', async () => {
+  const { Outlet } = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
+  return {
+    AdminRoute: () => <Outlet />,
+  }
+})
+vi.mock('./features/admin/AdminLayout', async () => {
+  const { Outlet } = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
+  return {
+    AdminLayout: () => (
+      <div>
+        <p>AdminLayout Route</p>
+        <Outlet />
+      </div>
+    ),
+  }
+})
+vi.mock('./features/admin/categories/AdminCategoriesPage', () => ({
+  AdminCategoriesPage: () => <h1>Admin Categories Route</h1>,
 }))
-vi.mock('./features/admin/AdminLayout', () => ({
-  AdminLayout: () => <div><p>AdminLayout Route</p></div>,
+vi.mock('./features/admin/brands/AdminBrandsPage', () => ({
+  AdminBrandsPage: () => <h1>Admin Brands Route</h1>,
+}))
+vi.mock('./features/admin/products/AdminProductsPage', () => ({
+  AdminProductsPage: () => <h1>Admin Products Route</h1>,
 }))
 
-it('wires the admin route', () => {
+it('wires the admin categories route', () => {
   window.history.pushState({}, '', '/admin/catalog/categories')
   render(<App />)
-  expect(screen.getByText('AdminRoute Guard')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Admin Categories Route' })).toBeInTheDocument()
+})
+
+it('wires the admin brands route', () => {
+  window.history.pushState({}, '', '/admin/catalog/brands')
+  render(<App />)
+  expect(screen.getByRole('heading', { name: 'Admin Brands Route' })).toBeInTheDocument()
+})
+
+it('wires the admin products route', () => {
+  window.history.pushState({}, '', '/admin/catalog/products')
+  render(<App />)
+  expect(screen.getByRole('heading', { name: 'Admin Products Route' })).toBeInTheDocument()
+})
+
+it('redirects /admin to /admin/catalog/categories', () => {
+  window.history.pushState({}, '', '/admin')
+  render(<App />)
+  expect(screen.getByRole('heading', { name: 'Admin Categories Route' })).toBeInTheDocument()
 })
 
 

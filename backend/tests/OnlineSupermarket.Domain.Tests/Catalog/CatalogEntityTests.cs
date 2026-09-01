@@ -41,6 +41,14 @@ public sealed class CatalogEntityTests
     }
 
     [Fact]
+    public void Product_WithEmptyBrandId_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => new Product(
+            Guid.NewGuid(), Guid.Empty, "SKU-001", "Sản phẩm",
+            "san-pham", null, 100_000m, "cái", null));
+    }
+
+    [Fact]
     public void ChangeCategory_WithLeafCategory_UpdatesCategoryId()
     {
         var product = new Product(
@@ -168,5 +176,58 @@ public sealed class CatalogEntityTests
         Assert.Equal(originalBasePrice, product.BasePrice);
         Assert.Equal(originalUnit, product.Unit);
         Assert.Equal(originalImageUrl, product.ImageUrl);
+    }
+
+    [Fact]
+    public void Category_Update_WithSelfParent_ThrowsAndKeepsOriginalState()
+    {
+        var category = new Category("Điện tử", "dien-tu");
+        Assert.Throws<ArgumentException>(() => category.Update("Gia dụng", "gia-dung", category.Id));
+        Assert.Equal("Điện tử", category.Name);
+        Assert.Equal("dien-tu", category.Slug);
+        Assert.Null(category.ParentCategoryId);
+    }
+
+    [Theory]
+    [InlineData("", "slug-moi")]
+    [InlineData("   ", "slug-moi")]
+    [InlineData("Tên Mới", "")]
+    [InlineData("Tên Mới", "   ")]
+    public void Category_Update_WithInvalidInputs_ThrowsAndKeepsOriginalState(string name, string slug)
+    {
+        var category = new Category("Ban đầu", "ban-dau");
+        Assert.Throws<ArgumentException>(() => category.Update(name, slug, null));
+        Assert.Equal("Ban đầu", category.Name);
+        Assert.Equal("ban-dau", category.Slug);
+    }
+
+    [Theory]
+    [InlineData("", "slug-moi")]
+    [InlineData("   ", "slug-moi")]
+    [InlineData("Tên Mới", "")]
+    [InlineData("Tên Mới", "   ")]
+    public void Brand_Update_WithInvalidInputs_ThrowsAndKeepsOriginalState(string name, string slug)
+    {
+        var brand = new Brand("Ban đầu", "ban-dau");
+        Assert.Throws<ArgumentException>(() => brand.Update(name, slug));
+        Assert.Equal("Ban đầu", brand.Name);
+        Assert.Equal("ban-dau", brand.Slug);
+    }
+
+    [Theory]
+    [InlineData("00000000-0000-0000-0000-000000000000", "d41a7741-9457-4b53-8408-0138947f68c3", "SKU-1", "Name", "slug", 100, "cái")]
+    [InlineData("d41a7741-9457-4b53-8408-0138947f68c3", "00000000-0000-0000-0000-000000000000", "SKU-1", "Name", "slug", 100, "cái")]
+    [InlineData("d41a7741-9457-4b53-8408-0138947f68c3", "d41a7741-9457-4b53-8408-0138947f68c4", " ", "Name", "slug", 100, "cái")]
+    [InlineData("d41a7741-9457-4b53-8408-0138947f68c3", "d41a7741-9457-4b53-8408-0138947f68c4", "SKU-1", " ", "slug", 100, "cái")]
+    [InlineData("d41a7741-9457-4b53-8408-0138947f68c3", "d41a7741-9457-4b53-8408-0138947f68c4", "SKU-1", "Name", " ", 100, "cái")]
+    [InlineData("d41a7741-9457-4b53-8408-0138947f68c3", "d41a7741-9457-4b53-8408-0138947f68c4", "SKU-1", "Name", "slug", -1, "cái")]
+    [InlineData("d41a7741-9457-4b53-8408-0138947f68c3", "d41a7741-9457-4b53-8408-0138947f68c4", "SKU-1", "Name", "slug", 100, " ")]
+    public void Product_Constructor_WithInvalidInputs_Throws(
+        string categoryIdStr, string brandIdStr, string sku, string name, string slug, decimal basePrice, string unit)
+    {
+        var categoryId = Guid.Parse(categoryIdStr);
+        var brandId = Guid.Parse(brandIdStr);
+        Assert.ThrowsAny<ArgumentException>(() => new Product(
+            categoryId, brandId, sku, name, slug, "Mô tả", basePrice, unit, null));
     }
 }

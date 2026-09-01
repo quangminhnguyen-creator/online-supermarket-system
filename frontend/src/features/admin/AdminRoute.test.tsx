@@ -24,7 +24,7 @@ const renderRoute = () => {
 it('shows loading when auth is loading', () => {
   vi.mocked(useAuth).mockReturnValue({ isLoading: true } as any)
   renderRoute()
-  expect(screen.getByText(/loading/i)).toBeInTheDocument()
+  expect(screen.getByText(/đang tải/i)).toBeInTheDocument()
 })
 
 it('redirects to home if guest', () => {

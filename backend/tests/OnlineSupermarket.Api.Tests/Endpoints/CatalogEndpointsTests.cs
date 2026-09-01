@@ -26,9 +26,9 @@ public sealed class CatalogEndpointsTests : IClassFixture<TestApiFactory>
         var response = await client.GetFromJsonAsync<PaginatedResponse<ProductSummaryDto>>(
             $"/api/products?categoryId={tvAndMonitor.Id}&pageSize=100");
 
-        Assert.Contains(response!.Data, p => p.Sku == "TV-SAM-001");
-        Assert.Contains(response.Data, p => p.Sku == "MH-SAM-001");
-        Assert.DoesNotContain(response.Data, p => p.Sku == "AT-JBL-001");
+        Assert.Contains(response!.Items, p => p.Sku == "TV-SAM-001");
+        Assert.Contains(response.Items, p => p.Sku == "MH-SAM-001");
+        Assert.DoesNotContain(response.Items, p => p.Sku == "AT-JBL-001");
     }
 
     [Fact]
@@ -42,11 +42,11 @@ public sealed class CatalogEndpointsTests : IClassFixture<TestApiFactory>
         var response = await client.GetFromJsonAsync<PaginatedResponse<ProductSummaryDto>>(
             $"/api/products?categoryId={tv.Id}&pageSize=100");
 
-        Assert.All(response!.Data, p => Assert.Equal("tivi", p.CategorySlug));
-        Assert.DoesNotContain(response.Data, p => p.Sku == "MH-SAM-001");
+        Assert.All(response!.Items, p => Assert.Equal("tivi", p.CategorySlug));
+        Assert.DoesNotContain(response.Items, p => p.Sku == "MH-SAM-001");
 
         var detail = await client.GetFromJsonAsync<ProductDetailDto>(
-            $"/api/products/{response.Data[0].Id}");
+            $"/api/products/{response.Items[0].Id}");
         Assert.Equal("tivi", detail!.CategorySlug);
     }
 
@@ -87,9 +87,9 @@ public sealed class CatalogEndpointsTests : IClassFixture<TestApiFactory>
         Assert.DoesNotContain(brandsResponse!, b => b.Slug == "inactive-brand");
 
         var productsResponse = await client.GetFromJsonAsync<PaginatedResponse<ProductSummaryDto>>("/api/products");
-        Assert.DoesNotContain(productsResponse!.Data, p => p.Sku == "INAC-PROD");
-        Assert.DoesNotContain(productsResponse.Data, p => p.Sku == "INAC-CAT-PROD");
-        Assert.DoesNotContain(productsResponse.Data, p => p.Sku == "INAC-BRAND-PROD");
+        Assert.DoesNotContain(productsResponse!.Items, p => p.Sku == "INAC-PROD");
+        Assert.DoesNotContain(productsResponse.Items, p => p.Sku == "INAC-CAT-PROD");
+        Assert.DoesNotContain(productsResponse.Items, p => p.Sku == "INAC-BRAND-PROD");
 
         var inactiveProdResponse = await client.GetAsync($"/api/products/{inactiveProduct.Id}");
         Assert.Equal(System.Net.HttpStatusCode.NotFound, inactiveProdResponse.StatusCode);
@@ -99,5 +99,108 @@ public sealed class CatalogEndpointsTests : IClassFixture<TestApiFactory>
 
         var inacBrandProdResponse = await client.GetAsync($"/api/products/{productWithInactiveBrand.Id}");
         Assert.Equal(System.Net.HttpStatusCode.NotFound, inacBrandProdResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task PublicCatalog_MultiLevelCategoryHierarchy_HidesDescendantsWhenRootAncestorInactive()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var rootInactive = new OnlineSupermarket.Domain.Catalog.Category("Root Inactive", "root-inactive-1");
+        rootInactive.Deactivate();
+
+        var childActive = new OnlineSupermarket.Domain.Catalog.Category("Child Active", "child-active-1", rootInactive.Id);
+        var leafActive = new OnlineSupermarket.Domain.Catalog.Category("Leaf Active", "leaf-active-1", childActive.Id);
+        var activeBrand = new OnlineSupermarket.Domain.Catalog.Brand("Brand Tree", "brand-tree-1");
+
+        dbContext.Categories.AddRange(rootInactive, childActive, leafActive);
+        dbContext.Brands.Add(activeBrand);
+        await dbContext.SaveChangesAsync();
+
+        var product = new OnlineSupermarket.Domain.Catalog.Product(
+            leafActive.Id, activeBrand.Id, "TREE-PROD-1", "Tree Product 1", "tree-product-1", null, 50000m, "cái", null);
+        dbContext.Products.Add(product);
+        await dbContext.SaveChangesAsync();
+
+        var client = _factory.CreateClient();
+
+        var categories = await client.GetFromJsonAsync<IEnumerable<CategoryDto>>("/api/categories");
+        Assert.DoesNotContain(categories!, c => c.Slug == "root-inactive-1");
+        Assert.DoesNotContain(categories!, c => c.Slug == "child-active-1");
+        Assert.DoesNotContain(categories!, c => c.Slug == "leaf-active-1");
+
+        var products = await client.GetFromJsonAsync<PaginatedResponse<ProductSummaryDto>>("/api/products");
+        Assert.DoesNotContain(products!.Items, p => p.Sku == "TREE-PROD-1");
+
+        var detailResponse = await client.GetAsync($"/api/products/{product.Id}");
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, detailResponse.StatusCode);
+
+        var queryByLeaf = await client.GetFromJsonAsync<PaginatedResponse<ProductSummaryDto>>($"/api/products?categoryId={leafActive.Id}");
+        Assert.Empty(queryByLeaf!.Items);
+    }
+
+    [Fact]
+    public async Task PublicCatalog_MultiLevelCategoryHierarchy_WhenMiddleAncestorInactive_HidesMiddleAndLeaf()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var rootActive = new OnlineSupermarket.Domain.Catalog.Category("Root Active", "root-active-2");
+        var middleInactive = new OnlineSupermarket.Domain.Catalog.Category("Middle Inactive", "middle-inactive-2", rootActive.Id);
+        middleInactive.Deactivate();
+        var leafActive = new OnlineSupermarket.Domain.Catalog.Category("Leaf Active Under Inactive", "leaf-active-2", middleInactive.Id);
+        var activeBrand = new OnlineSupermarket.Domain.Catalog.Brand("Brand Tree 2", "brand-tree-2");
+
+        dbContext.Categories.AddRange(rootActive, middleInactive, leafActive);
+        dbContext.Brands.Add(activeBrand);
+        await dbContext.SaveChangesAsync();
+
+        var product = new OnlineSupermarket.Domain.Catalog.Product(
+            leafActive.Id, activeBrand.Id, "TREE-PROD-2", "Tree Product 2", "tree-product-2", null, 50000m, "cái", null);
+        dbContext.Products.Add(product);
+        await dbContext.SaveChangesAsync();
+
+        var client = _factory.CreateClient();
+
+        var categories = await client.GetFromJsonAsync<IEnumerable<CategoryDto>>("/api/categories");
+        Assert.Contains(categories!, c => c.Slug == "root-active-2");
+        Assert.DoesNotContain(categories!, c => c.Slug == "middle-inactive-2");
+        Assert.DoesNotContain(categories!, c => c.Slug == "leaf-active-2");
+
+        var products = await client.GetFromJsonAsync<PaginatedResponse<ProductSummaryDto>>("/api/products");
+        Assert.DoesNotContain(products!.Items, p => p.Sku == "TREE-PROD-2");
+    }
+
+    [Fact]
+    public async Task PublicCatalog_MultiLevelCategoryFilter_ReturnsProductsAcrossAllDescendantLevels()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var root = new OnlineSupermarket.Domain.Catalog.Category("Root Multi", "root-multi-3");
+        var child = new OnlineSupermarket.Domain.Catalog.Category("Child Multi", "child-multi-3", root.Id);
+        var subchild = new OnlineSupermarket.Domain.Catalog.Category("SubChild Multi", "subchild-multi-3", child.Id);
+        var brand = new OnlineSupermarket.Domain.Catalog.Brand("Brand Multi", "brand-multi-3");
+
+        dbContext.Categories.AddRange(root, child, subchild);
+        dbContext.Brands.Add(brand);
+        await dbContext.SaveChangesAsync();
+
+        var pRoot = new OnlineSupermarket.Domain.Catalog.Product(root.Id, brand.Id, "MULTI-P1", "Multi P1", "multi-p1", null, 1000m, "cái", null);
+        var pChild = new OnlineSupermarket.Domain.Catalog.Product(child.Id, brand.Id, "MULTI-P2", "Multi P2", "multi-p2", null, 2000m, "cái", null);
+        var pSub = new OnlineSupermarket.Domain.Catalog.Product(subchild.Id, brand.Id, "MULTI-P3", "Multi P3", "multi-p3", null, 3000m, "cái", null);
+
+        dbContext.Products.AddRange(pRoot, pChild, pSub);
+        await dbContext.SaveChangesAsync();
+
+        var client = _factory.CreateClient();
+
+        var response = await client.GetFromJsonAsync<PaginatedResponse<ProductSummaryDto>>(
+            $"/api/products?categoryId={root.Id}&pageSize=100");
+
+        Assert.Contains(response!.Items, p => p.Sku == "MULTI-P1");
+        Assert.Contains(response.Items, p => p.Sku == "MULTI-P2");
+        Assert.Contains(response.Items, p => p.Sku == "MULTI-P3");
     }
 }

@@ -21,11 +21,26 @@ public static class AdminCatalogEndpoints
                 .Select(c => new AdminCategoryDto(c.Id, c.Name, c.Slug, c.ParentCategoryId, c.IsActive))
                 .ToListAsync(cancellationToken);
             return Results.Ok(categories);
-        });
+        })
+        .WithName("AdminGetCategories")
+        .Produces<IEnumerable<AdminCategoryDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapPost("/categories", async (UpsertCategoryRequest request, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
-            if (await dbContext.Categories.AnyAsync(c => c.Slug.ToLower() == request.Slug.ToLower(), cancellationToken))
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return Results.BadRequest(new { message = "Category name is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Slug))
+            {
+                return Results.BadRequest(new { message = "Category slug is required." });
+            }
+
+            var normalizedSlug = request.Slug.Trim().ToLower();
+            if (await dbContext.Categories.AnyAsync(c => c.Slug.ToLower() == normalizedSlug, cancellationToken))
             {
                 return Results.Conflict(new { message = "Category slug already exists." });
             }
@@ -39,20 +54,44 @@ public static class AdminCatalogEndpoints
                 }
             }
 
-            var category = new Category(request.Name, request.Slug, request.ParentCategoryId);
-            dbContext.Categories.Add(category);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            try
+            {
+                var category = new Category(request.Name, request.Slug, request.ParentCategoryId);
+                dbContext.Categories.Add(category);
+                await dbContext.SaveChangesAsync(cancellationToken);
 
-            return Results.Created($"/api/admin/catalog/categories/{category.Id}", 
-                new AdminCategoryDto(category.Id, category.Name, category.Slug, category.ParentCategoryId, category.IsActive));
-        });
+                return Results.Created($"/api/admin/catalog/categories/{category.Id}",
+                    new AdminCategoryDto(category.Id, category.Name, category.Slug, category.ParentCategoryId, category.IsActive));
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is ArgumentOutOfRangeException)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
+        })
+        .WithName("AdminCreateCategory")
+        .Produces<AdminCategoryDto>(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapPut("/categories/{id:guid}", async (Guid id, UpsertCategoryRequest request, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return Results.BadRequest(new { message = "Category name is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Slug))
+            {
+                return Results.BadRequest(new { message = "Category slug is required." });
+            }
+
             var category = await dbContext.Categories.FindAsync(new object[] { id }, cancellationToken);
             if (category == null) return Results.NotFound();
 
-            if (await dbContext.Categories.AnyAsync(c => c.Id != id && c.Slug.ToLower() == request.Slug.ToLower(), cancellationToken))
+            var normalizedSlug = request.Slug.Trim().ToLower();
+            if (await dbContext.Categories.AnyAsync(c => c.Id != id && c.Slug.ToLower() == normalizedSlug, cancellationToken))
             {
                 return Results.Conflict(new { message = "Category slug already exists." });
             }
@@ -76,11 +115,25 @@ public static class AdminCatalogEndpoints
                 }
             }
 
-            category.Update(request.Name, request.Slug, request.ParentCategoryId);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            try
+            {
+                category.Update(request.Name, request.Slug, request.ParentCategoryId);
+                await dbContext.SaveChangesAsync(cancellationToken);
 
-            return Results.Ok(new AdminCategoryDto(category.Id, category.Name, category.Slug, category.ParentCategoryId, category.IsActive));
-        });
+                return Results.Ok(new AdminCategoryDto(category.Id, category.Name, category.Slug, category.ParentCategoryId, category.IsActive));
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is ArgumentOutOfRangeException)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
+        })
+        .WithName("AdminUpdateCategory")
+        .Produces<AdminCategoryDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapPatch("/categories/{id:guid}/status", async (Guid id, UpdateCatalogStatusRequest request, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
@@ -108,7 +161,14 @@ public static class AdminCatalogEndpoints
 
             await dbContext.SaveChangesAsync(cancellationToken);
             return Results.Ok(new AdminCategoryDto(category.Id, category.Name, category.Slug, category.ParentCategoryId, category.IsActive));
-        });
+        })
+        .WithName("AdminUpdateCategoryStatus")
+        .Produces<AdminCategoryDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         // Brands
         group.MapGet("/brands", async (AppDbContext dbContext, CancellationToken cancellationToken) =>
@@ -118,38 +178,91 @@ public static class AdminCatalogEndpoints
                 .Select(b => new AdminBrandDto(b.Id, b.Name, b.Slug, b.IsActive))
                 .ToListAsync(cancellationToken);
             return Results.Ok(brands);
-        });
+        })
+        .WithName("AdminGetBrands")
+        .Produces<IEnumerable<AdminBrandDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapPost("/brands", async (UpsertBrandRequest request, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
-            if (await dbContext.Brands.AnyAsync(b => b.Slug.ToLower() == request.Slug.ToLower(), cancellationToken))
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return Results.BadRequest(new { message = "Brand name is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Slug))
+            {
+                return Results.BadRequest(new { message = "Brand slug is required." });
+            }
+
+            var normalizedSlug = request.Slug.Trim().ToLower();
+            if (await dbContext.Brands.AnyAsync(b => b.Slug.ToLower() == normalizedSlug, cancellationToken))
             {
                 return Results.Conflict(new { message = "Brand slug already exists." });
             }
 
-            var brand = new Brand(request.Name, request.Slug);
-            dbContext.Brands.Add(brand);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            try
+            {
+                var brand = new Brand(request.Name, request.Slug);
+                dbContext.Brands.Add(brand);
+                await dbContext.SaveChangesAsync(cancellationToken);
 
-            return Results.Created($"/api/admin/catalog/brands/{brand.Id}", 
-                new AdminBrandDto(brand.Id, brand.Name, brand.Slug, brand.IsActive));
-        });
+                return Results.Created($"/api/admin/catalog/brands/{brand.Id}",
+                    new AdminBrandDto(brand.Id, brand.Name, brand.Slug, brand.IsActive));
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is ArgumentOutOfRangeException)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
+        })
+        .WithName("AdminCreateBrand")
+        .Produces<AdminBrandDto>(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapPut("/brands/{id:guid}", async (Guid id, UpsertBrandRequest request, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return Results.BadRequest(new { message = "Brand name is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Slug))
+            {
+                return Results.BadRequest(new { message = "Brand slug is required." });
+            }
+
             var brand = await dbContext.Brands.FindAsync(new object[] { id }, cancellationToken);
             if (brand == null) return Results.NotFound();
 
-            if (await dbContext.Brands.AnyAsync(b => b.Id != id && b.Slug.ToLower() == request.Slug.ToLower(), cancellationToken))
+            var normalizedSlug = request.Slug.Trim().ToLower();
+            if (await dbContext.Brands.AnyAsync(b => b.Id != id && b.Slug.ToLower() == normalizedSlug, cancellationToken))
             {
                 return Results.Conflict(new { message = "Brand slug already exists." });
             }
 
-            brand.Update(request.Name, request.Slug);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            try
+            {
+                brand.Update(request.Name, request.Slug);
+                await dbContext.SaveChangesAsync(cancellationToken);
 
-            return Results.Ok(new AdminBrandDto(brand.Id, brand.Name, brand.Slug, brand.IsActive));
-        });
+                return Results.Ok(new AdminBrandDto(brand.Id, brand.Name, brand.Slug, brand.IsActive));
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is ArgumentOutOfRangeException)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
+        })
+        .WithName("AdminUpdateBrand")
+        .Produces<AdminBrandDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapPatch("/brands/{id:guid}/status", async (Guid id, UpdateCatalogStatusRequest request, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
@@ -172,7 +285,15 @@ public static class AdminCatalogEndpoints
 
             await dbContext.SaveChangesAsync(cancellationToken);
             return Results.Ok(new AdminBrandDto(brand.Id, brand.Name, brand.Slug, brand.IsActive));
-        });
+        })
+        .WithName("AdminUpdateBrandStatus")
+        .Produces<AdminBrandDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
+
         // Products
         group.MapGet("/products", async (
             [Microsoft.AspNetCore.Mvc.FromQuery] int page = 1,
@@ -228,13 +349,61 @@ public static class AdminCatalogEndpoints
                 new OnlineSupermarket.Api.Contracts.Catalog.PaginationMeta(totalCount, page, pageSize, totalPages));
 
             return Results.Ok(response);
-        });
+        })
+        .WithName("AdminGetProducts")
+        .Produces<OnlineSupermarket.Api.Contracts.Catalog.PaginatedResponse<AdminProductDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapPost("/products", async (UpsertProductRequest request, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
-            if (await dbContext.Products.AnyAsync(p => p.Sku.ToLower() == request.Sku.ToLower() || p.Slug.ToLower() == request.Slug.ToLower(), cancellationToken))
+            if (string.IsNullOrWhiteSpace(request.Name))
             {
-                return Results.Conflict(new { message = "Product sku or slug already exists." });
+                return Results.BadRequest(new { message = "Product name is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Slug))
+            {
+                return Results.BadRequest(new { message = "Product slug is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Sku))
+            {
+                return Results.BadRequest(new { message = "Product sku is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Unit))
+            {
+                return Results.BadRequest(new { message = "Product unit is required." });
+            }
+
+            if (request.CategoryId == Guid.Empty)
+            {
+                return Results.BadRequest(new { message = "Category ID is required." });
+            }
+
+            if (request.BrandId == Guid.Empty)
+            {
+                return Results.BadRequest(new { message = "Brand ID is required." });
+            }
+
+            if (request.BasePrice < 0)
+            {
+                return Results.BadRequest(new { message = "Base price cannot be negative." });
+            }
+
+            var normalizedSku = request.Sku.Trim().ToLower();
+            var normalizedSlug = request.Slug.Trim().ToLower();
+
+            if (await dbContext.Products.AnyAsync(p => p.Sku.ToLower() == normalizedSku, cancellationToken))
+            {
+                return Results.Conflict(new { message = "Product sku already exists." });
+            }
+
+            if (await dbContext.Products.AnyAsync(p => p.Slug.ToLower() == normalizedSlug, cancellationToken))
+            {
+                return Results.Conflict(new { message = "Product slug already exists." });
             }
 
             var category = await dbContext.Categories.FindAsync(new object[] { request.CategoryId }, cancellationToken);
@@ -263,10 +432,51 @@ public static class AdminCatalogEndpoints
             {
                 return Results.BadRequest(new { message = ex.Message });
             }
-        });
+        })
+        .WithName("AdminCreateProduct")
+        .Produces<AdminProductDto>(StatusCodes.Status201Created)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapPut("/products/{id:guid}", async (Guid id, UpsertProductRequest request, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return Results.BadRequest(new { message = "Product name is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Slug))
+            {
+                return Results.BadRequest(new { message = "Product slug is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Sku))
+            {
+                return Results.BadRequest(new { message = "Product sku is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Unit))
+            {
+                return Results.BadRequest(new { message = "Product unit is required." });
+            }
+
+            if (request.CategoryId == Guid.Empty)
+            {
+                return Results.BadRequest(new { message = "Category ID is required." });
+            }
+
+            if (request.BrandId == Guid.Empty)
+            {
+                return Results.BadRequest(new { message = "Brand ID is required." });
+            }
+
+            if (request.BasePrice < 0)
+            {
+                return Results.BadRequest(new { message = "Base price cannot be negative." });
+            }
+
             var product = await dbContext.Products
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
@@ -274,9 +484,17 @@ public static class AdminCatalogEndpoints
                 
             if (product == null) return Results.NotFound();
 
-            if (await dbContext.Products.AnyAsync(p => p.Id != id && (p.Sku.ToLower() == request.Sku.ToLower() || p.Slug.ToLower() == request.Slug.ToLower()), cancellationToken))
+            var normalizedSku = request.Sku.Trim().ToLower();
+            var normalizedSlug = request.Slug.Trim().ToLower();
+
+            if (await dbContext.Products.AnyAsync(p => p.Id != id && p.Sku.ToLower() == normalizedSku, cancellationToken))
             {
-                return Results.Conflict(new { message = "Product sku or slug already exists." });
+                return Results.Conflict(new { message = "Product sku already exists." });
+            }
+
+            if (await dbContext.Products.AnyAsync(p => p.Id != id && p.Slug.ToLower() == normalizedSlug, cancellationToken))
+            {
+                return Results.Conflict(new { message = "Product slug already exists." });
             }
 
             var category = product.Category;
@@ -306,7 +524,14 @@ public static class AdminCatalogEndpoints
             {
                 return Results.BadRequest(new { message = ex.Message });
             }
-        });
+        })
+        .WithName("AdminUpdateProduct")
+        .Produces<AdminProductDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapPatch("/products/{id:guid}/status", async (Guid id, UpdateCatalogStatusRequest request, AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
@@ -332,11 +557,17 @@ public static class AdminCatalogEndpoints
 
             await dbContext.SaveChangesAsync(cancellationToken);
             return Results.Ok(new AdminProductDto(product.Id, product.CategoryId, product.Category!.Name, product.BrandId, product.Brand!.Name, product.Sku, product.Name, product.Slug, product.Description, product.BasePrice, product.Unit, product.ImageUrl, product.IsActive));
-        });
+        })
+        .WithName("AdminUpdateProductStatus")
+        .Produces<AdminProductDto>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
     private static async Task<bool> WouldCreateCategoryCycleAsync(AppDbContext dbContext, Guid categoryId, Guid? newParentId, CancellationToken cancellationToken)
-
     {
         if (!newParentId.HasValue) return false;
 

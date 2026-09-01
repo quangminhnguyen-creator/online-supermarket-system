@@ -101,7 +101,7 @@ export function ProductBrowsePage() {
         pageSize: 20,
       })
 
-      setProducts(response.data)
+      setProducts(response.items)
       setPaginationMeta(response.meta)
     } catch (err: any) {
       setError(err?.message || 'Đã có lỗi xảy ra khi tải sản phẩm. Vui lòng thử lại!')
