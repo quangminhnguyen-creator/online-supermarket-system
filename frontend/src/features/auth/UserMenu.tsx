@@ -47,6 +47,11 @@ export function UserMenu() {
         <Link to="/orders/history" className="btn-nav-orders" title="Lịch sử đơn hàng">
           Đơn hàng
         </Link>
+        {user.role === 'Admin' && (
+          <Link to="/admin/orders" className="btn-nav-admin" title="Khu vực quản trị">
+            ⚙️ Quản trị
+          </Link>
+        )}
         <button
           type="button"
           className="btn-logout"

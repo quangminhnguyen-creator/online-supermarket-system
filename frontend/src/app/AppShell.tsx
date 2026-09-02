@@ -4,6 +4,7 @@ import { ApiStatus } from '../features/system/ApiStatus'
 import { UserMenu } from '../features/auth/UserMenu'
 import { CartHeaderLink } from '../features/cart/CartHeaderLink'
 import { CompareHeaderLink } from '../features/compare/CompareHeaderLink'
+import { BranchNavMenu } from '../features/products/BranchNavMenu'
 
 export function AppShell({ children }: PropsWithChildren) {
   return (
@@ -18,7 +19,7 @@ export function AppShell({ children }: PropsWithChildren) {
         </Link>
         <nav className="site-nav" aria-label="Điều hướng chính">
           <Link to="/browse">Sản phẩm</Link>
-          <a href="#branches">Chi nhánh</a>
+          <BranchNavMenu />
           <a href="#roadmap">Lộ trình</a>
         </nav>
         <div className="header-actions">

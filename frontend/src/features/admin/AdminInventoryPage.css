@@ -1,0 +1,134 @@
+/* Inventory page reuses the shared admin table/badge styles from
+   AdminOrdersPage.css (loaded via the admin routes). This file adds only the
+   inventory-specific pieces: low-stock highlighting and the edit modal. */
+
+.admin-inventory-summary {
+  align-self: flex-end;
+  margin: 0 0 4px;
+  color: #5a6b63;
+  font-size: 0.9rem;
+}
+
+.admin-lowstock-note {
+  color: #99201f;
+  font-weight: 600;
+}
+
+.admin-inventory-row--low {
+  background: #fff6f6;
+}
+
+.admin-inventory-row--low:hover {
+  background: #ffeeee;
+}
+
+.admin-lowstock-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #ffd9d9;
+  color: #99201f;
+}
+
+.admin-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* Edit modal */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.admin-modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 440px;
+  padding: 22px 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  color: var(--ink, #132a23);
+}
+
+.admin-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-modal-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--forest, #0b3d2e);
+}
+
+.admin-modal-close {
+  border: none;
+  background: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #8a978f;
+}
+
+.admin-modal-sku {
+  margin: 4px 0 16px;
+  color: #5a6b63;
+}
+
+.admin-modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-field-hint {
+  font-size: 0.78rem;
+  color: #8a978f;
+}
+
+.admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.admin-modal .btn-primary,
+.admin-modal .admin-btn-secondary {
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  border: none;
+}
+
+.admin-modal .btn-primary {
+  background: var(--leaf, #1f7a4d);
+  color: #fff;
+}
+
+.admin-modal .admin-btn-secondary {
+  background: var(--mist, #e8f1ed);
+  color: var(--forest, #0b3d2e);
+}
+
+.admin-modal .btn-primary:disabled,
+.admin-modal .admin-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

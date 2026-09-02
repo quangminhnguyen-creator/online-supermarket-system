@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using OnlineSupermarket.Api.Contracts.Branch;
+using OnlineSupermarket.Domain.Branches;
 using OnlineSupermarket.Infrastructure.Persistence;
 
 namespace OnlineSupermarket.Api.Endpoints;
@@ -28,6 +29,21 @@ public static class BranchEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         var adminGroup = routes.MapGroup("/api/admin/branches").WithTags("Admin-Branches").RequireAuthorization("AdminOnly");
+
+        adminGroup.MapGet(string.Empty, ListAllBranchesAsync)
+            .WithName("ListAllBranches")
+            .Produces<IEnumerable<BranchDto>>();
+
+        adminGroup.MapPost(string.Empty, CreateBranchAsync)
+            .WithName("CreateBranch")
+            .Produces<BranchDto>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        adminGroup.MapPut("/{id:guid}", UpdateBranchAsync)
+            .WithName("UpdateBranch")
+            .Produces<BranchDto>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         adminGroup.MapPut("/{branchId:guid}/inventory", UpdateInventoryAsync)
             .WithName("UpdateBranchInventory")
@@ -136,6 +152,65 @@ public static class BranchEndpoints
             inventory.AvailableQuantity,
             inventory.ReorderLevel);
 
+        return Results.Ok(dto);
+    }
+
+    private static async Task<IResult> ListAllBranchesAsync(
+        [FromServices] AppDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        var branches = await dbContext.Branches
+            .OrderBy(b => b.Name)
+            .Select(b => new BranchDto(
+                b.Id, b.Name, b.Address, b.Phone, b.Latitude, b.Longitude, b.IsActive))
+            .ToListAsync(cancellationToken);
+
+        return Results.Ok(branches);
+    }
+
+    private static async Task<IResult> CreateBranchAsync(
+        [FromBody] CreateBranchRequest request,
+        [FromServices] AppDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Address))
+        {
+            return Results.BadRequest(new { message = "Name and address are required." });
+        }
+
+        var branch = new Branch(request.Name, request.Address, request.Phone, null, null);
+        dbContext.Branches.Add(branch);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var dto = new BranchDto(
+            branch.Id, branch.Name, branch.Address, branch.Phone, branch.Latitude, branch.Longitude, branch.IsActive);
+        return Results.Created($"/api/branches/{branch.Id}", dto);
+    }
+
+    private static async Task<IResult> UpdateBranchAsync(
+        [FromRoute] Guid id,
+        [FromBody] UpdateBranchRequest request,
+        [FromServices] AppDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Address))
+        {
+            return Results.BadRequest(new { message = "Name and address are required." });
+        }
+
+        var branch = await dbContext.Branches.FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
+        if (branch is null)
+        {
+            return Results.NotFound(new { message = "Branch not found." });
+        }
+
+        branch.Update(request.Name, request.Address, request.Phone);
+        if (request.IsActive) branch.Activate();
+        else branch.Deactivate();
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var dto = new BranchDto(
+            branch.Id, branch.Name, branch.Address, branch.Phone, branch.Latitude, branch.Longitude, branch.IsActive);
         return Results.Ok(dto);
     }
 }

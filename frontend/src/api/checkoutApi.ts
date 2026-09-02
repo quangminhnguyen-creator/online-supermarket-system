@@ -9,6 +9,18 @@ export interface CheckoutRequest {
   recipientName?: string | null
   recipientPhone?: string | null
   deliveryAddress?: string | null
+  couponCode?: string | null
+}
+
+export interface CouponValidationRequest {
+  code: string
+}
+
+export interface CouponValidationResponse {
+  valid: boolean
+  discountAmount: number
+  reason: string | null
+  message: string
 }
 
 export interface PaymentInitDto {
@@ -38,4 +50,6 @@ export const checkoutApi = {
     postJson<CheckoutResponse>('/checkout', data, { token, signal }),
   initiatePayment: (data: PaymentRequest, token: string, signal?: AbortSignal) =>
     postJson<PaymentInitDto>('/checkout/payment', data, { token, signal }),
+  validateCoupon: (data: CouponValidationRequest, token: string, signal?: AbortSignal) =>
+    postJson<CouponValidationResponse>('/checkout/validate-coupon', data, { token, signal }),
 }

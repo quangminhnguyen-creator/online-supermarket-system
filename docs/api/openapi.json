@@ -76,7 +76,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -86,7 +86,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -126,7 +126,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -136,7 +136,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -176,7 +176,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -186,7 +186,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -245,7 +245,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -255,7 +255,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -264,7 +264,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -291,7 +291,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -324,7 +324,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -361,7 +361,7 @@
             "name": "minPrice",
             "in": "query",
             "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
               "type": [
                 "number",
                 "string"
@@ -373,7 +373,7 @@
             "name": "maxPrice",
             "in": "query",
             "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
               "type": [
                 "number",
                 "string"
@@ -437,7 +437,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -486,7 +486,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -565,7 +565,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -575,7 +575,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -584,7 +584,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       },
       "post": {
@@ -616,7 +616,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -626,7 +626,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -636,7 +636,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -646,7 +646,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -655,7 +655,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -700,7 +700,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -710,7 +710,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -720,7 +720,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -730,7 +730,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -740,7 +740,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -749,7 +749,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -794,7 +794,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -804,7 +804,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -814,7 +814,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -824,7 +824,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -834,7 +834,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -843,7 +843,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -870,7 +870,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -880,7 +880,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -889,7 +889,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       },
       "post": {
@@ -921,7 +921,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -931,7 +931,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -941,7 +941,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -951,7 +951,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -960,7 +960,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1005,7 +1005,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1015,7 +1015,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1025,7 +1025,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1035,7 +1035,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1045,7 +1045,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1054,7 +1054,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1099,7 +1099,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1109,7 +1109,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1119,7 +1119,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1129,7 +1129,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1139,7 +1139,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1148,7 +1148,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1230,7 +1230,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1240,7 +1240,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1250,7 +1250,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1259,7 +1259,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       },
       "post": {
@@ -1291,7 +1291,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1301,7 +1301,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1311,7 +1311,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1321,7 +1321,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1330,7 +1330,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1375,7 +1375,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1385,7 +1385,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1395,7 +1395,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1405,7 +1405,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1415,7 +1415,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1424,7 +1424,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1469,7 +1469,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1479,7 +1479,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1489,7 +1489,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1499,7 +1499,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1509,7 +1509,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1518,7 +1518,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1576,7 +1576,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1617,7 +1617,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1625,6 +1625,137 @@
             }
           }
         }
+      }
+    },
+    "/api/admin/branches": {
+      "get": {
+        "tags": [
+          "Admin-Branches"
+        ],
+        "operationId": "ListAllBranches",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BranchDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Admin-Branches"
+        ],
+        "operationId": "CreateBranch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBranchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/admin/branches/{id}": {
+      "put": {
+        "tags": [
+          "Admin-Branches"
+        ],
+        "operationId": "UpdateBranch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBranchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
       }
     },
     "/api/admin/branches/{branchId}/inventory": {
@@ -1668,7 +1799,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1677,7 +1808,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1701,7 +1832,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1710,7 +1841,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       },
       "delete": {
@@ -1724,7 +1855,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1758,7 +1889,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1768,7 +1899,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1778,7 +1909,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1787,7 +1918,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1832,7 +1963,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1842,7 +1973,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1851,7 +1982,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       },
       "delete": {
@@ -1884,7 +2015,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1893,7 +2024,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1927,7 +2058,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1936,7 +2067,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -1970,7 +2101,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1980,7 +2111,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1990,7 +2121,7 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1999,7 +2130,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2033,7 +2164,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2043,7 +2174,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2052,7 +2183,40 @@
           }
         },
         "security": [
-          {}
+          { }
+        ]
+      }
+    },
+    "/api/checkout/validate-coupon": {
+      "post": {
+        "tags": [
+          "Checkout"
+        ],
+        "operationId": "ValidateCoupon",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponValidationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponValidationResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
         ]
       }
     },
@@ -2110,7 +2274,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2145,7 +2309,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2154,7 +2318,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2220,7 +2384,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2255,7 +2419,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2264,7 +2428,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2309,7 +2473,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2319,7 +2483,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2328,7 +2492,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2355,7 +2519,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2365,7 +2529,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2374,7 +2538,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2401,7 +2565,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2411,7 +2575,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2420,7 +2584,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2465,7 +2629,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2475,7 +2639,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2484,7 +2648,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2522,7 +2686,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2532,7 +2696,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2542,7 +2706,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2551,7 +2715,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2568,7 +2732,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2577,7 +2741,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       },
       "post": {
@@ -2609,7 +2773,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2619,7 +2783,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2628,7 +2792,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2666,7 +2830,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2676,7 +2840,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2686,7 +2850,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2695,7 +2859,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       },
       "delete": {
@@ -2721,7 +2885,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2731,7 +2895,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2740,7 +2904,7 @@
           }
         },
         "security": [
-          {}
+          { }
         ]
       }
     },
@@ -2768,7 +2932,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2778,7 +2942,7 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2787,7 +2951,193 @@
           }
         },
         "security": [
-          {}
+          { }
+        ]
+      }
+    },
+    "/api/admin/promotions": {
+      "get": {
+        "tags": [
+          "Admin-Promotions"
+        ],
+        "operationId": "ListPromotions",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedPromotionsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Admin-Promotions"
+        ],
+        "operationId": "CreatePromotion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePromotionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/admin/promotions/{id}": {
+      "put": {
+        "tags": [
+          "Admin-Promotions"
+        ],
+        "operationId": "UpdatePromotion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePromotionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
         ]
       }
     }
@@ -2980,7 +3330,7 @@
             ]
           },
           "basePrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3058,7 +3408,7 @@
             ]
           },
           "latitude": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "null",
               "number",
@@ -3067,7 +3417,7 @@
             "format": "double"
           },
           "longitude": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "null",
               "number",
@@ -3094,7 +3444,7 @@
             "format": "uuid"
           },
           "sellingPrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3162,7 +3512,7 @@
             "type": "string"
           },
           "sellingPrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3265,7 +3615,7 @@
             "format": "int32"
           },
           "subtotal": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3302,7 +3652,7 @@
             "type": "string"
           },
           "unitPrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3318,7 +3668,7 @@
             "format": "int32"
           },
           "lineTotal": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3427,6 +3777,12 @@
               "null",
               "string"
             ]
+          },
+          "couponCode": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3447,7 +3803,7 @@
             "format": "uuid"
           },
           "subtotal": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3455,7 +3811,7 @@
             "format": "double"
           },
           "discountAmount": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3463,7 +3819,7 @@
             "format": "double"
           },
           "shippingFee": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3471,7 +3827,7 @@
             "format": "double"
           },
           "totalAmount": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3490,6 +3846,48 @@
                 "$ref": "#/components/schemas/PaymentInitDto"
               }
             ]
+          }
+        }
+      },
+      "CouponValidationRequest": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        }
+      },
+      "CouponValidationResponse": {
+        "required": [
+          "valid",
+          "discountAmount",
+          "reason",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "discountAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "message": {
+            "type": "string"
           }
         }
       },
@@ -3531,6 +3929,69 @@
           }
         }
       },
+      "CreateBranchRequest": {
+        "required": [
+          "name",
+          "address"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreatePromotionRequest": {
+        "required": [
+          "code",
+          "discountType",
+          "discountValue"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "discountType": {
+            "type": "string"
+          },
+          "discountValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "minOrderAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "usageLimit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "InventoryAdjustmentRequest": {
         "required": [
           "productId",
@@ -3551,7 +4012,7 @@
             "format": "int32"
           },
           "sellingPrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "null",
               "number",
@@ -3653,7 +4114,7 @@
             "type": "string"
           },
           "subtotal": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3661,7 +4122,7 @@
             "format": "double"
           },
           "discountAmount": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3669,7 +4130,7 @@
             "format": "double"
           },
           "shippingFee": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3677,7 +4138,7 @@
             "format": "double"
           },
           "totalAmount": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3747,7 +4208,7 @@
             "type": "string"
           },
           "unitPrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3763,7 +4224,7 @@
             "format": "int32"
           },
           "lineTotal": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3792,7 +4253,7 @@
             "format": "date-time"
           },
           "totalAmount": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -3853,6 +4314,47 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "PaginatedPromotionsDto": {
+        "required": [
+          "page",
+          "pageSize",
+          "totalCount",
+          "promotions"
+        ],
+        "type": "object",
+        "properties": {
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "promotions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromotionDto"
+            }
           }
         }
       },
@@ -4001,7 +4503,7 @@
             "type": "string"
           },
           "amount": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -4139,7 +4641,7 @@
             ]
           },
           "basePrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -4213,7 +4715,7 @@
             "type": "string"
           },
           "basePrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -4238,6 +4740,77 @@
           },
           "brandName": {
             "type": "string"
+          }
+        }
+      },
+      "PromotionDto": {
+        "required": [
+          "id",
+          "code",
+          "discountType",
+          "discountValue",
+          "minOrderAmount",
+          "usageLimit",
+          "usageCount",
+          "isActive",
+          "createdAtUtc",
+          "updatedAtUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "discountType": {
+            "type": "string"
+          },
+          "discountValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "minOrderAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "usageLimit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "usageCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAtUtc": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -4374,6 +4947,32 @@
           }
         }
       },
+      "UpdateBranchRequest": {
+        "required": [
+          "name",
+          "address",
+          "phone",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
       "UpdateCartItemRequest": {
         "required": [
           "quantity"
@@ -4433,6 +5032,45 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "UpdatePromotionRequest": {
+        "required": [
+          "discountValue",
+          "minOrderAmount",
+          "usageLimit",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "discountValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "minOrderAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "usageLimit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
           }
         }
       },
@@ -4523,7 +5161,7 @@
             ]
           },
           "basePrice": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -4627,6 +5265,9 @@
     },
     {
       "name": "Addresses"
+    },
+    {
+      "name": "Admin-Promotions"
     }
   ]
 }

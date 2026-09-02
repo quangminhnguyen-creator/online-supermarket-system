@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using OnlineSupermarket.Api.Contracts.Checkout;
 using OnlineSupermarket.Domain.Orders;
 using OnlineSupermarket.Domain.Payments;
+using OnlineSupermarket.Domain.Promotions;
 using OnlineSupermarket.Infrastructure.Persistence;
 
 namespace OnlineSupermarket.Api.Endpoints;
@@ -29,6 +30,10 @@ public static class CheckoutEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPost("/validate-coupon", ValidateCouponAsync)
+            .WithName("ValidateCoupon")
+            .Produces<CouponValidationResponse>();
+
         routes.MapPost("/api/checkout/payment/callback", PaymentCallbackAsync)
             .WithName("PaymentCallback")
             .AllowAnonymous()
@@ -43,6 +48,58 @@ public static class CheckoutEndpoints
             ?? user.FindFirst("sub")?.Value;
         return Guid.TryParse(userIdClaim, out var userId) ? userId
             : throw new UnauthorizedAccessException("Invalid user token.");
+    }
+
+    private static string CouponReason(PromotionEligibility eligibility) => eligibility switch
+    {
+        PromotionEligibility.Inactive => "COUPON_INACTIVE",
+        PromotionEligibility.Exhausted => "COUPON_EXHAUSTED",
+        PromotionEligibility.MinOrderNotMet => "MIN_ORDER_NOT_MET",
+        _ => "OK"
+    };
+
+    private static string CouponMessage(string reason) => reason switch
+    {
+        "INVALID_CODE" => "Mã giảm giá không tồn tại.",
+        "COUPON_INACTIVE" => "Mã giảm giá đã ngừng áp dụng.",
+        "COUPON_EXHAUSTED" => "Mã giảm giá đã hết lượt sử dụng.",
+        "MIN_ORDER_NOT_MET" => "Đơn hàng chưa đạt giá trị tối thiểu để áp mã.",
+        _ => "Mã giảm giá hợp lệ."
+    };
+
+    private static async Task<IResult> ValidateCouponAsync(
+        ClaimsPrincipal user,
+        [FromBody] CouponValidationRequest request,
+        [FromServices] AppDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId(user);
+
+        var cart = await dbContext.Carts
+            .Include(c => c.Items)
+            .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
+
+        var subtotal = cart?.Items.Sum(i => i.LineTotal) ?? 0m;
+
+        var code = (request.Code ?? string.Empty).Trim().ToUpperInvariant();
+        var promotion = string.IsNullOrEmpty(code)
+            ? null
+            : await dbContext.Promotions.FirstOrDefaultAsync(p => p.Code == code, cancellationToken);
+
+        if (promotion is null)
+        {
+            return Results.Ok(new CouponValidationResponse(false, 0m, "INVALID_CODE", CouponMessage("INVALID_CODE")));
+        }
+
+        var eligibility = promotion.CheckEligibility(subtotal);
+        if (eligibility != PromotionEligibility.Eligible)
+        {
+            var reason = CouponReason(eligibility);
+            return Results.Ok(new CouponValidationResponse(false, 0m, reason, CouponMessage(reason)));
+        }
+
+        var discount = promotion.CalculateDiscount(subtotal);
+        return Results.Ok(new CouponValidationResponse(true, discount, null, CouponMessage("OK")));
     }
 
     private static async Task<IResult> CheckoutAsync(
@@ -125,7 +182,35 @@ public static class CheckoutEndpoints
                     .ToDictionaryAsync(p => p.Id, cancellationToken);
 
                 var subtotal = cart.Items.Sum(i => i.LineTotal);
-                var discountAmount = 0m;
+
+                // Apply an optional coupon. Re-validated here inside the transaction so a
+                // code that passed the preview but was exhausted meanwhile is rejected.
+                decimal discountAmount = 0m;
+                Promotion? appliedPromotion = null;
+                if (!string.IsNullOrWhiteSpace(request.CouponCode))
+                {
+                    var code = request.CouponCode.Trim().ToUpperInvariant();
+                    var promotion = await dbContext.Promotions
+                        .FirstOrDefaultAsync(p => p.Code == code, cancellationToken);
+
+                    if (promotion is null)
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        return Results.BadRequest(new { message = "INVALID_COUPON" });
+                    }
+
+                    var eligibility = promotion.CheckEligibility(subtotal);
+                    if (eligibility != PromotionEligibility.Eligible)
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        return Results.BadRequest(new { message = CouponReason(eligibility) });
+                    }
+
+                    discountAmount = promotion.CalculateDiscount(subtotal);
+                    promotion.IncrementUsage();
+                    appliedPromotion = promotion;
+                }
+
                 var shippingFee = request.FulfillmentType == "Delivery" ? 15000m : 0m;
                 var totalAmount = subtotal - discountAmount + shippingFee;
 
@@ -151,7 +236,9 @@ public static class CheckoutEndpoints
                     subtotal: subtotal,
                     discountAmount: discountAmount,
                     shippingFee: shippingFee,
-                    totalAmount: totalAmount);
+                    totalAmount: totalAmount,
+                    promotionId: appliedPromotion?.Id,
+                    promotionCodeSnapshot: appliedPromotion?.Code);
 
                 dbContext.Orders.Add(order);
                 dbContext.CartItems.RemoveRange(cart.Items);
@@ -306,7 +393,22 @@ public static class CheckoutEndpoints
             }
         }
 
+        await ReleasePromotionUsageAsync(order, dbContext, cancellationToken);
+
         order.SetStatus(OrderStatus.Cancelled, "Payment failed - inventory released");
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task ReleasePromotionUsageAsync(
+        Order order,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        if (!order.PromotionId.HasValue) return;
+
+        var promotion = await dbContext.Promotions
+            .FirstOrDefaultAsync(p => p.Id == order.PromotionId.Value, cancellationToken);
+
+        promotion?.ReleaseUsage();
     }
 }

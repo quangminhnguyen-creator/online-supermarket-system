@@ -93,6 +93,9 @@ app.MapUserEndpoints();
 // Addresses (FR-115)
 app.MapAddressEndpoints();
 
+// Promotions (Admin CRUD)
+app.MapPromotionEndpoints();
+
 app.Run();
 
 public partial class Program;
