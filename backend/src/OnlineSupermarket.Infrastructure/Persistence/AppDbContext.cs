@@ -6,6 +6,7 @@ using OnlineSupermarket.Domain.Inventory;
 using OnlineSupermarket.Domain.Orders;
 using OnlineSupermarket.Domain.Entities;
 using OnlineSupermarket.Domain.Payments;
+using OnlineSupermarket.Domain.Promotions;
 using OnlineSupermarket.Domain.Shopping;
 
 namespace OnlineSupermarket.Infrastructure.Persistence;
@@ -40,6 +41,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     // Payments
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<PaymentCallback> PaymentCallbacks => Set<PaymentCallback>();
+
+    // Promotions
+    public DbSet<Promotion> Promotions => Set<Promotion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

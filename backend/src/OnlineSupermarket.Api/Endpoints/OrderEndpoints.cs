@@ -203,6 +203,13 @@ public static class OrderEndpoints
                 inventory.Release(item.Quantity);
             }
         }
+
+        if (order.PromotionId.HasValue)
+        {
+            var promotion = await dbContext.Promotions
+                .FirstOrDefaultAsync(p => p.Id == order.PromotionId.Value, cancellationToken);
+            promotion?.ReleaseUsage();
+        }
     }
 
     private static HashSet<OrderStatus> GetValidTransitions(OrderStatus current)

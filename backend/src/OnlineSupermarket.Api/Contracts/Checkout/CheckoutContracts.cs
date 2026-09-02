@@ -7,7 +7,17 @@ public sealed record CheckoutRequest(
     [property: JsonPropertyName("deliveryAddressId")] Guid? DeliveryAddressId = null,
     [property: JsonPropertyName("recipientName")] string? RecipientName = null,
     [property: JsonPropertyName("recipientPhone")] string? RecipientPhone = null,
-    [property: JsonPropertyName("deliveryAddress")] string? DeliveryAddress = null);
+    [property: JsonPropertyName("deliveryAddress")] string? DeliveryAddress = null,
+    [property: JsonPropertyName("couponCode")] string? CouponCode = null);
+
+public sealed record CouponValidationRequest(
+    [property: JsonPropertyName("code")] string Code);
+
+public sealed record CouponValidationResponse(
+    [property: JsonPropertyName("valid")] bool Valid,
+    [property: JsonPropertyName("discountAmount")] decimal DiscountAmount,
+    [property: JsonPropertyName("reason")] string? Reason,
+    [property: JsonPropertyName("message")] string Message);
 
 public sealed record CheckoutResponse(
     [property: JsonPropertyName("orderId")] Guid OrderId,

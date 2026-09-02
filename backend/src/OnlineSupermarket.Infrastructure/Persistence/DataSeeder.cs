@@ -5,6 +5,7 @@ using OnlineSupermarket.Domain.Entities;
 using OnlineSupermarket.Domain.Identity;
 using OnlineSupermarket.Domain.Inventory;
 using OnlineSupermarket.Domain.Orders;
+using OnlineSupermarket.Domain.Promotions;
 using OnlineSupermarket.Domain.Shopping;
 using OnlineSupermarket.Infrastructure.Identity;
 
@@ -23,6 +24,21 @@ public static class DataSeeder
         await SeedAddressesAsync(context);
         await SeedCartsAsync(context);
         await SeedOrdersAsync(context);
+        await SeedPromotionsAsync(context);
+    }
+
+    public static async Task SeedPromotionsAsync(AppDbContext context)
+    {
+        if (await context.Promotions.AnyAsync()) return;
+
+        var promotions = new List<Promotion>
+        {
+            Promotion.Create("WELCOME10", DiscountType.Percentage, 10m),
+            Promotion.Create("SAVE50K", DiscountType.FixedAmount, 50_000m, minOrderAmount: 500_000m, usageLimit: 100),
+        };
+
+        await context.Promotions.AddRangeAsync(promotions);
+        await context.SaveChangesAsync();
     }
 
     public static async Task SeedBranchesAsync(AppDbContext context)
