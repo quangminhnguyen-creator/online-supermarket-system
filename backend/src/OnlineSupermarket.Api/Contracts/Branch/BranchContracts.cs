@@ -31,3 +31,14 @@ public sealed record InventoryAdjustmentRequest(
     [property: JsonPropertyName("sellingPrice")] decimal? SellingPrice = null,
     [property: JsonPropertyName("reorderLevel")] int? ReorderLevel = null,
     [property: JsonPropertyName("reason")] string? Reason = null);
+
+public sealed record CreateBranchRequest(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("address")] string Address,
+    [property: JsonPropertyName("phone")] string? Phone = null);
+
+public sealed record UpdateBranchRequest(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("address")] string Address,
+    [property: JsonPropertyName("phone")] string? Phone,
+    [property: JsonPropertyName("isActive")] bool IsActive);

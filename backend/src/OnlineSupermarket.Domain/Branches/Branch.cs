@@ -29,4 +29,15 @@ public sealed class Branch : Entity
     public decimal? Latitude { get; private set; }
     public decimal? Longitude { get; private set; }
     public bool IsActive { get; private set; } = true;
+
+    public void Update(string name, string address, string? phone)
+    {
+        Name = Guard.Required(name, nameof(name));
+        Address = Guard.Required(address, nameof(address));
+        Phone = phone?.Trim();
+    }
+
+    public void Activate() => IsActive = true;
+
+    public void Deactivate() => IsActive = false;
 }
