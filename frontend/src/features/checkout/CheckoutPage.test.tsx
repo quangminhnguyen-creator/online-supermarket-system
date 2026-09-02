@@ -364,4 +364,89 @@ describe('CheckoutPage', () => {
     expect(screen.getByRole('group', { name: 'Phương thức thanh toán' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Đặt hàng' })).toBeEnabled()
   })
+
+  it('applies a valid coupon and shows the discount in the summary', async () => {
+    vi.spyOn(checkoutApi, 'validateCoupon').mockResolvedValue({
+      valid: true,
+      discountAmount: 10000,
+      reason: null,
+      message: 'Mã giảm giá hợp lệ.',
+    })
+    renderCheckout({ cart: cartWithItems })
+
+    fireEvent.change(screen.getByPlaceholderText('Nhập mã giảm giá'), { target: { value: 'sale10' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Áp dụng' }))
+
+    expect(await screen.findByText('SALE10')).toBeInTheDocument()
+    expect(screen.getByText('Giảm giá')).toBeInTheDocument()
+    expect(screen.getByText('-10.000 ₫')).toBeInTheDocument()
+    // subtotal 100.000 - 10.000 discount + 0 shipping = 90.000
+    expect(screen.getByText('90.000 ₫')).toBeInTheDocument()
+  })
+
+  it('shows the backend message when a coupon is invalid', async () => {
+    vi.spyOn(checkoutApi, 'validateCoupon').mockResolvedValue({
+      valid: false,
+      discountAmount: 0,
+      reason: 'MIN_ORDER_NOT_MET',
+      message: 'Đơn hàng chưa đạt giá trị tối thiểu để áp mã.',
+    })
+    renderCheckout({ cart: cartWithItems })
+
+    fireEvent.change(screen.getByPlaceholderText('Nhập mã giảm giá'), { target: { value: 'BIG' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Áp dụng' }))
+
+    expect(await screen.findByText('Đơn hàng chưa đạt giá trị tối thiểu để áp mã.')).toBeInTheDocument()
+    expect(screen.queryByText('Giảm giá')).not.toBeInTheDocument()
+  })
+
+  it('removes an applied coupon and reverts the summary', async () => {
+    vi.spyOn(checkoutApi, 'validateCoupon').mockResolvedValue({
+      valid: true,
+      discountAmount: 10000,
+      reason: null,
+      message: 'ok',
+    })
+    renderCheckout({ cart: cartWithItems })
+
+    fireEvent.change(screen.getByPlaceholderText('Nhập mã giảm giá'), { target: { value: 'SALE10' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Áp dụng' }))
+    await screen.findByText('SALE10')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Gỡ mã' }))
+
+    expect(screen.queryByText('Giảm giá')).not.toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Nhập mã giảm giá')).toBeInTheDocument()
+  })
+
+  it('includes the applied coupon code in the checkout request', async () => {
+    vi.spyOn(checkoutApi, 'validateCoupon').mockResolvedValue({
+      valid: true,
+      discountAmount: 10000,
+      reason: null,
+      message: 'ok',
+    })
+    const checkoutSpy = vi.spyOn(checkoutApi, 'checkout').mockResolvedValue(checkoutResponse)
+    vi.spyOn(checkoutApi, 'initiatePayment').mockResolvedValue({
+      paymentId: 'pay-1',
+      method: 'COD',
+      status: 'PendingCollection',
+      checkoutUrl: null,
+    })
+    renderCheckout({ cart: cartWithItems })
+
+    fireEvent.change(screen.getByPlaceholderText('Nhập mã giảm giá'), { target: { value: 'sale10' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Áp dụng' }))
+    await screen.findByText('SALE10')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Đặt hàng' }))
+
+    await waitFor(() => {
+      expect(checkoutSpy).toHaveBeenCalledWith(
+        { fulfillmentType: 'Pickup', couponCode: 'SALE10' },
+        'jwt-token',
+        expect.any(AbortSignal)
+      )
+    })
+  })
 })

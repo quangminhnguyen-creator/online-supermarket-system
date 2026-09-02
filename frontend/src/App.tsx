@@ -4,6 +4,7 @@ import { AuthProvider } from './features/auth/AuthContext'
 import { CartProvider } from './features/cart/CartContext'
 import { ProductBrowsePage } from './features/products/ProductBrowsePage'
 import { ProductDetailPage } from './features/products/ProductDetailPage'
+import { BranchesPage } from './features/products/BranchesPage'
 import { ProfilePage } from './features/account/ProfilePage'
 import { AddressListPage } from './features/account/AddressListPage'
 import { CartPage } from './features/cart/CartPage'
@@ -17,6 +18,8 @@ import { AdminOrdersPage } from './features/admin/AdminOrdersPage'
 import { AdminOrderDetailPage } from './features/admin/AdminOrderDetailPage'
 import { AdminInventoryPage } from './features/admin/AdminInventoryPage'
 import { AdminUsersPage } from './features/admin/AdminUsersPage'
+import { AdminPromotionsPage } from './features/admin/AdminPromotionsPage'
+import { AdminBranchesPage } from './features/admin/AdminBranchesPage'
 
 export default function App() {
   return (
@@ -29,6 +32,7 @@ export default function App() {
               <Route path="/browse" element={<ProductBrowsePage />} />
               <Route path="/products" element={<ProductBrowsePage />} />
               <Route path="/product/:id" element={<ProductDetailPage />} />
+              <Route path="/branches" element={<BranchesPage />} />
               <Route path="/account/profile" element={<ProfilePage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/account/addresses" element={<AddressListPage />} />
@@ -51,8 +55,10 @@ export default function App() {
                 <Route index element={<AdminOrdersPage />} />
                 <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="orders/:id" element={<AdminOrderDetailPage />} />
+                <Route path="branches" element={<AdminBranchesPage />} />
                 <Route path="inventory" element={<AdminInventoryPage />} />
                 <Route path="users" element={<AdminUsersPage />} />
+                <Route path="promotions" element={<AdminPromotionsPage />} />
               </Route>
             </Routes>
           </AppShell>

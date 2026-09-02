@@ -1,6 +1,54 @@
-import { getJson, putJson } from './httpClient'
+import { getJson, postJson, putJson } from './httpClient'
 import type { OrderDetailDto, PaginatedOrdersDto } from './orderApi'
-import type { BranchProductInventoryDto } from './branchApi'
+import type { BranchDto, BranchProductInventoryDto } from './branchApi'
+
+export interface CreateBranchBody {
+  name: string
+  address: string
+  phone?: string | null
+}
+
+export interface UpdateBranchBody {
+  name: string
+  address: string
+  phone: string | null
+  isActive: boolean
+}
+
+export interface PromotionDto {
+  id: string
+  code: string
+  discountType: string
+  discountValue: number
+  minOrderAmount: number
+  usageLimit: number | null
+  usageCount: number
+  isActive: boolean
+  createdAtUtc: string
+  updatedAtUtc: string
+}
+
+export interface PaginatedPromotionsDto {
+  page: number
+  pageSize: number
+  totalCount: number
+  promotions: PromotionDto[]
+}
+
+export interface CreatePromotionBody {
+  code: string
+  discountType: string
+  discountValue: number
+  minOrderAmount?: number
+  usageLimit?: number | null
+}
+
+export interface UpdatePromotionBody {
+  discountValue: number
+  minOrderAmount: number
+  usageLimit: number | null
+  isActive: boolean
+}
 
 export interface InventoryAdjustmentBody {
   productId: string
@@ -79,4 +127,20 @@ export const adminApi = {
       body,
       { token, signal },
     ),
+
+  // Branches (admin — includes inactive)
+  listBranches: (token: string, signal?: AbortSignal) =>
+    getJson<BranchDto[]>('/admin/branches', { token, signal }),
+  createBranch: (body: CreateBranchBody, token: string, signal?: AbortSignal) =>
+    postJson<BranchDto>('/admin/branches', body, { token, signal }),
+  updateBranch: (id: string, body: UpdateBranchBody, token: string, signal?: AbortSignal) =>
+    putJson<BranchDto>(`/admin/branches/${encodeURIComponent(id)}`, body, { token, signal }),
+
+  // Promotions
+  listPromotions: (page: number, pageSize: number, token: string, signal?: AbortSignal) =>
+    getJson<PaginatedPromotionsDto>(`/admin/promotions?page=${page}&pageSize=${pageSize}`, { token, signal }),
+  createPromotion: (body: CreatePromotionBody, token: string, signal?: AbortSignal) =>
+    postJson<PromotionDto>('/admin/promotions', body, { token, signal }),
+  updatePromotion: (id: string, body: UpdatePromotionBody, token: string, signal?: AbortSignal) =>
+    putJson<PromotionDto>(`/admin/promotions/${encodeURIComponent(id)}`, body, { token, signal }),
 }

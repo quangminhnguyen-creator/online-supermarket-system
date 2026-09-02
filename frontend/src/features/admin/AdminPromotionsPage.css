@@ -1,0 +1,32 @@
+/* Promotions page reuses shared admin table + modal styles
+   (AdminOrdersPage.css, AdminInventoryPage.css). This file adds the header
+   layout, the create button and the promotion status badge colors. */
+
+.admin-promotions-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-create-btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--leaf, #1f7a4d);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-status--active {
+  background: #c8f0d4;
+  color: #14663a;
+}
+
+.admin-status--inactive {
+  background: #ececec;
+  color: #666;
+}

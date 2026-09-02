@@ -482,3 +482,44 @@
     font-size: 20px;
   }
 }
+
+/* Coupon / promotion code */
+.checkout-coupon-row {
+  display: flex;
+  gap: 8px;
+}
+
+.checkout-coupon-row input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1.5px solid var(--mist, #e8f1ed);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.checkout-coupon-row input:focus {
+  outline: none;
+  border-color: var(--leaf, #1f7a4d);
+}
+
+.checkout-coupon-applied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--mist, #e8f1ed);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.checkout-btn--ghost {
+  background: transparent;
+  color: var(--leaf, #1f7a4d);
+  border: 1px solid var(--leaf, #1f7a4d);
+}
+
+.checkout-summary__row--discount span,
+.checkout-summary__row--discount strong {
+  color: #14663a;
+}

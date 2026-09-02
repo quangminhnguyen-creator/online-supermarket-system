@@ -1,0 +1,62 @@
+.branch-nav {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Dropdown, hidden until hover / keyboard focus within the nav item. */
+.branch-nav__menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 280px;
+  background: #fff;
+  border: 1px solid var(--mist, #e8f1ed);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+  padding: 6px;
+  z-index: 50;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.branch-nav:hover .branch-nav__menu,
+.branch-nav:focus-within .branch-nav__menu {
+  display: block;
+}
+
+.branch-nav__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 9px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.branch-nav__item:hover,
+.branch-nav__item:focus-visible {
+  background: var(--mist, #e8f1ed);
+  outline: none;
+}
+
+.branch-nav__item-name {
+  font-weight: 600;
+  color: var(--forest, #0b3d2e);
+}
+
+.branch-nav__item-addr {
+  font-size: 0.8rem;
+  color: #5a6b63;
+}
+
+.branch-nav__hint {
+  display: block;
+  padding: 9px 11px;
+  color: #8a978f;
+  font-size: 0.85rem;
+}

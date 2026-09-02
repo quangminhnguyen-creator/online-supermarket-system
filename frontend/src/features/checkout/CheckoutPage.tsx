@@ -30,6 +30,16 @@ export function toCheckoutError(error: unknown) {
   ) {
     return 'Giỏ hàng không còn sản phẩm.'
   }
+  if (error instanceof ApiError && error.status === 400 && typeof error.data?.message === 'string') {
+    const couponMessages: Record<string, string> = {
+      INVALID_COUPON: 'Mã giảm giá không hợp lệ. Vui lòng gỡ mã và thử lại.',
+      COUPON_INACTIVE: 'Mã giảm giá đã ngừng áp dụng. Vui lòng gỡ mã.',
+      COUPON_EXHAUSTED: 'Mã giảm giá đã hết lượt sử dụng. Vui lòng gỡ mã.',
+      MIN_ORDER_NOT_MET: 'Đơn hàng chưa đạt giá trị tối thiểu để áp mã. Vui lòng gỡ mã.',
+    }
+    const mapped = couponMessages[error.data.message]
+    if (mapped) return mapped
+  }
   if (
     error instanceof ApiError &&
     error.status === 409 &&
@@ -116,11 +126,13 @@ function EmptyCheckout() {
 function CheckoutOrderSummary({
   cart,
   shippingFee,
+  discount,
 }: {
   cart: CartDto
   shippingFee: number
+  discount: number
 }) {
-  const totalAmount = cart.subtotal + shippingFee
+  const totalAmount = Math.max(0, cart.subtotal - discount) + shippingFee
 
   return (
     <aside className="checkout-summary" aria-label="Tóm tắt đơn hàng">
@@ -142,6 +154,12 @@ function CheckoutOrderSummary({
           <span>Tạm tính</span>
           <strong>{formatPrice(cart.subtotal)}</strong>
         </div>
+        {discount > 0 && (
+          <div className="checkout-summary__row checkout-summary__row--discount">
+            <span>Giảm giá</span>
+            <strong>-{formatPrice(discount)}</strong>
+          </div>
+        )}
         <div className="checkout-summary__row">
           <span>Phí giao hàng</span>
           <strong>{formatPrice(shippingFee)}</strong>
@@ -172,6 +190,10 @@ export function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null)
+  const [couponInput, setCouponInput] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null)
+  const [couponError, setCouponError] = useState<string | null>(null)
+  const [couponChecking, setCouponChecking] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return
@@ -205,20 +227,51 @@ export function CheckoutPage() {
     }
   }
 
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim()
+    if (!code || !accessToken) return
+    setCouponChecking(true)
+    setCouponError(null)
+    try {
+      const result = await checkoutApi.validateCoupon({ code }, accessToken)
+      if (result.valid) {
+        setAppliedCoupon({ code: code.toUpperCase(), discountAmount: result.discountAmount })
+      } else {
+        setAppliedCoupon(null)
+        setCouponError(result.message)
+      }
+    } catch {
+      setAppliedCoupon(null)
+      setCouponError('Không thể kiểm tra mã giảm giá. Vui lòng thử lại.')
+    } finally {
+      setCouponChecking(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponInput('')
+    setCouponError(null)
+  }
+
   function buildCheckoutRequest(): CheckoutRequest | null {
     if (fulfillmentType === 'Pickup') {
-      return { fulfillmentType: 'Pickup' }
+      const request: CheckoutRequest = { fulfillmentType: 'Pickup' }
+      if (appliedCoupon) request.couponCode = appliedCoupon.code
+      return request
     }
     if (!recipientName.trim() || !recipientPhone.trim() || !deliveryAddress.trim()) {
       return null
     }
-    return {
+    const request: CheckoutRequest = {
       fulfillmentType: 'Delivery',
       deliveryAddressId: selectedAddressId || null,
       recipientName: recipientName.trim(),
       recipientPhone: recipientPhone.trim(),
       deliveryAddress: deliveryAddress.trim(),
     }
+    if (appliedCoupon) request.couponCode = appliedCoupon.code
+    return request
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -515,6 +568,54 @@ export function CheckoutPage() {
             </div>
           </fieldset>
 
+          <fieldset
+            className="checkout-form__section"
+            role="group"
+            aria-label="Mã giảm giá"
+          >
+            <legend>Mã giảm giá</legend>
+            {appliedCoupon ? (
+              <div className="checkout-coupon-applied" role="status">
+                <span>
+                  Đã áp dụng <strong>{appliedCoupon.code}</strong> — giảm{' '}
+                  {formatPrice(appliedCoupon.discountAmount)}
+                </span>
+                <button
+                  type="button"
+                  className="checkout-btn checkout-btn--ghost"
+                  onClick={handleRemoveCoupon}
+                  disabled={isSubmitting || !!createdOrderId}
+                >
+                  Gỡ mã
+                </button>
+              </div>
+            ) : (
+              <div className="checkout-coupon-row">
+                <input
+                  type="text"
+                  aria-label="Mã giảm giá"
+                  placeholder="Nhập mã giảm giá"
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value)}
+                  disabled={isSubmitting || couponChecking || !!createdOrderId}
+                />
+                <button
+                  type="button"
+                  className="checkout-btn checkout-btn--secondary"
+                  onClick={handleApplyCoupon}
+                  disabled={isSubmitting || couponChecking || !couponInput.trim() || !!createdOrderId}
+                >
+                  {couponChecking ? 'Đang kiểm tra...' : 'Áp dụng'}
+                </button>
+              </div>
+            )}
+            {couponError && (
+              <p className="checkout-alert checkout-alert--info" role="alert">
+                {couponError}
+              </p>
+            )}
+          </fieldset>
+
           {submitError && (
             <div className="checkout-alert" role="alert">
               <p>{submitError}</p>
@@ -537,7 +638,11 @@ export function CheckoutPage() {
           </button>
         </form>
 
-        <CheckoutOrderSummary cart={cart} shippingFee={shippingFee} />
+        <CheckoutOrderSummary
+          cart={cart}
+          shippingFee={shippingFee}
+          discount={appliedCoupon?.discountAmount ?? 0}
+        />
       </div>
     </section>
   )

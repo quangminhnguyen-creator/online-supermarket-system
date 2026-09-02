@@ -12,7 +12,9 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/admin/orders', label: 'Đơn hàng', icon: '🧾' },
+  { to: '/admin/branches', label: 'Chi nhánh', icon: '🏬' },
   { to: '/admin/inventory', label: 'Kho & Giá', icon: '📦' },
+  { to: '/admin/promotions', label: 'Khuyến mãi', icon: '🎟️' },
   { to: '/admin/users', label: 'Người dùng', icon: '👥' },
 ]
 
