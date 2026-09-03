@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AdminInventoryPage } from './AdminInventoryPage'
 import { branchApi, type BranchProductInventoryDto } from '../../api/branchApi'
 import { adminApi } from '../../api/adminApi'
+import { inventoryIntelligenceApi } from '../../api/inventoryIntelligenceApi'
 import { ApiError } from '../../api/httpClient'
 
 const mockAuth = { accessToken: 'jwt-token' as string | null }
@@ -19,8 +20,8 @@ const branches = [
 ]
 
 const inventoryBranch1: BranchProductInventoryDto[] = [
-  { productId: 'p1', productName: 'iPhone 15', sku: 'SKU-1', sellingPrice: 20000000, quantityOnHand: 30, reservedQuantity: 2, availableQuantity: 28, reorderLevel: 5 },
-  { productId: 'p2', productName: 'AirPods Pro 2', sku: 'SKU-2', sellingPrice: 5000000, quantityOnHand: 6, reservedQuantity: 4, availableQuantity: 2, reorderLevel: 5 },
+  { inventoryId: 'inv-1', productId: 'p1', productName: 'iPhone 15', sku: 'SKU-1', sellingPrice: 20000000, quantityOnHand: 30, reservedQuantity: 2, availableQuantity: 28, reorderLevel: 5 },
+  { inventoryId: 'inv-2', productId: 'p2', productName: 'AirPods Pro 2', sku: 'SKU-2', sellingPrice: 5000000, quantityOnHand: 6, reservedQuantity: 4, availableQuantity: 2, reorderLevel: 5 },
 ]
 
 function mockBranchApi(inventory = inventoryBranch1) {
@@ -114,6 +115,18 @@ describe('AdminInventoryPage', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Lưu thay đổi' }))
     expect(within(dialog).getByRole('alert')).toHaveTextContent('Giá bán phải là số không âm.')
     expect(adjust).not.toHaveBeenCalled()
+  })
+
+  it('opens immutable transaction history for one inventory row', async () => {
+    const user = userEvent.setup()
+    mockBranchApi()
+    vi.spyOn(inventoryIntelligenceApi, 'getTransactions')
+      .mockResolvedValue({ data: [], totalCount: 0, page: 1, pageSize: 20 })
+
+    renderPage()
+    await user.click(await screen.findByRole('button', { name: 'Lịch sử kho iPhone 15' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Lịch sử giao dịch kho' })).toBeInTheDocument()
   })
 
   it('shows an error state and retries the inventory load', async () => {

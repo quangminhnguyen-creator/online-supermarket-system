@@ -132,3 +132,12 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.admin-history-modal {
+  max-width: 780px;
+}
+
+.admin-history-modal .admin-table-wrap {
+  max-height: 60vh;
+  overflow: auto;
+}
