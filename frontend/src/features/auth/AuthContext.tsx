@@ -9,6 +9,11 @@ import {
   type LoginRequest,
   type RegisterRequest,
 } from '../../api/authApi'
+import { recommendationApi } from '../../api/recommendationApi'
+import {
+  getOrCreateAnonymousSessionId,
+  rotateAnonymousSessionId,
+} from '../recommendations/recommendationSession'
 
 interface AuthContextType {
   user: UserDto | null
@@ -46,6 +51,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     localStorage.setItem(REFRESH_TOKEN_KEY, refresh)
   }, [])
 
+  const mergeAnonymousViewSession = useCallback((token: string) => {
+    const anonymousSessionId = getOrCreateAnonymousSessionId()
+    recommendationApi
+      .mergeSession(anonymousSessionId, token)
+      .then(() => rotateAnonymousSessionId())
+      .catch(() => {
+        // keep the old anonymous id so a later authenticated init retries the merge
+      })
+  }, [])
+
   useEffect(() => {
     const initAuth = async () => {
       const storedAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY)
@@ -61,6 +76,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           const userData = await getMeApi(storedAccessToken)
           setUser(userData)
           setAccessToken(storedAccessToken)
+          mergeAnonymousViewSession(storedAccessToken)
           setIsLoading(false)
           return
         } catch {
@@ -72,6 +88,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         try {
           const authRes = await refreshTokenApi(storedRefreshToken)
           setAuthTokens(authRes.accessToken, authRes.refreshToken, authRes.user)
+          mergeAnonymousViewSession(authRes.accessToken)
         } catch {
           clearAuth()
         }
@@ -83,11 +100,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
 
     initAuth()
-  }, [clearAuth, setAuthTokens])
+  }, [clearAuth, setAuthTokens, mergeAnonymousViewSession])
 
   const login = async (data: LoginRequest) => {
     const authRes = await loginApi(data)
     setAuthTokens(authRes.accessToken, authRes.refreshToken, authRes.user)
+    mergeAnonymousViewSession(authRes.accessToken)
   }
 
   const register = async (data: RegisterRequest) => {
@@ -95,6 +113,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     // Auto login after successful register
     const authRes = await loginApi({ email: data.email, password: data.password })
     setAuthTokens(authRes.accessToken, authRes.refreshToken, authRes.user)
+    mergeAnonymousViewSession(authRes.accessToken)
   }
 
   const logout = async () => {
