@@ -13,7 +13,8 @@ public sealed class InventoryMutationService(
         IReadOnlyCollection<InventoryMutationCommand> commands,
         CancellationToken cancellationToken)
     {
-        if (dbContext.Database.CurrentTransaction is null)
+        if (dbContext.Database.IsRelational()
+            && dbContext.Database.CurrentTransaction is null)
         {
             throw new InvalidOperationException(
                 "Inventory mutations require an active database transaction.");

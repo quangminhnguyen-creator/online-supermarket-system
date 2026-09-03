@@ -5,6 +5,7 @@ using OnlineSupermarket.Api.Contracts.Checkout;
 using OnlineSupermarket.Domain.Orders;
 using OnlineSupermarket.Domain.Payments;
 using OnlineSupermarket.Domain.Promotions;
+using OnlineSupermarket.Infrastructure.Inventory;
 using OnlineSupermarket.Infrastructure.Persistence;
 
 namespace OnlineSupermarket.Api.Endpoints;
@@ -106,6 +107,7 @@ public static class CheckoutEndpoints
         ClaimsPrincipal user,
         [FromBody] CheckoutRequest request,
         [FromServices] AppDbContext dbContext,
+        [FromServices] IInventoryMutationService mutationService,
         CancellationToken cancellationToken)
     {
         var userId = GetUserId(user);
@@ -119,14 +121,14 @@ public static class CheckoutEndpoints
                 return Results.BadRequest(new { message = "RecipientName and RecipientPhone are required for Delivery." });
         }
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.Serializable, cancellationToken);
-
         const int maxRetries = 3;
         var retryCount = 0;
 
         while (retryCount < maxRetries)
         {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable, cancellationToken);
+
             try
             {
                 var cart = await dbContext.Carts
@@ -139,8 +141,7 @@ public static class CheckoutEndpoints
                 var inventoryIds = cart.Items.Select(i => i.BranchInventoryId).ToList();
                 var inventories = await dbContext.BranchInventories
                     .Where(bi => inventoryIds.Contains(bi.Id))
-                    .OrderBy(bi => bi.BranchId)
-                    .ThenBy(bi => bi.ProductId)
+                    .OrderBy(bi => bi.Id)
                     .ToListAsync(cancellationToken);
 
                 var inventoryMap = inventories.ToDictionary(bi => bi.Id);
@@ -160,20 +161,11 @@ public static class CheckoutEndpoints
 
                 if (insufficientItems.Any())
                 {
-                    await transaction.RollbackAsync(cancellationToken);
                     return Results.Conflict(new
                     {
                         message = "INSUFFICIENT_STOCK",
                         items = insufficientItems.Select(i => new { i.ProductId, i.Requested, i.Available })
                     });
-                }
-
-                foreach (var item in cart.Items)
-                {
-                    if (inventoryMap.TryGetValue(item.BranchInventoryId, out var inv))
-                    {
-                        inv.Reserve(item.Quantity);
-                    }
                 }
 
                 var productIds = cart.Items.Select(i => i.ProductId).ToList();
@@ -195,14 +187,12 @@ public static class CheckoutEndpoints
 
                     if (promotion is null)
                     {
-                        await transaction.RollbackAsync(cancellationToken);
                         return Results.BadRequest(new { message = "INVALID_COUPON" });
                     }
 
                     var eligibility = promotion.CheckEligibility(subtotal);
                     if (eligibility != PromotionEligibility.Eligible)
                     {
-                        await transaction.RollbackAsync(cancellationToken);
                         return Results.BadRequest(new { message = CouponReason(eligibility) });
                     }
 
@@ -240,6 +230,13 @@ public static class CheckoutEndpoints
                     promotionId: appliedPromotion?.Id,
                     promotionCodeSnapshot: appliedPromotion?.Code);
 
+                var reserveCommands = cart.Items
+                    .Select(item => InventoryMutationCommand.Reserve(
+                        item.BranchInventoryId, item.Quantity, order.Id, userId))
+                    .ToArray();
+
+                await mutationService.ApplyBatchAsync(reserveCommands, cancellationToken);
+
                 dbContext.Orders.Add(order);
                 dbContext.CartItems.RemoveRange(cart.Items);
 
@@ -260,7 +257,6 @@ public static class CheckoutEndpoints
                 retryCount++;
                 if (retryCount >= maxRetries)
                 {
-                    await transaction.RollbackAsync(cancellationToken);
                     return Results.Conflict(new { message = "INSUFFICIENT_STOCK", retry = true });
                 }
                 await Task.Delay(Random.Shared.Next(50, 200), cancellationToken);
