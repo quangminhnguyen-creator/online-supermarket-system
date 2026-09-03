@@ -168,3 +168,29 @@ select:focus-visible {
   overflow-x: hidden;
   max-width: 100%;
 }
+
+.order-item-actions {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.order-item-review-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: #f0f7f4;
+  border: 1px solid #c8e4d4;
+  border-radius: 6px;
+  color: #1b6d45;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.order-item-review-link:hover {
+  background: #1b6d45;
+  color: #ffffff;
+  border-color: #1b6d45;
+}

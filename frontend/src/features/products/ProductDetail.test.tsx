@@ -13,6 +13,25 @@ import { ProductDetailPage } from './ProductDetailPage'
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
 vi.mock('../cart/CartContext', () => ({ useCart: vi.fn() }))
 vi.mock('../compare/CompareContext', () => ({ useCompare: vi.fn() }))
+vi.mock('../../api/reviewApi', () => ({
+  reviewApi: {
+    getProductReviews: vi.fn().mockResolvedValue({
+      averageRating: 0,
+      reviewCount: 0,
+      data: [],
+      page: 1,
+      pageSize: 10,
+      totalCount: 0,
+    }),
+    getEligibility: vi.fn().mockResolvedValue({
+      canReview: false,
+      orderItemId: null,
+      reviewId: null,
+    }),
+    createReview: vi.fn(),
+    updateReview: vi.fn(),
+  },
+}))
 vi.mock('../auth/AuthModal', () => ({
   AuthModal: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
@@ -512,6 +531,21 @@ describe('ProductDetailPage', () => {
 
       fireEvent.change(input, { target: { value: '2' } })
       expect(addButton).toBeEnabled()
+    })
+
+    it('focuses reviews section when loaded with #reviews hash', async () => {
+      window.location.hash = '#reviews'
+      const scrollIntoViewMock = vi.fn()
+      window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+
+      renderSameBranchDetail()
+      const reviewsSection = await screen.findByLabelText('Đánh giá sản phẩm')
+      expect(reviewsSection).toBeInTheDocument()
+
+      await waitFor(() => {
+        expect(scrollIntoViewMock).toHaveBeenCalled()
+      })
+      window.location.hash = ''
     })
   })
 })

@@ -105,7 +105,7 @@ public static class OrderEndpoints
         if (order == null)
             return Results.NotFound(new { message = "Order not found." });
 
-        return Results.Ok(MapToDetailDto(order, dbContext));
+        return Results.Ok(await MapToDetailDtoAsync(order, dbContext, cancellationToken));
     }
 
     private static async Task<IResult> GetAllOrdersAsync(
@@ -154,7 +154,7 @@ public static class OrderEndpoints
         if (order == null)
             return Results.NotFound(new { message = "Order not found." });
 
-        return Results.Ok(MapToDetailDto(order, dbContext));
+        return Results.Ok(await MapToDetailDtoAsync(order, dbContext, cancellationToken));
     }
 
     private static async Task<IResult> UpdateOrderStatusAsync(
@@ -206,7 +206,7 @@ public static class OrderEndpoints
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        return Results.Ok(MapToDetailDto(order, dbContext));
+        return Results.Ok(await MapToDetailDtoAsync(order, dbContext, cancellationToken));
     }
 
     private static async Task<IReadOnlyCollection<InventoryMutationCommand>> OrderItemCommandsAsync(
@@ -248,13 +248,36 @@ public static class OrderEndpoints
         };
     }
 
-    private static OrderDetailDto MapToDetailDto(Order order, AppDbContext dbContext)
+    private static async Task<OrderDetailDto> MapToDetailDtoAsync(
+        Order order,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken)
     {
-        var payment = dbContext.Payments.Local.FirstOrDefault(p => p.OrderId == order.Id)
-            ?? dbContext.Payments.FirstOrDefault(p => p.OrderId == order.Id);
+        var payment = await dbContext.Payments
+            .FirstOrDefaultAsync(p => p.OrderId == order.Id, cancellationToken);
 
-        var itemDtos = order.Items.Select(i => new OrderItemDto(
-            i.ProductId, i.ProductName, i.Sku, i.UnitPrice, i.Quantity, i.LineTotal)).ToList();
+        var itemIds = order.Items.Select(i => i.Id).ToList();
+        var reviews = await dbContext.Reviews
+            .Where(r => itemIds.Contains(r.OrderItemId))
+            .Select(r => new { r.OrderItemId, r.Id })
+            .ToDictionaryAsync(r => r.OrderItemId, r => r.Id, cancellationToken);
+
+        var isCompleted = order.Status == OrderStatus.Completed;
+
+        var itemDtos = order.Items.Select(i =>
+        {
+            var hasReview = reviews.TryGetValue(i.Id, out var reviewId);
+            return new OrderItemDto(
+                i.Id,
+                i.ProductId,
+                i.ProductName,
+                i.Sku,
+                i.UnitPrice,
+                i.Quantity,
+                i.LineTotal,
+                CanReview: isCompleted && !hasReview,
+                ReviewId: hasReview ? reviewId : null);
+        }).ToList();
 
         var historyDtos = order.StatusHistory.Select(h => new StatusHistoryDto(
             h.FromStatus.ToString(), h.ToStatus.ToString(), h.Note, h.CreatedAtUtc)).ToList();

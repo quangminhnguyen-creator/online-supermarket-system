@@ -31,12 +31,15 @@ public sealed record OrderDetailDto(
     [property: JsonPropertyName("payment")] PaymentDto? Payment);
 
 public sealed record OrderItemDto(
+    [property: JsonPropertyName("orderItemId")] Guid OrderItemId,
     [property: JsonPropertyName("productId")] Guid ProductId,
     [property: JsonPropertyName("productName")] string ProductName,
     [property: JsonPropertyName("sku")] string Sku,
     [property: JsonPropertyName("unitPrice")] decimal UnitPrice,
     [property: JsonPropertyName("quantity")] int Quantity,
-    [property: JsonPropertyName("lineTotal")] decimal LineTotal);
+    [property: JsonPropertyName("lineTotal")] decimal LineTotal,
+    [property: JsonPropertyName("canReview")] bool CanReview,
+    [property: JsonPropertyName("reviewId")] Guid? ReviewId);
 
 public sealed record StatusHistoryDto(
     [property: JsonPropertyName("fromStatus")] string FromStatus,

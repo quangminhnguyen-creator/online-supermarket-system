@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { orderApi, type OrderDetailDto } from '../../api/orderApi'
+import { orderApi, type OrderDetailDto, type OrderItemDto } from '../../api/orderApi'
 import { ApiError } from '../../api/httpClient'
 import './OrderHistoryPage.css'
 
@@ -70,13 +70,32 @@ function OrderDetailError({ onRetry }: { onRetry: () => void }) {
   )
 }
 
-function OrderItemRow({ item }: { item: { productName: string; sku: string; unitPrice: number; quantity: number; lineTotal: number } }) {
+function OrderItemRow({ item }: { item: OrderItemDto }) {
   return (
     <div className="order-item-row">
       <span>{item.productName}</span>
       <span>{item.sku}</span>
       <span>{formatPrice(item.unitPrice)} x {item.quantity}</span>
       <span>{formatPrice(item.lineTotal)}</span>
+      {(item.canReview || item.reviewId) && (
+        <div className="order-item-actions">
+          {item.canReview ? (
+            <Link
+              to={`/product/${item.productId}?reviewOrderItemId=${item.orderItemId}#reviews`}
+              className="order-item-review-link"
+            >
+              Viết đánh giá {item.productName}
+            </Link>
+          ) : item.reviewId ? (
+            <Link
+              to={`/product/${item.productId}?reviewId=${item.reviewId}#reviews`}
+              className="order-item-review-link"
+            >
+              Sửa đánh giá {item.productName}
+            </Link>
+          ) : null}
+        </div>
+      )}
     </div>
   )
 }

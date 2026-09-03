@@ -39,7 +39,7 @@ const orderDetail = {
   status: 'Confirmed',
   createdAtUtc: '2026-08-28T01:00:00Z',
   updatedAtUtc: '2026-08-28T01:05:00Z',
-  items: [{ productId: '00000000-0000-0000-0000-000000000301', productName: 'Điện thoại A', sku: 'DT-A', unitPrice: 50000, quantity: 2, lineTotal: 100000 }],
+  items: [{ orderItemId: '00000000-0000-0000-0000-000000000302', productId: '00000000-0000-0000-0000-000000000301', productName: 'Điện thoại A', sku: 'DT-A', unitPrice: 50000, quantity: 2, lineTotal: 100000, canReview: false, reviewId: null }],
   statusHistory: [{ fromStatus: 'Pending', toStatus: 'Confirmed', note: 'Payment initiated: COD', createdAtUtc: '2026-08-28T01:05:00Z' }],
   payment: { id: '00000000-0000-0000-0000-000000000401', method: 'COD', status: 'PendingCollection', amount: 115000, providerTransactionId: null, createdAtUtc: '2026-08-28T01:05:00Z' },
 }
@@ -108,5 +108,55 @@ describe('OrderDetailPage', () => {
     screen.getByRole('button', { name: 'Thử lại' }).click()
     expect(await screen.findByRole('heading', { name: 'Chi tiết đơn hàng 00000000-0000-0000-0000-000000000001' })).toBeInTheDocument()
     expect(mockGetOrderById.mock.calls.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('shows review action only for eligible items in completed orders', async () => {
+    mockGetOrderById.mockResolvedValue({
+      ...orderDetail,
+      status: 'Completed',
+      items: [
+        {
+          orderItemId: 'oi-1',
+          productId: 'p-1',
+          productName: 'Sản phẩm A',
+          sku: 'SP-A',
+          unitPrice: 50000,
+          quantity: 1,
+          lineTotal: 50000,
+          canReview: true,
+          reviewId: null,
+        },
+        {
+          orderItemId: 'oi-2',
+          productId: 'p-2',
+          productName: 'Sản phẩm B',
+          sku: 'SP-B',
+          unitPrice: 65000,
+          quantity: 1,
+          lineTotal: 65000,
+          canReview: false,
+          reviewId: 'r-2',
+        },
+        {
+          orderItemId: 'oi-3',
+          productId: 'p-3',
+          productName: 'Sản phẩm C',
+          sku: 'SP-C',
+          unitPrice: 20000,
+          quantity: 1,
+          lineTotal: 20000,
+          canReview: false,
+          reviewId: null,
+        },
+      ],
+    })
+
+    renderDetail()
+
+    expect(await screen.findByRole('link', { name: 'Viết đánh giá Sản phẩm A' }))
+      .toHaveAttribute('href', '/product/p-1?reviewOrderItemId=oi-1#reviews')
+    expect(screen.getByRole('link', { name: 'Sửa đánh giá Sản phẩm B' }))
+      .toHaveAttribute('href', '/product/p-2?reviewId=r-2#reviews')
+    expect(screen.queryByRole('link', { name: /Sản phẩm C/i })).not.toBeInTheDocument()
   })
 })

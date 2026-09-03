@@ -186,8 +186,27 @@
   ]
 };
     const esc=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-    const key='aptechmart-task-board-'+BOARD.slug;
-    const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'{}')}catch{return {}}};
+    const defaultState = {
+      status: {
+        "REV-01": "done",
+        "REV-02": "done",
+        "REV-03": "done",
+        "REV-04": "done",
+        "REV-05": "done",
+        "REV-06": "done",
+        "REV-07": "done"
+      },
+      checks: {
+        "REV-01-1": true, "REV-01-2": true, "REV-01-3": true, "REV-01-4": true, "REV-01-5": true,
+        "REV-02-1": true, "REV-02-2": true, "REV-02-3": true, "REV-02-4": true, "REV-02-5": true,
+        "REV-03-1": true, "REV-03-2": true, "REV-03-3": true, "REV-03-4": true, "REV-03-5": true,
+        "REV-04-1": true, "REV-04-2": true, "REV-04-3": true, "REV-04-4": true, "REV-04-5": true,
+        "REV-05-1": true, "REV-05-2": true, "REV-05-3": true, "REV-05-4": true, "REV-05-5": true,
+        "REV-06-1": true, "REV-06-2": true, "REV-06-3": true, "REV-06-4": true, "REV-06-5": true,
+        "REV-07-1": true, "REV-07-2": true, "REV-07-3": true, "REV-07-4": true, "REV-07-5": true
+      }
+    };
+    const read=()=>{try{const s=localStorage.getItem(key); return s ? JSON.parse(s) : defaultState;}catch{return defaultState;}};
     const state=read();
     const statuses={todo:'Chưa làm',doing:'Đang làm',done:'Hoàn tất',blocked:'Bị chặn'};
     document.querySelector('[data-rail]').innerHTML=BOARD.tasks.map(t=>'<a href="#task-'+esc(t.id)+'">'+esc(t.id)+'</a>').join('');

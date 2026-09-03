@@ -10,12 +10,15 @@ export interface OrderListDto {
 }
 
 export interface OrderItemDto {
+  orderItemId?: string
   productId: string
   productName: string
   sku: string
   unitPrice: number
   quantity: number
   lineTotal: number
+  canReview?: boolean
+  reviewId?: string | null
 }
 
 export interface StatusHistoryDto {
