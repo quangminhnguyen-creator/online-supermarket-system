@@ -302,12 +302,16 @@ public static class CheckoutEndpoints
     private static async Task<IResult> PaymentCallbackAsync(
         [FromBody] PaymentCallbackRequest request,
         [FromServices] AppDbContext dbContext,
+        [FromServices] IInventoryMutationService mutationService,
         CancellationToken cancellationToken)
     {
         var externalEventId = request.Data.GetValueOrDefault("transactionId") ?? Guid.NewGuid().ToString();
         var amount = decimal.TryParse(request.Data.GetValueOrDefault("amount") ?? "", out var a) ? a : 0m;
         var responseCode = request.Data.GetValueOrDefault("responseCode") ?? "00";
         var isSuccess = responseCode == "00" || responseCode == "0";
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, cancellationToken);
 
         var payment = await dbContext.Payments
             .FirstOrDefaultAsync(p => p.ProviderTransactionId == externalEventId, cancellationToken);
@@ -358,53 +362,53 @@ public static class CheckoutEndpoints
         else
         {
             payment.MarkFailed(System.Text.Json.JsonSerializer.Serialize(request.Data));
-            await ReleaseOrderInventoryAsync(payment.OrderId, dbContext, cancellationToken);
+
+            var failedOrder = await dbContext.Orders
+                .Include(o => o.Items)
+                .Include(o => o.StatusHistory)
+                .FirstOrDefaultAsync(o => o.Id == payment.OrderId, cancellationToken);
+            if (failedOrder != null)
+            {
+                var releaseCommands = await OrderItemCommandsAsync(
+                    failedOrder, dbContext, (id, quantity, orderId) => InventoryMutationCommand.Release(id, quantity, orderId), cancellationToken);
+                await mutationService.ApplyBatchAsync(releaseCommands, cancellationToken);
+
+                if (failedOrder.PromotionId.HasValue)
+                {
+                    var promotion = await dbContext.Promotions
+                        .FirstOrDefaultAsync(p => p.Id == failedOrder.PromotionId.Value, cancellationToken);
+                    promotion?.ReleaseUsage();
+                }
+
+                failedOrder.SetStatus(OrderStatus.Cancelled, "Payment failed - inventory released");
+            }
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Results.Ok(new { message = "Callback processed." });
     }
 
-    private static async Task ReleaseOrderInventoryAsync(
-        Guid orderId,
-        AppDbContext dbContext,
-        CancellationToken cancellationToken)
-    {
-        var order = await dbContext.Orders
-            .Include(o => o.Items)
-            .Include(o => o.StatusHistory)
-            .FirstOrDefaultAsync(o => o.Id == orderId, cancellationToken);
-
-        if (order == null) return;
-
-        foreach (var item in order.Items)
-        {
-            var inventory = await dbContext.BranchInventories
-                .FirstOrDefaultAsync(bi => bi.BranchId == order.BranchId && bi.ProductId == item.ProductId, cancellationToken);
-
-            if (inventory != null)
-            {
-                inventory.Release(item.Quantity);
-            }
-        }
-
-        await ReleasePromotionUsageAsync(order, dbContext, cancellationToken);
-
-        order.SetStatus(OrderStatus.Cancelled, "Payment failed - inventory released");
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    private static async Task ReleasePromotionUsageAsync(
+    private static async Task<IReadOnlyCollection<InventoryMutationCommand>> OrderItemCommandsAsync(
         Order order,
         AppDbContext dbContext,
+        Func<Guid, int, Guid, InventoryMutationCommand> factory,
         CancellationToken cancellationToken)
     {
-        if (!order.PromotionId.HasValue) return;
+        var productIds = order.Items.Select(i => i.ProductId).Distinct().ToArray();
+        if (productIds.Length == 0)
+        {
+            return [];
+        }
 
-        var promotion = await dbContext.Promotions
-            .FirstOrDefaultAsync(p => p.Id == order.PromotionId.Value, cancellationToken);
+        var inventories = await dbContext.BranchInventories
+            .Where(bi => bi.BranchId == order.BranchId && productIds.Contains(bi.ProductId))
+            .ToDictionaryAsync(bi => bi.ProductId, cancellationToken);
 
-        promotion?.ReleaseUsage();
+        return order.Items
+            .Where(i => inventories.ContainsKey(i.ProductId))
+            .Select(i => factory(inventories[i.ProductId].Id, i.Quantity, order.Id))
+            .ToArray();
     }
 }

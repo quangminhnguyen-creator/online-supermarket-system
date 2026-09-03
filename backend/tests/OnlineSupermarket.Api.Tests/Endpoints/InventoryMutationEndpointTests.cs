@@ -7,6 +7,8 @@ using OnlineSupermarket.Api.Contracts.Checkout;
 using OnlineSupermarket.Domain.Branches;
 using OnlineSupermarket.Domain.Identity;
 using OnlineSupermarket.Domain.Inventory;
+using OnlineSupermarket.Domain.Orders;
+using OnlineSupermarket.Domain.Payments;
 using OnlineSupermarket.Domain.Shopping;
 using OnlineSupermarket.Infrastructure.Identity;
 using OnlineSupermarket.Infrastructure.Persistence;
@@ -16,6 +18,7 @@ namespace OnlineSupermarket.Api.Tests.Endpoints;
 public sealed class InventoryMutationEndpointTests
 {
     private sealed record CheckoutSeed(HttpClient Client, Guid UserId, Guid InventoryId);
+    private sealed record OrderSeed(HttpClient AdminClient, Guid OrderId, Guid InventoryId);
 
     private static async Task<CheckoutSeed> SeedCheckoutAsync(
         TestApiFactory factory,
@@ -93,5 +96,182 @@ public sealed class InventoryMutationEndpointTests
         var inventory = await db.BranchInventories.SingleAsync(bi => bi.Id == seed.InventoryId);
         Assert.Equal(0, inventory.ReservedQuantity);
         Assert.Equal(2, inventory.QuantityOnHand);
+    }
+
+    private static async Task<HttpClient> CreateAdminClientAsync(TestApiFactory factory)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+
+        var admin = User.Create($"admin_{Guid.NewGuid():N}@test.com", "hash", "Admin", null, UserRole.Admin);
+        db.Users.Add(admin);
+        await db.SaveChangesAsync();
+
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", tokenService.GenerateAccessToken(admin));
+        return client;
+    }
+
+    private static async Task<OrderSeed> SeedReservedOrderAsync(
+        TestApiFactory factory,
+        int quantity,
+        OrderStatus status)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var customer = User.Create($"customer_order_{Guid.NewGuid():N}@test.com", "hash", "Customer", null);
+        var branch = new Branch("Ledger Order Branch", "1 Test Street", "0900000000", 10m, 106m);
+        var productId = Guid.NewGuid();
+        var inventory = BranchInventory.Create(branch.Id, productId, 100_000m, 100, 5);
+        inventory.Reserve(quantity);
+
+        var order = Order.Create(
+            customer.Id,
+            branch.Id,
+            "Delivery",
+            "Thu Ban",
+            "0900000000",
+            "Thu, 0900000000, 1 Test Street",
+            null,
+            [(productId, "Product A", "SKU-A", 100_000m, quantity, 100_000m * quantity)],
+            subtotal: 100_000m * quantity,
+            discountAmount: 0m,
+            shippingFee: 15_000m,
+            totalAmount: 100_000m * quantity + 15_000m);
+
+        var path = new[]
+        {
+            OrderStatus.Pending,
+            OrderStatus.Confirmed,
+            OrderStatus.Preparing,
+            OrderStatus.Ready,
+            OrderStatus.Shipped,
+            OrderStatus.Delivered,
+        };
+        var targetIndex = Array.IndexOf(path, status);
+        for (var i = 1; i <= targetIndex; i++)
+        {
+            order.SetStatus(path[i], $"transition to {path[i]}");
+        }
+
+        db.Users.Add(customer);
+        db.Branches.Add(branch);
+        db.BranchInventories.Add(inventory);
+        db.Orders.Add(order);
+        await db.SaveChangesAsync();
+
+        return new OrderSeed(await CreateAdminClientAsync(factory), order.Id, inventory.Id);
+    }
+
+    private static async Task<List<InventoryTransaction>> LoadTransactionsAsync(
+        TestApiFactory factory,
+        InventoryTransactionType type)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return await db.InventoryTransactions
+            .Where(t => t.TransactionType == type)
+            .ToListAsync();
+    }
+
+    [Fact]
+    public async Task CompletingOrder_ConvertsReservationToSaleExactlyOnce()
+    {
+        using var factory = new TestApiFactory();
+        var fixture = await SeedReservedOrderAsync(factory, quantity: 3, OrderStatus.Delivered);
+
+        var first = await fixture.AdminClient.PutAsJsonAsync(
+            $"/api/admin/orders/{fixture.OrderId}/status",
+            new { status = "Completed", note = "delivered to customer" });
+        var second = await fixture.AdminClient.PutAsJsonAsync(
+            $"/api/admin/orders/{fixture.OrderId}/status",
+            new { status = "Completed" });
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, second.StatusCode);
+
+        var sale = Assert.Single(await LoadTransactionsAsync(factory, InventoryTransactionType.Sale));
+        Assert.Equal(-3, sale.QuantityOnHandDelta);
+        Assert.Equal(-3, sale.ReservedQuantityDelta);
+        Assert.Equal(fixture.InventoryId, sale.BranchInventoryId);
+        Assert.Equal(fixture.OrderId, sale.ReferenceId);
+        Assert.Equal(
+            $"order:{fixture.OrderId}:inventory:{fixture.InventoryId}:sale",
+            sale.OperationKey);
+    }
+
+    [Fact]
+    public async Task CancellingOrder_LogsReleaseTransactionOnce()
+    {
+        using var factory = new TestApiFactory();
+        var fixture = await SeedReservedOrderAsync(factory, quantity: 3, OrderStatus.Confirmed);
+
+        var first = await fixture.AdminClient.PutAsJsonAsync(
+            $"/api/admin/orders/{fixture.OrderId}/status",
+            new { status = "Cancelled", note = "customer request" });
+        var second = await fixture.AdminClient.PutAsJsonAsync(
+            $"/api/admin/orders/{fixture.OrderId}/status",
+            new { status = "Cancelled" });
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, second.StatusCode);
+
+        var release = Assert.Single(await LoadTransactionsAsync(factory, InventoryTransactionType.Release));
+        Assert.Equal(0, release.QuantityOnHandDelta);
+        Assert.Equal(-3, release.ReservedQuantityDelta);
+        Assert.Equal(0, release.ReservedQuantityAfter);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var inventory = await db.BranchInventories.SingleAsync(bi => bi.Id == fixture.InventoryId);
+        Assert.Equal(0, inventory.ReservedQuantity);
+    }
+
+    [Fact]
+    public async Task PaymentFailure_ReleasesReservationOnce()
+    {
+        using var factory = new TestApiFactory();
+        var fixture = await SeedReservedOrderAsync(factory, quantity: 2, OrderStatus.Confirmed);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var order = await db.Orders.FirstAsync(o => o.Id == fixture.OrderId);
+        var payment = Payment.Create(order.Id, PaymentMethod.VNPay, order.TotalAmount);
+        db.Payments.Add(payment);
+        await db.SaveChangesAsync();
+
+        var client = factory.CreateClient();
+        for (var i = 0; i < 2; i++)
+        {
+            var response = await client.PostAsJsonAsync("/api/checkout/payment/callback", new
+            {
+                provider = "vnpay",
+                data = new Dictionary<string, string>
+                {
+                    ["transactionId"] = "txn-001",
+                    ["amount"] = order.TotalAmount.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["orderId"] = order.Id.ToString(),
+                    ["responseCode"] = "99",
+                },
+            });
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        var release = Assert.Single(await LoadTransactionsAsync(factory, InventoryTransactionType.Release));
+        Assert.Equal(-2, release.ReservedQuantityDelta);
+        Assert.Equal(fixture.InventoryId, release.BranchInventoryId);
+        Assert.Equal(
+            $"order:{fixture.OrderId}:inventory:{fixture.InventoryId}:release",
+            release.OperationKey);
+
+        var reloaded = await db.Orders.AsNoTracking().SingleAsync(o => o.Id == fixture.OrderId);
+        Assert.Equal(OrderStatus.Cancelled, reloaded.Status);
+
+        var inventory = await db.BranchInventories.AsNoTracking()
+            .SingleAsync(bi => bi.Id == fixture.InventoryId);
+        Assert.Equal(0, inventory.ReservedQuantity);
     }
 }

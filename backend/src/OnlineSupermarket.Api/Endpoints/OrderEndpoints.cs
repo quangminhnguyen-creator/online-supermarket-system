@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using OnlineSupermarket.Api.Contracts.Order;
 using OnlineSupermarket.Domain.Orders;
+using OnlineSupermarket.Infrastructure.Inventory;
 using OnlineSupermarket.Infrastructure.Persistence;
 
 namespace OnlineSupermarket.Api.Endpoints;
@@ -160,6 +161,7 @@ public static class OrderEndpoints
         [FromRoute] Guid id,
         [FromBody] UpdateOrderStatusRequest request,
         [FromServices] AppDbContext dbContext,
+        [FromServices] IInventoryMutationService mutationService,
         CancellationToken cancellationToken)
     {
         if (!Enum.TryParse<OrderStatus>(request.Status, true, out var newStatus))
@@ -177,39 +179,56 @@ public static class OrderEndpoints
         if (!validTransitions.Contains(newStatus))
             return Results.BadRequest(new { message = $"Invalid transition from {order.Status} to {newStatus}." });
 
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, cancellationToken);
+
         if (newStatus == OrderStatus.Cancelled)
         {
-            await ReleaseInventoryOnCancel(order, dbContext, cancellationToken);
+            var releaseCommands = await OrderItemCommandsAsync(
+                order, dbContext, (id, quantity, orderId) => InventoryMutationCommand.Release(id, quantity, orderId), cancellationToken);
+            await mutationService.ApplyBatchAsync(releaseCommands, cancellationToken);
+
+            if (order.PromotionId.HasValue)
+            {
+                var promotion = await dbContext.Promotions
+                    .FirstOrDefaultAsync(p => p.Id == order.PromotionId.Value, cancellationToken);
+                promotion?.ReleaseUsage();
+            }
+        }
+        else if (newStatus == OrderStatus.Completed)
+        {
+            var saleCommands = await OrderItemCommandsAsync(
+                order, dbContext, (id, quantity, orderId) => InventoryMutationCommand.Sale(id, quantity, orderId), cancellationToken);
+            await mutationService.ApplyBatchAsync(saleCommands, cancellationToken);
         }
 
         order.SetStatus(newStatus, request.Note);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Results.Ok(MapToDetailDto(order, dbContext));
     }
 
-    private static async Task ReleaseInventoryOnCancel(
+    private static async Task<IReadOnlyCollection<InventoryMutationCommand>> OrderItemCommandsAsync(
         Order order,
         AppDbContext dbContext,
+        Func<Guid, int, Guid, InventoryMutationCommand> factory,
         CancellationToken cancellationToken)
     {
-        foreach (var item in order.Items)
+        var productIds = order.Items.Select(i => i.ProductId).Distinct().ToArray();
+        if (productIds.Length == 0)
         {
-            var inventory = await dbContext.BranchInventories
-                .FirstOrDefaultAsync(bi => bi.BranchId == order.BranchId && bi.ProductId == item.ProductId, cancellationToken);
-
-            if (inventory != null)
-            {
-                inventory.Release(item.Quantity);
-            }
+            return [];
         }
 
-        if (order.PromotionId.HasValue)
-        {
-            var promotion = await dbContext.Promotions
-                .FirstOrDefaultAsync(p => p.Id == order.PromotionId.Value, cancellationToken);
-            promotion?.ReleaseUsage();
-        }
+        var inventories = await dbContext.BranchInventories
+            .Where(bi => bi.BranchId == order.BranchId && productIds.Contains(bi.ProductId))
+            .ToDictionaryAsync(bi => bi.ProductId, cancellationToken);
+
+        return order.Items
+            .Where(i => inventories.ContainsKey(i.ProductId))
+            .Select(i => factory(inventories[i.ProductId].Id, i.Quantity, order.Id))
+            .ToArray();
     }
 
     private static HashSet<OrderStatus> GetValidTransitions(OrderStatus current)
