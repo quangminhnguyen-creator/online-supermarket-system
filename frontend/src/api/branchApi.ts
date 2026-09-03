@@ -11,6 +11,7 @@ export interface BranchDto {
 }
 
 export interface BranchProductInventoryDto {
+  inventoryId: string
   productId: string
   productName: string
   sku: string

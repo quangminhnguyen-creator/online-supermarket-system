@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { branchApi, type BranchDto, type BranchProductInventoryDto } from '../../api/branchApi'
 import { AdminInventoryModal } from './AdminInventoryModal'
+import { AdminInventoryTransactions } from './AdminInventoryTransactions'
 import './AdminOrdersPage.css'
 import './AdminInventoryPage.css'
 
@@ -28,6 +29,7 @@ export function AdminInventoryPage() {
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [retryKey, setRetryKey] = useState(0)
   const [editing, setEditing] = useState<BranchProductInventoryDto | null>(null)
+  const [history, setHistory] = useState<BranchProductInventoryDto | null>(null)
 
   // Load the branch list once.
   useEffect(() => {
@@ -165,6 +167,14 @@ export function AdminInventoryPage() {
                       <button
                         type="button"
                         className="admin-link admin-link-btn"
+                        onClick={() => setHistory(item)}
+                        aria-label={`Lịch sử kho ${item.productName}`}
+                      >
+                        Lịch sử kho
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-link admin-link-btn"
                         onClick={() => setEditing(item)}
                         aria-label={`Chỉnh sửa ${item.productName}`}
                       >
@@ -185,6 +195,14 @@ export function AdminInventoryPage() {
           item={editing}
           onClose={() => setEditing(null)}
           onSaved={onSaved}
+        />
+      )}
+
+      {history && (
+        <AdminInventoryTransactions
+          inventoryId={history.inventoryId}
+          productName={history.productName}
+          onClose={() => setHistory(null)}
         />
       )}
     </main>

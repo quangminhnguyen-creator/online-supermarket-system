@@ -78,6 +78,9 @@ app.MapAdminCatalogEndpoints();
 // Branch (A-3)
 app.MapBranchEndpoints();
 
+// Inventory intelligence (INV)
+app.MapInventoryIntelligenceEndpoints();
+
 // Cart (A-4)
 app.MapCartEndpoints();
 

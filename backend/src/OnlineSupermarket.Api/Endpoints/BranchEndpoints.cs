@@ -1,15 +1,24 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using OnlineSupermarket.Api.Contracts.Branch;
 using OnlineSupermarket.Domain.Branches;
+using OnlineSupermarket.Infrastructure.Inventory;
 using OnlineSupermarket.Infrastructure.Persistence;
 
 namespace OnlineSupermarket.Api.Endpoints;
 
 public static class BranchEndpoints
 {
+    private static Guid GetUserId(ClaimsPrincipal user)
+    {
+        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? user.FindFirst("sub")?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId
+            : throw new UnauthorizedAccessException("Invalid user token.");
+    }
     public static IEndpointRouteBuilder MapBranchEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/api").WithTags("Branches");
@@ -102,6 +111,7 @@ public static class BranchEndpoints
             .Where(bi => bi.BranchId == id)
             .OrderBy(bi => bi.Product != null ? bi.Product.Name : string.Empty)
             .Select(bi => new BranchProductInventoryDto(
+                bi.Id,
                 bi.ProductId,
                 bi.Product != null ? bi.Product.Name : string.Empty,
                 bi.Product != null ? bi.Product.Sku : string.Empty,
@@ -119,7 +129,9 @@ public static class BranchEndpoints
     private static async Task<IResult> UpdateInventoryAsync(
         [FromRoute] Guid branchId,
         [FromBody] InventoryAdjustmentRequest request,
+        ClaimsPrincipal user,
         [FromServices] AppDbContext dbContext,
+        [FromServices] IInventoryMutationService mutationService,
         CancellationToken cancellationToken)
     {
         var inventory = await dbContext.BranchInventories
@@ -131,18 +143,29 @@ public static class BranchEndpoints
         if (inventory == null)
             return Results.NotFound(new { message = "Inventory not found for this product at this branch." });
 
-        if (request.SellingPrice.HasValue)
-            inventory.AdjustSellingPrice(request.SellingPrice.Value);
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, cancellationToken);
 
         if (request.QuantityOnHand >= 0)
-            inventory.AdjustQuantity(request.QuantityOnHand);
+        {
+            var actorUserId = GetUserId(user);
+            await mutationService.ApplyBatchAsync(
+                [InventoryMutationCommand.ManualAdjustment(
+                    inventory.Id, request.QuantityOnHand, actorUserId, request.Reason)],
+                cancellationToken);
+        }
+
+        if (request.SellingPrice.HasValue)
+            inventory.AdjustSellingPrice(request.SellingPrice.Value);
 
         if (request.ReorderLevel.HasValue)
             inventory.AdjustReorderLevel(request.ReorderLevel.Value);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         var dto = new BranchProductInventoryDto(
+            inventory.Id,
             inventory.ProductId,
             inventory.Product!.Name,
             inventory.Product.Sku!,

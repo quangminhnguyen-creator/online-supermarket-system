@@ -27,6 +27,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     // Inventory
     public DbSet<BranchInventory> BranchInventories => Set<BranchInventory>();
+    public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
 
     // Shopping
     public DbSet<Cart> Carts => Set<Cart>();
