@@ -57,10 +57,10 @@ public sealed class ProductViewEvent : Entity
             throw new ArgumentException("viewedAtUtc must be UTC.", nameof(viewedAtUtc));
         }
 
-        if (userId is null == anonymousSessionId is null)
+        if (userId is null && anonymousSessionId is null)
         {
             throw new ArgumentException(
-                "Exactly one of userId or anonymousSessionId is required.",
+                "At least one of userId or anonymousSessionId is required.",
                 nameof(anonymousSessionId));
         }
 

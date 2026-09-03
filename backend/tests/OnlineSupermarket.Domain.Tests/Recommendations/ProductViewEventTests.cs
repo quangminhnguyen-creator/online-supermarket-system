@@ -50,11 +50,16 @@ public sealed class ProductViewEventTests
     }
 
     [Fact]
-    public void Create_WithBothUserAndAnonymousOwner_Throws()
+    public void Create_WithClaimedMergeOwner_AllowsBothUserAndAnonymousSession()
     {
-        Assert.Throws<ArgumentException>(() =>
-            ProductViewEvent.Create(
-                Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, DateTime.UtcNow));
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+
+        var view = ProductViewEvent.Create(
+            Guid.NewGuid(), userId, sessionId, null, DateTime.UtcNow);
+
+        Assert.Equal(userId, view.UserId);
+        Assert.Equal(sessionId, view.AnonymousSessionId);
     }
 
     [Fact]
