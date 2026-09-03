@@ -90,7 +90,11 @@ public static class DependencyInjection
         if (!configuration.GetValue<bool>("Infrastructure:DisableBackgroundServices"))
         {
             services.AddHostedService<BackgroundServices.RefreshTokenCleanupService>();
+            services.AddHostedService<Jobs.IntelligenceWorker>();
         }
+
+        services.AddSingleton<Jobs.IJobQueue>(sp => new Jobs.ChannelJobQueue());
+        services.AddScoped<Jobs.JobRunCoordinator>();
 
         return services;
     }
