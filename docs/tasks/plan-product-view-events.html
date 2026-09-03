@@ -183,8 +183,9 @@
   ]
 };
     const esc=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-    const key='aptechmart-task-board-'+BOARD.slug;
-    const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'{}')}catch{return {}}};
+    const key='aptechmart-task-board-'+BOARD.slug+'-completed';
+    const defaultDone={status:Object.fromEntries(BOARD.tasks.map(t=>[t.id,'done'])),checks:Object.fromEntries(BOARD.tasks.flatMap(t=>t.steps.map((_,i)=>[t.id+'-'+(i+1),true])))};
+    const read=()=>{try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):defaultDone}catch{return defaultDone}};
     const state=read();
     const statuses={todo:'Chưa làm',doing:'Đang làm',done:'Hoàn tất',blocked:'Bị chặn'};
     document.querySelector('[data-rail]').innerHTML=BOARD.tasks.map(t=>'<a href="#task-'+esc(t.id)+'">'+esc(t.id)+'</a>').join('');
