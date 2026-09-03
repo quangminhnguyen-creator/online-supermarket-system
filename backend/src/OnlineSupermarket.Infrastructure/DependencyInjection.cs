@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using OnlineSupermarket.Infrastructure.Identity;
+using OnlineSupermarket.Infrastructure.Inventory;
 using OnlineSupermarket.Infrastructure.Persistence;
 using OnlineSupermarket.Infrastructure.Services;
 
@@ -23,6 +24,9 @@ public static class DependencyInjection
         }
 
         services.AddDbContext<AppDbContext>(options => options.UseMySQL(connectionString));
+
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<IInventoryMutationService, InventoryMutationService>();
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         var jwtOptions = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();

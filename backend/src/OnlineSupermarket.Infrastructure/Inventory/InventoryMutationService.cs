@@ -1,0 +1,177 @@
+using Microsoft.EntityFrameworkCore;
+using OnlineSupermarket.Domain.Inventory;
+using OnlineSupermarket.Infrastructure.Persistence;
+
+namespace OnlineSupermarket.Infrastructure.Inventory;
+
+public sealed class InventoryMutationService(
+    AppDbContext dbContext,
+    TimeProvider timeProvider)
+    : IInventoryMutationService
+{
+    public async Task ApplyBatchAsync(
+        IReadOnlyCollection<InventoryMutationCommand> commands,
+        CancellationToken cancellationToken)
+    {
+        if (dbContext.Database.CurrentTransaction is null)
+        {
+            throw new InvalidOperationException(
+                "Inventory mutations require an active database transaction.");
+        }
+
+        if (commands.Count == 0)
+        {
+            return;
+        }
+
+        var distinctIds = commands
+            .Select(c => c.BranchInventoryId)
+            .Distinct()
+            .OrderBy(id => id)
+            .ToArray();
+
+        var inventories = await dbContext.BranchInventories
+            .Where(bi => distinctIds.Contains(bi.Id))
+            .OrderBy(bi => bi.Id)
+            .ToListAsync(cancellationToken);
+
+        var inventoryMap = inventories.ToDictionary(bi => bi.Id);
+        var missing = distinctIds.FirstOrDefault(id => !inventoryMap.ContainsKey(id));
+        if (missing != Guid.Empty)
+        {
+            throw new InvalidOperationException(
+                $"Inventory {missing} not found.");
+        }
+
+        var commandsByInventory = commands
+            .Select((command, index) => (Command: command, Index: index))
+            .GroupBy(x => x.Command.BranchInventoryId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderBy(x => x.Index).Select(x => x.Command).ToArray());
+
+        var operationKeys = commands
+            .Where(c => !string.IsNullOrWhiteSpace(c.OperationKey))
+            .Select(c => c.OperationKey!.Trim())
+            .Distinct()
+            .ToArray();
+
+        var replayable = operationKeys.Length == 0
+            ? new Dictionary<string, InventoryTransaction>()
+            : await dbContext.InventoryTransactions
+                .Where(t => operationKeys.Contains(t.OperationKey!))
+                .ToDictionaryAsync(t => t.OperationKey!, cancellationToken);
+
+        var occurredAtUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var toApply = new List<InventoryMutationCommand>();
+
+        foreach (var inventoryId in distinctIds)
+        {
+            foreach (var command in commandsByInventory[inventoryId])
+            {
+                var key = string.IsNullOrWhiteSpace(command.OperationKey)
+                    ? null
+                    : command.OperationKey.Trim();
+
+                if (key is not null && replayable.TryGetValue(key, out var existing))
+                {
+                    if (existing.TransactionType != command.TransactionType ||
+                        existing.ReferenceType != command.ReferenceType ||
+                        existing.ReferenceId != command.ReferenceId ||
+                        existing.BranchInventoryId != command.BranchInventoryId)
+                    {
+                        throw new InvalidOperationException(
+                            $"Operation key '{key}' was replayed with mismatched command.");
+                    }
+
+                    continue;
+                }
+
+                Preflight(command, inventoryMap[inventoryId]);
+                toApply.Add(command);
+            }
+        }
+
+        foreach (var command in toApply)
+        {
+            var inventory = inventoryMap[command.BranchInventoryId];
+            var beforeOnHand = inventory.QuantityOnHand;
+
+            int onHandDelta;
+            int reservedDelta;
+            switch (command.TransactionType)
+            {
+                case InventoryTransactionType.Reserve:
+                    onHandDelta = 0;
+                    reservedDelta = command.Quantity;
+                    inventory.Reserve(command.Quantity);
+                    break;
+
+                case InventoryTransactionType.Release:
+                    onHandDelta = 0;
+                    reservedDelta = -command.Quantity;
+                    inventory.Release(command.Quantity);
+                    break;
+
+                case InventoryTransactionType.Sale:
+                    onHandDelta = -command.Quantity;
+                    reservedDelta = -command.Quantity;
+                    inventory.CompleteSale(command.Quantity);
+                    break;
+
+                case InventoryTransactionType.ManualAdjustment:
+                    onHandDelta = command.AbsoluteQuantityOnHand!.Value - beforeOnHand;
+                    reservedDelta = 0;
+                    inventory.AdjustQuantity(command.AbsoluteQuantityOnHand!.Value);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(command.TransactionType));
+            }
+
+            dbContext.InventoryTransactions.Add(InventoryTransaction.Create(
+                command.BranchInventoryId,
+                command.TransactionType,
+                onHandDelta,
+                reservedDelta,
+                inventory.QuantityOnHand,
+                inventory.ReservedQuantity,
+                command.ReferenceType,
+                command.ReferenceId,
+                command.OperationKey?.Trim(),
+                command.ActorUserId,
+                command.Note,
+                command.OccurredAtUtc ?? occurredAtUtc));
+        }
+    }
+
+    private static void Preflight(InventoryMutationCommand command, BranchInventory inventory)
+    {
+        switch (command.TransactionType)
+        {
+            case InventoryTransactionType.Reserve:
+                if (command.Quantity <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(command.Quantity));
+                if (command.Quantity > inventory.AvailableQuantity)
+                    throw new InvalidOperationException("Insufficient available inventory.");
+                break;
+
+            case InventoryTransactionType.Release:
+                if (command.Quantity <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(command.Quantity));
+                break;
+
+            case InventoryTransactionType.Sale:
+                if (command.Quantity <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(command.Quantity));
+                if (command.Quantity > inventory.ReservedQuantity || command.Quantity > inventory.QuantityOnHand)
+                    throw new InvalidOperationException("Sale exceeds reserved inventory.");
+                break;
+
+            case InventoryTransactionType.ManualAdjustment:
+                if (command.AbsoluteQuantityOnHand is null or < 0)
+                    throw new ArgumentOutOfRangeException(nameof(command.AbsoluteQuantityOnHand));
+                break;
+        }
+    }
+}
