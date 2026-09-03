@@ -10,7 +10,7 @@ using OnlineSupermarket.Infrastructure.Services;
 
 namespace OnlineSupermarket.Api.Tests;
 
-public sealed class TestApiFactory : WebApplicationFactory<Program>
+public class TestApiFactory : WebApplicationFactory<Program>
 {
     private const string VariableName = "ConnectionStrings__DefaultConnection";
     private readonly string? _originalConnectionString;

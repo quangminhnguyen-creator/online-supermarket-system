@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using OnlineSupermarket.Api.Contracts.Recommendation;
 using OnlineSupermarket.Domain.Recommendations;
 using OnlineSupermarket.Infrastructure.Persistence;
+using OnlineSupermarket.Infrastructure.Recommendations;
 
 namespace OnlineSupermarket.Api.Endpoints;
 
@@ -19,6 +20,12 @@ public static class RecommendationEndpoints
             .Produces(StatusCodes.Status202Accepted)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/recommendations/session/merge", MergeSessionAsync)
+            .WithName("MergeRecommendationSession")
+            .RequireAuthorization()
+            .Produces<MergeSessionResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         return routes;
     }
@@ -58,5 +65,28 @@ public static class RecommendationEndpoints
     {
         var claim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return Guid.TryParse(claim, out var userId) ? userId : null;
+    }
+
+    private static async Task<IResult> MergeSessionAsync(
+        [FromBody] MergeSessionRequest request,
+        [FromServices] IProductViewEventStore viewEventStore,
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken)
+    {
+        if (request.AnonymousSessionId == Guid.Empty)
+        {
+            return Results.BadRequest(new { message = "Anonymous session id is required." });
+        }
+
+        var userId = TryGetUserId(user);
+        if (!userId.HasValue)
+        {
+            return Results.Unauthorized();
+        }
+
+        var mergedCount = await viewEventStore.MergeAnonymousSessionAsync(
+            request.AnonymousSessionId, userId.Value, cancellationToken);
+
+        return Results.Ok(new MergeSessionResponse(mergedCount));
     }
 }
