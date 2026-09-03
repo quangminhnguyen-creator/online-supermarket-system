@@ -459,6 +459,80 @@ namespace OnlineSupermarket.Infrastructure.Persistence.Migrations
                     b.ToTable("branch_inventories", (string)null);
                 });
 
+            modelBuilder.Entity("OnlineSupermarket.Domain.Inventory.InventoryTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<Guid>("BranchInventoryId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("branch_inventory_id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("OperationKey")
+                        .HasMaxLength(180)
+                        .HasColumnType("varchar(180)")
+                        .HasColumnName("operation_key");
+
+                    b.Property<int>("QuantityOnHandAfter")
+                        .HasColumnType("int")
+                        .HasColumnName("quantity_on_hand_after");
+
+                    b.Property<int>("QuantityOnHandDelta")
+                        .HasColumnType("int")
+                        .HasColumnName("quantity_on_hand_delta");
+
+                    b.Property<Guid?>("ReferenceId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("reference_id");
+
+                    b.Property<string>("ReferenceType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("reference_type");
+
+                    b.Property<int>("ReservedQuantityAfter")
+                        .HasColumnType("int")
+                        .HasColumnName("reserved_quantity_after");
+
+                    b.Property<int>("ReservedQuantityDelta")
+                        .HasColumnType("int")
+                        .HasColumnName("reserved_quantity_delta");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("transaction_type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("OperationKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_inventory_transactions_operation_key");
+
+                    b.HasIndex("BranchInventoryId", "CreatedAtUtc")
+                        .HasDatabaseName("ix_inventory_transactions_inventory_created");
+
+                    b.ToTable("inventory_transactions", (string)null);
+                });
+
             modelBuilder.Entity("OnlineSupermarket.Domain.Orders.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -942,6 +1016,20 @@ namespace OnlineSupermarket.Infrastructure.Persistence.Migrations
                     b.Navigation("Branch");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("OnlineSupermarket.Domain.Inventory.InventoryTransaction", b =>
+                {
+                    b.HasOne("OnlineSupermarket.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OnlineSupermarket.Domain.Inventory.BranchInventory", null)
+                        .WithMany()
+                        .HasForeignKey("BranchInventoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("OnlineSupermarket.Domain.Orders.OrderItem", b =>
