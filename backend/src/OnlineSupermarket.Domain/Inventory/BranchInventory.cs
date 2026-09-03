@@ -112,4 +112,21 @@ public sealed class BranchInventory : Entity
         ReservedQuantity = Math.Max(0, ReservedQuantity - quantity);
         UpdatedAtUtc = DateTime.UtcNow;
     }
+
+    public void CompleteSale(int quantity)
+    {
+        if (quantity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(quantity));
+        }
+
+        if (quantity > ReservedQuantity || quantity > QuantityOnHand)
+        {
+            throw new InvalidOperationException("Sale exceeds reserved inventory.");
+        }
+
+        QuantityOnHand -= quantity;
+        ReservedQuantity -= quantity;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
 }

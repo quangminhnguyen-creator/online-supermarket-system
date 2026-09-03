@@ -55,4 +55,47 @@ public sealed class BranchInventoryTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() => inventory.Reserve(0));
     }
+
+    [Fact]
+    public void CompleteSale_DecrementsOnHandAndReservedTogether()
+    {
+        var inventory = BranchInventory.Create(
+            Guid.NewGuid(), Guid.NewGuid(), 10m, 100, 20);
+        inventory.Reserve(10);
+
+        inventory.CompleteSale(10);
+
+        Assert.Equal(90, inventory.QuantityOnHand);
+        Assert.Equal(0, inventory.ReservedQuantity);
+        Assert.Equal(90, inventory.AvailableQuantity);
+    }
+
+    [Fact]
+    public void CompleteSale_WithNonPositiveQuantity_Throws()
+    {
+        var inventory = BranchInventory.Create(
+            Guid.NewGuid(), Guid.NewGuid(), 10m, 100, 20);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => inventory.CompleteSale(0));
+    }
+
+    [Fact]
+    public void CompleteSale_WhenQuantityExceedsReserved_Throws()
+    {
+        var inventory = BranchInventory.Create(
+            Guid.NewGuid(), Guid.NewGuid(), 10m, 100, 20);
+        inventory.Reserve(5);
+
+        Assert.Throws<InvalidOperationException>(() => inventory.CompleteSale(10));
+    }
+
+    [Fact]
+    public void CompleteSale_WhenQuantityExceedsOnHand_Throws()
+    {
+        var inventory = BranchInventory.Create(
+            Guid.NewGuid(), Guid.NewGuid(), 10m, 3, 20);
+        inventory.Reserve(3);
+
+        Assert.Throws<InvalidOperationException>(() => inventory.CompleteSale(5));
+    }
 }
