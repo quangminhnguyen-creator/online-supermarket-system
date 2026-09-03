@@ -105,6 +105,9 @@ app.MapReviewEndpoints();
 // Recommendations (VIEW)
 app.MapRecommendationEndpoints();
 
+// Admin Jobs
+app.MapAdminJobEndpoints();
+
 app.Run();
 
 public partial class Program;
