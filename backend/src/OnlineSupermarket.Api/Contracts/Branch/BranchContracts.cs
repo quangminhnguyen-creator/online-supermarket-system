@@ -16,6 +16,7 @@ public sealed record BranchInventoryListDto(
     [property: JsonPropertyName("products")] IReadOnlyList<BranchProductInventoryDto> Products);
 
 public sealed record BranchProductInventoryDto(
+    [property: JsonPropertyName("inventoryId")] Guid InventoryId,
     [property: JsonPropertyName("productId")] Guid ProductId,
     [property: JsonPropertyName("productName")] string ProductName,
     [property: JsonPropertyName("sku")] string Sku,
