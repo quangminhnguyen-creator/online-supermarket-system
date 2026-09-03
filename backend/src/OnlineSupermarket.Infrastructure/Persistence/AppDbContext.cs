@@ -10,6 +10,7 @@ using OnlineSupermarket.Domain.Promotions;
 using OnlineSupermarket.Domain.Recommendations;
 using OnlineSupermarket.Domain.Reviews;
 using OnlineSupermarket.Domain.Shopping;
+using OnlineSupermarket.Domain.Jobs;
 
 namespace OnlineSupermarket.Infrastructure.Persistence;
 
@@ -53,6 +54,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     // Recommendations
     public DbSet<ProductViewEvent> ProductViewEvents => Set<ProductViewEvent>();
+
+    // Jobs
+    public DbSet<BackgroundJobRun> BackgroundJobRuns => Set<BackgroundJobRun>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
