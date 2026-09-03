@@ -99,6 +99,12 @@ app.MapAddressEndpoints();
 // Promotions (Admin CRUD)
 app.MapPromotionEndpoints();
 
+// Reviews (REV-03, REV-04)
+app.MapReviewEndpoints();
+
+// Recommendations (VIEW)
+app.MapRecommendationEndpoints();
+
 app.Run();
 
 public partial class Program;
