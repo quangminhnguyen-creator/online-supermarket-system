@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using OnlineSupermarket.Infrastructure.Identity;
 using OnlineSupermarket.Infrastructure.Inventory;
 using OnlineSupermarket.Infrastructure.Persistence;
+using OnlineSupermarket.Infrastructure.Recommendations;
 using OnlineSupermarket.Infrastructure.Services;
 
 namespace OnlineSupermarket.Infrastructure;
@@ -27,6 +28,7 @@ public static class DependencyInjection
 
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IInventoryMutationService, InventoryMutationService>();
+        services.AddScoped<IProductViewEventStore, ProductViewEventStore>();
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         var jwtOptions = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
