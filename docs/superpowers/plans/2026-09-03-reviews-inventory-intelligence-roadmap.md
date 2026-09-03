@@ -12,8 +12,9 @@
 
 ## Global Constraints
 
-- Baseline schema là 17 bảng; kết thúc toàn bộ roadmap phải đúng 24 bảng.
-- Bảy bảng mới là `reviews`, `inventory_transactions`, `product_view_events`, `recommendation_results`, `demand_forecasts`, `stock_alerts`, `background_job_runs`.
+- Baseline schema là 17 bảng; phạm vi active của roadmap phải kết thúc ở đúng 23 bảng.
+- Sáu bảng active là `reviews`, `inventory_transactions`, `product_view_events`, `recommendation_results`, `demand_forecasts`, `background_job_runs`.
+- `stock_alerts` được giữ trong design ở trạng thái **Deferred — Requires Phase 2B forecast completion**; không có task, migration, API, UI hoặc test triển khai trong roadmap này. Khi capability này được kích hoạt sau, tổng schema mới tăng từ 23 lên 24 bảng.
 - Không tạo `roles`, `user_roles`, `promotion_usages` hoặc `user_product_affinities`.
 - Domain không phụ thuộc ASP.NET Core hoặc EF Core.
 - Mọi timestamp lưu UTC `datetime(6)`; `Guid` dùng convention `char(36)` hiện có.
@@ -51,7 +52,7 @@ Consumes Phase 1 only for shared conventions. Deliverable: `reviews`, verified-p
 
 Plan: `docs/superpowers/plans/2026-09-03-inventory-forecast-alerts.md`
 
-Consumes Phase 1. Deliverable: immutable ledger, atomic reserve/release/sale/manual adjustment, `demand_forecasts`, `stock_alerts`, forecast worker/API và Admin UI.
+Consumes Phase 1. Deliverable: immutable ledger, atomic reserve/release/sale/manual adjustment, `demand_forecasts`, forecast worker/API và Admin UI. `stock_alerts` là out-of-scope của Phase 2B hiện tại.
 
 ### Phase 2C: Recommendations
 
@@ -63,7 +64,20 @@ Consumes Phase 1; may run in parallel with 2A after the shared migration is merg
 
 Plan: `docs/superpowers/plans/2026-09-03-intelligence-release-validation.md`
 
-Consumes all previous phases. Deliverable: deterministic demo seed, portable Playwright E2E, performance smoke output, 24-table assertion, OpenAPI regeneration và synchronized README/ERD/DFD/sitemap/requirements.
+Consumes all previous phases. Deliverable: deterministic demo seed, portable Playwright E2E, performance smoke output, 23-table assertion, OpenAPI regeneration và synchronized README/ERD/DFD/sitemap/requirements.
+
+## HTML Task Boards
+
+Các board dưới đây là checklist thực thi theo deliverable. Chúng lưu trạng thái cục bộ trong trình duyệt và liên kết ngược về plan/spec nguồn:
+
+- `docs/tasks/plan-background-job-runs.html`
+- `docs/tasks/plan-reviews.html`
+- `docs/tasks/plan-inventory-transactions.html`
+- `docs/tasks/plan-product-view-events.html`
+- `docs/tasks/plan-recommendation-results.html`
+- `docs/tasks/plan-demand-forecasts.html`
+
+Không tạo board cho `stock_alerts` trong phạm vi active.
 
 ---
 
@@ -108,4 +122,4 @@ dotnet ef migrations script --idempotent --project backend/src/OnlineSupermarket
 dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --no-restore --filter "FullyQualifiedName~MySqlSchema"
 ```
 
-Expected: 24 physical tables, all tests pass, frontend build succeeds, E2E report contains three passing cross-capability flows.
+Expected: 23 physical tables, all tests pass, frontend build succeeds, E2E report contains three passing cross-capability flows.

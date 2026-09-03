@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Demand Forecasts | AptechMart Task Board</title>
+  <style>
+    :root{--navy:#083e61;--blue:#0b5c8e;--cyan:#28a8b8;--green:#2e7d5b;--orange:#c85f2d;--red:#a83f45;--ink:#14283a;--muted:#607287;--paper:#f4f8fb;--panel:#fff;--line:#c9d7e2;--display:Bahnschrift,"Arial Narrow","Segoe UI",sans-serif;--body:"Segoe UI Variable","Segoe UI",sans-serif;--mono:"Cascadia Code",Consolas,monospace}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);font:16px/1.55 var(--body);background:linear-gradient(rgba(11,92,142,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(11,92,142,.045) 1px,transparent 1px),var(--paper);background-size:24px 24px}
+    button,select,input{font:inherit}button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid rgba(40,168,184,.45);outline-offset:3px}
+    .hero{position:relative;overflow:hidden;padding:64px max(24px,calc((100vw - 1160px)/2)) 54px;color:#fff;background:var(--navy)}.hero::after{content:attr(data-code);position:absolute;right:max(24px,calc((100vw - 1160px)/2));bottom:-45px;color:rgba(255,255,255,.07);font:700 clamp(8rem,24vw,18rem)/1 var(--display);pointer-events:none}.eyebrow{margin:0 0 14px;color:#91e4ea;font:700 .78rem/1 var(--mono);letter-spacing:.09em}.hero h1{position:relative;z-index:1;max-width:900px;margin:0;font:650 clamp(2.5rem,6vw,5.2rem)/.97 var(--display);letter-spacing:-.04em}.lead{position:relative;z-index:1;max-width:760px;margin:22px 0 0;color:#d5e6ee}.meta{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:9px;margin-top:26px}.meta span,.meta a{padding:7px 10px;border:1px solid rgba(255,255,255,.25);border-radius:99px;color:#e2f7f8;font:600 .76rem/1 var(--mono);text-decoration:none}
+    .controls{position:sticky;z-index:10;top:0;border-bottom:1px solid var(--line);background:rgba(244,248,251,.95);backdrop-filter:blur(14px)}.controls-inner{display:grid;grid-template-columns:minmax(240px,1fr) 180px auto;gap:18px;align-items:end;width:min(1160px,calc(100% - 48px));margin:auto;padding:15px 0}.progress-copy{display:flex;justify-content:space-between;margin-bottom:7px;font:650 .79rem/1.2 var(--mono)}.track{height:8px;overflow:hidden;border-radius:99px;background:#dce6ed}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .2s}.label{display:block;margin:0 0 6px;color:var(--muted);font:650 .7rem/1 var(--mono)}select,button{min-height:40px;padding:8px 11px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}button{cursor:pointer;font-weight:700}.reset{color:var(--red)}
+    main{width:min(1160px,calc(100% - 48px));margin:auto;padding:46px 0 80px}.dependency{display:grid;grid-template-columns:170px 1fr;gap:22px;margin-bottom:38px;padding:22px;border-left:5px solid var(--cyan);background:#eaf4f7}.dependency strong{font-family:var(--display);font-size:1.15rem}.dependency p{margin:0;color:var(--muted)}.rail{display:flex;overflow-x:auto;gap:8px;margin:0 0 30px;padding:0 0 12px}.rail a{min-width:54px;padding:9px;border:1px solid var(--line);border-radius:7px;color:var(--blue);font:700 .76rem/1 var(--mono);text-align:center;text-decoration:none;background:#fff}
+    .tasks{display:grid;gap:24px}.task{--accent:var(--blue);display:grid;grid-template-columns:112px minmax(0,1fr);scroll-margin-top:104px;border:1px solid var(--line);background:var(--panel);box-shadow:0 14px 34px rgba(31,67,91,.09)}.task[data-status=doing]{--accent:var(--orange)}.task[data-status=done]{--accent:var(--green)}.task[data-status=blocked]{--accent:var(--red)}.index{padding:26px 18px;color:#fff;background:var(--accent)}.index b{display:block;font:700 2.8rem/.9 var(--display)}.index span{display:block;margin-top:12px;font:650 .68rem/1.35 var(--mono)}.body{padding:25px 28px 29px}.head{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:20px}.head h2{margin:0;font:650 clamp(1.35rem,2.5vw,1.9rem)/1.08 var(--display)}.purpose{margin:8px 0 0;color:var(--muted)}.status{width:100%;border-left:4px solid var(--accent);font-weight:700}.grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(250px,.8fr);gap:28px;margin-top:23px}.sub{margin:0 0 11px;color:var(--navy);font:750 .72rem/1 var(--mono);letter-spacing:.06em}.checklist,.files{margin:0;padding:0;list-style:none}.checklist{display:grid;gap:9px}.checklist label{display:grid;grid-template-columns:21px 1fr;gap:9px;cursor:pointer}.checklist input{width:17px;height:17px;margin-top:3px;accent-color:var(--green)}.checklist input:checked+span{color:var(--muted);text-decoration:line-through}.files{padding-left:18px;list-style:disc;color:var(--muted)}.files li+li{margin-top:6px}.files code,.command,.commit code{font-family:var(--mono);font-size:.78rem}.command{overflow:auto;margin:16px 0 0;padding:12px 13px;border-left:3px solid var(--cyan);background:#102c3e;color:#dcf5f6;white-space:pre-wrap}.commit{margin:13px 0 0;color:var(--muted);font-size:.86rem}.empty{padding:32px;border:1px dashed var(--line);text-align:center;color:var(--muted)}footer{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}[hidden]{display:none!important}
+    @media(max-width:760px){.controls-inner{grid-template-columns:1fr 1fr}.progress{grid-column:1/-1}.task{grid-template-columns:76px minmax(0,1fr)}.index{padding:22px 12px}.grid{grid-template-columns:1fr}}@media(max-width:540px){.hero::after{display:none}.controls-inner,main{width:min(100% - 28px,1160px)}.controls-inner{grid-template-columns:1fr}.progress{grid-column:auto}.dependency,.task,.head{grid-template-columns:1fr}.index{display:flex;gap:13px;align-items:center;padding:13px 20px}.index span{margin:0}.body{padding:22px 19px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <header class="hero" data-code="FCST">
+    <p class="eyebrow">AptechMart / Engineering task board / FCST</p>
+    <h1>Demand Forecasts</h1>
+    <p class="lead">Moving average 7/14 ngày từ Sale ledger, materialize theo chi nhánh và cung cấp workspace Admin với manual rerun.</p>
+    <div class="meta"><span>7 task</span><span>RED → GREEN → VERIFY → COMMIT</span><a href="../superpowers/plans/2026-09-03-inventory-forecast-alerts.md">Plan nguồn</a><a href="../superpowers/specs/2026-09-03-reviews-inventory-intelligence-design.md">Design spec</a></div>
+  </header>
+  <div class="controls"><div class="controls-inner">
+    <div class="progress"><div class="progress-copy"><span>Tiến độ checklist</span><strong data-progress>0%</strong></div><div class="track" role="progressbar" aria-label="Tiến độ checklist" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-progressbar><div class="fill" data-fill></div></div></div>
+    <label><span class="label">Lọc trạng thái</span><select data-filter><option value="all">Tất cả</option><option value="todo">Chưa làm</option><option value="doing">Đang làm</option><option value="done">Hoàn tất</option><option value="blocked">Bị chặn</option></select></label>
+    <button class="reset" type="button" data-reset>Đặt lại board</button>
+  </div></div>
+  <main>
+    <section class="dependency" aria-labelledby="dependency-title"><strong id="dependency-title">Dependency gate</strong><p>Yêu cầu Background Job Runs và Inventory Transactions. Stock alerts là deferred, không tạo table/API/UI/test trong board này.</p></section>
+    <nav class="rail" data-rail aria-label="Đi đến task"></nav>
+    <section class="tasks" data-tasks aria-label="Danh sách task"></section>
+    <p class="empty" data-empty hidden>Không có task ở trạng thái này.</p>
+    <footer>Trạng thái và checklist chỉ lưu trong trình duyệt hiện tại. Mỗi task chỉ được chuyển sang “Hoàn tất” sau khi lệnh verification tương ứng chạy thành công.</footer>
+  </main>
+  <script>
+    const BOARD={
+  "slug": "demand-forecasts",
+  "code": "FCST",
+  "title": "Demand Forecasts",
+  "intro": "Moving average 7/14 ngày từ Sale ledger, materialize theo chi nhánh và cung cấp workspace Admin với manual rerun.",
+  "dependency": "Yêu cầu Background Job Runs và Inventory Transactions. Stock alerts là deferred, không tạo table/API/UI/test trong board này.",
+  "planHref": "../superpowers/plans/2026-09-03-inventory-forecast-alerts.md",
+  "tasks": [
+    {
+      "id": "FCST-01",
+      "phase": "CALCULATION",
+      "title": "Forecast domain và calculator",
+      "purpose": "Tính average trên tối đa 28 complete UTC days với quality Insufficient/Partial/Sufficient.",
+      "steps": [
+        "Viết boundary tests horizon 7/14 và quality 0/6/7/13/14/28.",
+        "Test zero-sale calendar days và invalid horizon.",
+        "Tạo DemandForecast + ForecastDataQuality.",
+        "Cài deterministic calculator bằng decimal/DateOnly.",
+        "Chạy calculator tests rồi commit."
+      ],
+      "command": "dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --filter FullyQualifiedName~DemandForecastCalculator",
+      "commit": "feat(forecast): calculate demand forecasts",
+      "files": [
+        "backend/src/OnlineSupermarket.Domain/Intelligence/DemandForecast.cs",
+        "backend/src/OnlineSupermarket.Infrastructure/Intelligence/DemandForecastCalculator.cs",
+        "backend/tests/OnlineSupermarket.Infrastructure.Tests/Intelligence/DemandForecastCalculatorTests.cs"
+      ]
+    },
+    {
+      "id": "FCST-02",
+      "phase": "PERSISTENCE",
+      "title": "Schema demand_forecasts",
+      "purpose": "Lưu rows 7/14 theo job run, inventory và algorithm version.",
+      "steps": [
+        "Viết metadata tests cho FK/check/index.",
+        "Thêm configuration + DbSet.",
+        "Generate migration AddDemandForecasts.",
+        "Inspect migration không chứa stock_alerts.",
+        "Chạy persistence tests rồi commit."
+      ],
+      "command": "dotnet test backend/tests/OnlineSupermarket.Api.Tests/OnlineSupermarket.Api.Tests.csproj --filter FullyQualifiedName~DemandForecastConfiguration",
+      "commit": "feat(forecast): persist demand forecasts",
+      "files": [
+        "backend/src/OnlineSupermarket.Infrastructure/Persistence/Configurations/DemandForecastConfiguration.cs",
+        "backend/src/OnlineSupermarket.Infrastructure/Persistence/AppDbContext.cs",
+        "backend/src/OnlineSupermarket.Infrastructure/Persistence/Migrations/*_AddDemandForecasts.cs"
+      ]
+    },
+    {
+      "id": "FCST-03",
+      "phase": "JOB",
+      "title": "Branch forecast handler",
+      "purpose": "Đọc Sale 28 ngày, ghi hai horizon atomically và giữ history cũ.",
+      "steps": [
+        "Viết handler tests two rows/branch isolation/no history.",
+        "Test ignore Reserve/Release/ManualAdjustment.",
+        "Cài query/group/calculation batch.",
+        "Rollback cả batch khi write lỗi.",
+        "Chạy handler tests rồi commit."
+      ],
+      "command": "dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --filter FullyQualifiedName~ForecastJobHandler",
+      "commit": "feat(forecast): materialize branch forecasts",
+      "files": [
+        "backend/src/OnlineSupermarket.Infrastructure/Intelligence/ForecastJobHandler.cs",
+        "backend/tests/OnlineSupermarket.Infrastructure.Tests/Intelligence/ForecastJobHandlerTests.cs"
+      ]
+    },
+    {
+      "id": "FCST-04",
+      "phase": "SCHEDULE",
+      "title": "Daily per-branch schedule",
+      "purpose": "Queue từng active branch với lock branch:{id}; các branch có thể chạy song song.",
+      "steps": [
+        "Viết due/not-due/already-success tests với TimeProvider.",
+        "Tạo ForecastRecurringSchedule.",
+        "Đăng ký handler + schedule.",
+        "Test manual và scheduled cùng lock.",
+        "Chạy worker tests rồi commit."
+      ],
+      "command": "dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --filter FullyQualifiedName~ForecastRecurringSchedule",
+      "commit": "feat(forecast): schedule branch runs",
+      "files": [
+        "backend/src/OnlineSupermarket.Infrastructure/Intelligence/ForecastRecurringSchedule.cs",
+        "backend/src/OnlineSupermarket.Infrastructure/DependencyInjection.cs"
+      ]
+    },
+    {
+      "id": "FCST-05",
+      "phase": "ADMIN API",
+      "title": "Forecast query và manual rerun",
+      "purpose": "Strict 7|14, latest successful batch, 202 status URL và 409 active lock.",
+      "steps": [
+        "Viết 400/401/403/404/409 tests.",
+        "Tạo ForecastDto và query endpoint.",
+        "Tạo POST admin forecast runs.",
+        "Filter failed/running materialization.",
+        "Chạy API tests rồi commit."
+      ],
+      "command": "dotnet test backend/tests/OnlineSupermarket.Api.Tests/OnlineSupermarket.Api.Tests.csproj --filter FullyQualifiedName~ForecastEndpoints",
+      "commit": "feat(forecast): expose admin forecast api",
+      "files": [
+        "backend/src/OnlineSupermarket.Api/Contracts/Inventory/InventoryIntelligenceContracts.cs",
+        "backend/src/OnlineSupermarket.Api/Endpoints/InventoryIntelligenceEndpoints.cs",
+        "backend/src/OnlineSupermarket.Api/Program.cs"
+      ]
+    },
+    {
+      "id": "FCST-06",
+      "phase": "FRONTEND",
+      "title": "Admin forecast workspace",
+      "purpose": "Branch selector, 7/14 controls, quality labels, status/history và manual refresh.",
+      "steps": [
+        "Viết API client tests.",
+        "Viết RTL route/loading/empty/error/409 tests.",
+        "Tạo AdminForecastPage + scoped CSS.",
+        "Map route/nav và bounded polling.",
+        "Chạy Vitest + build rồi commit."
+      ],
+      "command": "npm --prefix frontend test -- --run src/features/admin/AdminForecastPage.test.tsx src/App.test.tsx && npm --prefix frontend run build",
+      "commit": "feat(frontend): add demand forecast workspace",
+      "files": [
+        "frontend/src/api/inventoryIntelligenceApi.ts",
+        "frontend/src/features/admin/AdminForecastPage.tsx",
+        "frontend/src/features/admin/AdminLayout.tsx",
+        "frontend/src/App.tsx"
+      ]
+    },
+    {
+      "id": "FCST-07",
+      "phase": "RELEASE GATE",
+      "title": "MySQL, E2E và performance",
+      "purpose": "Xác nhận schema active 23 bảng, forecast batch, flow Admin và target 100 branches.",
+      "steps": [
+        "Chạy MySQL migration/schema tests.",
+        "Assert chính xác 23 physical tables.",
+        "Chạy inventory→forecast Playwright flow.",
+        "Chạy 100-branch performance smoke dưới 5 phút.",
+        "Lưu evidence, rà diff và commit fixes đúng scope."
+      ],
+      "command": "dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --filter FullyQualifiedName~MySql && node frontend/src/test/run-intelligence-gui-tests.mjs",
+      "commit": "test(forecast): verify materialized forecast release",
+      "files": [
+        "backend/tests/OnlineSupermarket.Infrastructure.Tests/Persistence/MySqlSchemaTests.cs",
+        "frontend/src/test/run-intelligence-gui-tests.mjs",
+        "scripts/run-intelligence-performance-smoke.ps1"
+      ]
+    }
+  ]
+};
+    const esc=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const key='aptechmart-task-board-'+BOARD.slug;
+    const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'{}')}catch{return {}}};
+    const state=read();
+    const statuses={todo:'Chưa làm',doing:'Đang làm',done:'Hoàn tất',blocked:'Bị chặn'};
+    document.querySelector('[data-rail]').innerHTML=BOARD.tasks.map(t=>'<a href="#task-'+esc(t.id)+'">'+esc(t.id)+'</a>').join('');
+    document.querySelector('[data-tasks]').innerHTML=BOARD.tasks.map(t=>{
+      const current=state.status?.[t.id]||'todo';
+      return '<article class="task" id="task-'+esc(t.id)+'" data-task data-id="'+esc(t.id)+'" data-status="'+current+'"><div class="index"><b>'+esc(t.id)+'</b><span>'+esc(t.phase)+'</span></div><div class="body"><div class="head"><div><h2>'+esc(t.title)+'</h2><p class="purpose">'+esc(t.purpose)+'</p></div><label><span class="label">Trạng thái</span><select class="status" data-status>'+Object.entries(statuses).map(([v,l])=>'<option value="'+v+'"'+(v===current?' selected':'')+'>'+l+'</option>').join('')+'</select></label></div><div class="grid"><div><h3 class="sub">Checklist thực thi</h3><ul class="checklist">'+t.steps.map((s,i)=>'<li><label><input type="checkbox" data-check="'+esc(t.id)+'-'+(i+1)+'"'+(state.checks?.[t.id+'-'+(i+1)]?' checked':'')+'><span>'+esc(s)+'</span></label></li>').join('')+'</ul><pre class="command">'+esc(t.command)+'</pre><p class="commit">Commit: <code>'+esc(t.commit)+'</code></p></div><div><h3 class="sub">Files và gate</h3><ul class="files">'+t.files.map(f=>'<li><code>'+esc(f)+'</code></li>').join('')+'</ul></div></div></div></article>';
+    }).join('');
+    const cards=[...document.querySelectorAll('[data-task]')],filter=document.querySelector('[data-filter]');
+    const snapshot=()=>({status:Object.fromEntries(cards.map(c=>[c.dataset.id,c.querySelector('[data-status]').value])),checks:Object.fromEntries([...document.querySelectorAll('[data-check]')].map(c=>[c.dataset.check,c.checked]))});
+    const save=()=>localStorage.setItem(key,JSON.stringify(snapshot()));
+    const render=()=>{const visible=cards.filter(c=>filter.value==='all'||c.dataset.status===filter.value);cards.forEach(c=>c.hidden=!visible.includes(c));document.querySelector('[data-empty]').hidden=visible.length>0;const checks=[...document.querySelectorAll('[data-check]')],done=checks.filter(c=>c.checked).length,pct=checks.length?Math.round(done*100/checks.length):0;document.querySelector('[data-progress]').textContent=pct+'%';document.querySelector('[data-fill]').style.width=pct+'%';document.querySelector('[data-progressbar]').setAttribute('aria-valuenow',String(pct))};
+    document.addEventListener('change',e=>{if(e.target.matches('[data-status]'))e.target.closest('[data-task]').dataset.status=e.target.value;if(e.target.matches('[data-status],[data-check]')){save();render()}});
+    filter.addEventListener('change',render);
+    document.querySelector('[data-reset]').addEventListener('click',()=>{localStorage.removeItem(key);cards.forEach(c=>{c.dataset.status='todo';c.querySelector('[data-status]').value='todo'});document.querySelectorAll('[data-check]').forEach(c=>c.checked=false);filter.value='all';render()});
+    render();
+  </script>
+</body>
+</html>

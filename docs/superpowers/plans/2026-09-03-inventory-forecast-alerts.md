@@ -1,10 +1,10 @@
-# Inventory Ledger, Demand Forecast, and Stock Alerts Implementation Plan
+# Inventory Ledger and Demand Forecast Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ghi ledger nguyên tử cho mọi inventory mutation, chuyển reservation thành sale đúng một lần khi order hoàn tất, rồi materialize forecast 7/14 ngày và stock alerts cho Admin.
+**Goal:** Ghi ledger nguyên tử cho mọi inventory mutation, chuyển reservation thành sale đúng một lần khi order hoàn tất, rồi materialize forecast 7/14 ngày cho Admin.
 
-**Architecture:** `InventoryMutationService` là đường duy nhất cho on-hand/reserved mutations và yêu cầu caller đang ở trong transaction `Serializable`; service load inventory theo `Id` tăng dần và thêm immutable ledger rows. `ForecastJobHandler` đọc `Sale` transactions, tính moving average 28 ngày, ghi hai horizon và alert batch theo `jobRunId`; API/UI chỉ đọc latest successful materialization.
+**Architecture:** `InventoryMutationService` là đường duy nhất cho on-hand/reserved mutations và yêu cầu caller đang ở trong transaction `Serializable`; service load inventory theo `Id` tăng dần và thêm immutable ledger rows. `ForecastJobHandler` đọc `Sale` transactions, tính moving average 28 ngày và ghi hai horizon theo `jobRunId`; API/UI chỉ đọc latest successful materialization.
 
 **Tech Stack:** .NET 10, C# 14, EF Core 10.0.9, MySQL 8.4, ASP.NET Core Minimal API, xUnit, React 19.2.8, TypeScript 5.9.3, Vitest, React Testing Library.
 
@@ -19,7 +19,7 @@
 - Mọi endpoint inventory mutation dùng transaction `Serializable`; retry tạo transaction mới.
 - Demand chỉ lấy `Sale`; không lấy reservation, release hoặc manual adjustment.
 - Forecast observation dùng tối đa 28 complete UTC days; horizon chỉ 7/14.
-- Alert dùng 14-day forecast và available quantity snapshot.
+- `stock_alerts` được giữ trong design như capability deferred, yêu cầu Phase 2B forecast hoàn tất; plan này không tạo table, API, UI hoặc task alert.
 - Mỗi task theo RED -> GREEN -> REFACTOR -> COMMIT; không stage thay đổi ngoài scope.
 
 ---
@@ -32,7 +32,7 @@
 - Create `backend/src/OnlineSupermarket.Infrastructure/Inventory/InventoryMutationCommand.cs`.
 - Create `backend/src/OnlineSupermarket.Infrastructure/Inventory/InventoryMutationService.cs`.
 - Modify checkout/order/branch endpoints to use the service and serializable transaction scope.
-- Create `backend/src/OnlineSupermarket.Domain/Intelligence/DemandForecast.cs`, `StockAlert.cs`, and calculation enums.
+- Create `backend/src/OnlineSupermarket.Domain/Intelligence/DemandForecast.cs` and calculation enums.
 - Create `backend/src/OnlineSupermarket.Infrastructure/Intelligence/DemandForecastCalculator.cs`.
 - Create EF configurations and migration `AddInventoryIntelligence`.
 - Create `ForecastJobHandler` and `ForecastRecurringSchedule`.
@@ -345,19 +345,16 @@ git commit -m "feat(inventory): log all stock mutations atomically"
 
 ---
 
-### Task 5: Forecast and alert domain calculations
+### Task 5: Forecast domain calculations
 
 **Files:**
 - Create: `backend/src/OnlineSupermarket.Domain/Intelligence/DemandForecast.cs`
 - Create: `backend/src/OnlineSupermarket.Domain/Intelligence/ForecastDataQuality.cs`
-- Create: `backend/src/OnlineSupermarket.Domain/Intelligence/StockAlert.cs`
-- Create: `backend/src/OnlineSupermarket.Domain/Intelligence/StockAlertSeverity.cs`
 - Create: `backend/src/OnlineSupermarket.Infrastructure/Intelligence/DemandForecastCalculator.cs`
 - Create: `backend/tests/OnlineSupermarket.Infrastructure.Tests/Intelligence/DemandForecastCalculatorTests.cs`
 
 **Interfaces:**
 - Produces: `Calculate(IReadOnlyDictionary<DateOnly,int> dailySales, DateOnly observationEnd, int horizonDays): ForecastCalculation`.
-- Produces: `CreateAlert(DemandForecast forecast, int availableQuantity, int reorderLevel): StockAlert?`.
 
 - [ ] **Step 1: Write failing forecast boundary tests**
 
@@ -377,68 +374,55 @@ public void Calculate_UsesDailyAverageAcrossCompleteCalendarDays(int horizon, do
     Assert.Equal(ForecastDataQuality.Partial, result.DataQuality);
 }
 
-[Fact]
-public void CreateAlert_WhenProjectedRemainderTouchesReorderLevel_ReturnsLowAlert()
-{
-    var alert = DemandForecastCalculator.CreateAlert(
-        CreateForecast(predicted: 10), availableQuantity: 20, reorderLevel: 10);
-
-    Assert.NotNull(alert);
-    Assert.Equal(0, alert!.RecommendedReorderQuantity);
-    Assert.Equal(StockAlertSeverity.Low, alert.Severity);
-}
 ```
 
-Add no-history, missing zero-sale calendar days, 28-day cap, invalid horizon, medium boundary, high stockout, and no-alert cases.
+Add no-history, missing zero-sale calendar days, 28-day cap, and invalid horizon cases.
 
 - [ ] **Step 2: Implement deterministic algorithm**
 
-Use `DateOnly` for calendar grouping and `decimal` for quantities. `actual_data_days` counts from first sale day through observation end, capped at 28, including zero-sale days. Return zero/Insufficient for no history. Build alerts only from a 14-day forecast.
+Use `DateOnly` for calendar grouping and `decimal` for quantities. `actual_data_days` counts from first sale day through observation end, capped at 28, including zero-sale days. Return zero/Insufficient for no history.
 
 - [ ] **Step 3: Run tests and commit**
 
 ```powershell
 dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --no-restore --filter "FullyQualifiedName~DemandForecastCalculatorTests"
 git add backend/src/OnlineSupermarket.Domain/Intelligence backend/src/OnlineSupermarket.Infrastructure/Intelligence/DemandForecastCalculator.cs backend/tests/OnlineSupermarket.Infrastructure.Tests/Intelligence
-git commit -m "feat(forecast): calculate demand and stock alerts"
+git commit -m "feat(forecast): calculate demand forecasts"
 ```
 
 ---
 
-### Task 6: Persist forecasts and alerts
+### Task 6: Persist forecasts
 
 **Files:**
 - Create: `backend/src/OnlineSupermarket.Infrastructure/Persistence/Configurations/DemandForecastConfiguration.cs`
-- Create: `backend/src/OnlineSupermarket.Infrastructure/Persistence/Configurations/StockAlertConfiguration.cs`
 - Modify: `backend/src/OnlineSupermarket.Infrastructure/Persistence/AppDbContext.cs`
-- Generate: EF migration named `AddDemandForecastsAndStockAlerts` and its designer.
+- Generate: EF migration named `AddDemandForecasts` and its designer.
 - Modify: `backend/src/OnlineSupermarket.Infrastructure/Persistence/Migrations/AppDbContextModelSnapshot.cs`
 - Modify: `backend/tests/OnlineSupermarket.Api.Tests/Persistence/ModelConfigurationTests.cs`
 
 **Interfaces:**
-- Produces: `AppDbContext.DemandForecasts`, `AppDbContext.StockAlerts`.
-- Produces: unique run/inventory/horizon and run/inventory indexes from spec.
+- Produces: `AppDbContext.DemandForecasts`.
+- Produces: unique `(job_run_id, branch_inventory_id, horizon_days)` index from spec.
 
 - [ ] **Step 1: Write failing metadata tests**
 
 ```csharp
 [Fact]
-public void ForecastAndAlert_HaveRunScopedUniqueKeys()
+public void Forecast_HasRunScopedUniqueKey()
 {
     using var context = CreateContext();
     var forecast = context.Model.FindEntityType(typeof(DemandForecast))!;
-    var alert = context.Model.FindEntityType(typeof(StockAlert))!;
 
     Assert.Contains(forecast.GetIndexes(), x => x.IsUnique && x.Properties.Count == 3);
-    Assert.Contains(alert.GetIndexes(), x => x.IsUnique && x.Properties.Count == 2);
 }
 ```
 
 - [ ] **Step 2: Map exact columns and generate migration**
 
 ```powershell
-dotnet ef migrations add AddDemandForecastsAndStockAlerts --project backend/src/OnlineSupermarket.Infrastructure --startup-project backend/src/OnlineSupermarket.Api
-rg -n "demand_forecasts|stock_alerts|horizon_days|recommended_reorder_quantity" backend/src/OnlineSupermarket.Infrastructure/Persistence/Migrations
+dotnet ef migrations add AddDemandForecasts --project backend/src/OnlineSupermarket.Infrastructure --startup-project backend/src/OnlineSupermarket.Api
+rg -n "demand_forecasts|horizon_days|predicted_quantity" backend/src/OnlineSupermarket.Infrastructure/Persistence/Migrations
 ```
 
 Add check constraints `horizon_days IN (7, 14)` and non-negative predicted/reorder quantities.
@@ -447,8 +431,8 @@ Add check constraints `horizon_days IN (7, 14)` and non-negative predicted/reord
 
 ```powershell
 dotnet test backend/tests/OnlineSupermarket.Api.Tests/OnlineSupermarket.Api.Tests.csproj --no-restore --filter "FullyQualifiedName~ModelConfigurationTests"
-git add backend/src/OnlineSupermarket.Infrastructure/Persistence/Configurations/DemandForecastConfiguration.cs backend/src/OnlineSupermarket.Infrastructure/Persistence/Configurations/StockAlertConfiguration.cs backend/src/OnlineSupermarket.Infrastructure/Persistence/AppDbContext.cs backend/src/OnlineSupermarket.Infrastructure/Persistence/Migrations/*_AddDemandForecastsAndStockAlerts.cs backend/src/OnlineSupermarket.Infrastructure/Persistence/Migrations/*_AddDemandForecastsAndStockAlerts.Designer.cs backend/src/OnlineSupermarket.Infrastructure/Persistence/Migrations/AppDbContextModelSnapshot.cs backend/tests/OnlineSupermarket.Api.Tests/Persistence/ModelConfigurationTests.cs
-git commit -m "feat(forecast): persist forecasts and stock alerts"
+git add backend/src/OnlineSupermarket.Infrastructure/Persistence/Configurations/DemandForecastConfiguration.cs backend/src/OnlineSupermarket.Infrastructure/Persistence/AppDbContext.cs backend/src/OnlineSupermarket.Infrastructure/Persistence/Migrations/*_AddDemandForecasts.cs backend/src/OnlineSupermarket.Infrastructure/Persistence/Migrations/*_AddDemandForecasts.Designer.cs backend/src/OnlineSupermarket.Infrastructure/Persistence/Migrations/AppDbContextModelSnapshot.cs backend/tests/OnlineSupermarket.Api.Tests/Persistence/ModelConfigurationTests.cs
+git commit -m "feat(forecast): persist demand forecasts"
 ```
 
 ---
@@ -464,13 +448,13 @@ git commit -m "feat(forecast): persist forecasts and stock alerts"
 **Interfaces:**
 - Implements: `IBackgroundJobHandler` with `JobName == Forecast`.
 - Implements: shared recurring schedule contract, one due job per active branch daily.
-- Produces: one atomic batch containing 7-day, 14-day, and zero-or-one alert per inventory.
+- Produces: one atomic batch containing 7-day and 14-day rows per inventory.
 
 - [ ] **Step 1: Write failing materialization test**
 
 ```csharp
 [Fact]
-public async Task ExecuteAsync_WritesTwoForecastsAndAlertPerAtRiskInventory()
+public async Task ExecuteAsync_WritesTwoForecastsPerInventory()
 {
     var inventory = await SeedInventoryWithDailySalesAsync(days: 14, unitsPerDay: 2, available: 20, reorder: 5);
 
@@ -478,7 +462,6 @@ public async Task ExecuteAsync_WritesTwoForecastsAndAlertPerAtRiskInventory()
 
     var forecasts = await _db.DemandForecasts.Where(x => x.JobRunId == _jobRunId).ToListAsync();
     Assert.Equal(new[] { 7, 14 }, forecasts.Select(x => x.HorizonDays).Order().ToArray());
-    Assert.Single(await _db.StockAlerts.Where(x => x.JobRunId == _jobRunId).ToListAsync());
 }
 ```
 
@@ -486,7 +469,7 @@ Add tests for no-history rows, branch isolation, ignoring non-Sale transactions,
 
 - [ ] **Step 2: Implement handler query and atomic write**
 
-Query the previous 28 complete UTC days once for the branch, group sales by inventory/date in memory, calculate both horizons, build 14-day alerts, and commit all new rows in one transaction. Never delete prior successful runs. `ForecastRecurringSchedule` returns a branch only when UTC time is at or after `ForecastHourUtc` and that branch has no active run or successful run created on the current UTC date.
+Query the previous 28 complete UTC days once for the branch, group sales by inventory/date in memory, calculate both horizons, and commit all new rows in one transaction. Never delete prior successful runs. `ForecastRecurringSchedule` returns a branch only when UTC time is at or after `ForecastHourUtc` and that branch has no active run or successful run created on the current UTC date.
 
 - [ ] **Step 3: Register handler/schedule and test**
 
@@ -508,7 +491,7 @@ git commit -m "feat(forecast): materialize scheduled branch forecasts"
 
 ---
 
-### Task 8: Admin forecast, alert, and ledger APIs
+### Task 8: Admin forecast and ledger APIs
 
 **Files:**
 - Create: `backend/src/OnlineSupermarket.Api/Contracts/Inventory/InventoryIntelligenceContracts.cs`
@@ -517,7 +500,7 @@ git commit -m "feat(forecast): materialize scheduled branch forecasts"
 - Create: `backend/tests/OnlineSupermarket.Api.Tests/Endpoints/InventoryIntelligenceEndpointsTests.cs`
 
 **Interfaces:**
-- Produces all four Admin routes from spec §6.2: transactions, forecast, alerts, and forecast trigger.
+- Produces three Admin routes from spec §6.2: transactions, forecast, and forecast trigger.
 - Consumes: `IJobRunCoordinator.TryQueueAsync` for trigger.
 
 - [ ] **Step 1: Write failing contract tests**
@@ -545,7 +528,7 @@ public async Task TriggerForecast_WhenAccepted_ReturnsStatusLocation()
 }
 ```
 
-Add 401/403, missing branch 404, active lock 409, latest-success-only, severity filter, transaction pagination, and actor/reference projection tests.
+Add 401/403, missing branch 404, active lock 409, latest-success-only, transaction pagination, and actor/reference projection tests.
 
 - [ ] **Step 2: Implement DTOs and endpoints**
 
@@ -556,10 +539,6 @@ public sealed record ForecastDto(
     string DataQuality, DateOnly ForecastStartDate, DateOnly ForecastEndDate,
     DateTime GeneratedAtUtc, Guid JobRunId);
 
-public sealed record StockAlertDto(
-    Guid Id, Guid BranchInventoryId, Guid ProductId, string ProductName,
-    int AvailableQuantity, int ReorderLevel, decimal PredictedQuantity,
-    int RecommendedReorderQuantity, string Severity, DateTime CreatedAtUtc);
 ```
 
 Resolve latest `Succeeded` run per branch and never return rows from a failed/running batch.
@@ -574,7 +553,7 @@ git commit -m "feat(forecast): expose admin inventory intelligence api"
 
 ---
 
-### Task 9: Admin inventory alerts and ledger UI
+### Task 9: Admin inventory ledger UI
 
 **Files:**
 - Create: `frontend/src/api/inventoryIntelligenceApi.ts`
@@ -588,22 +567,12 @@ git commit -m "feat(forecast): expose admin inventory intelligence api"
 - Modify: `frontend/src/features/admin/AdminInventoryPage.css`
 
 **Interfaces:**
-- Produces typed `getStockAlerts` and `getTransactions` clients.
-- Produces alert filter/badge and transaction history drawer/dialog from inventory rows.
+- Produces typed `getTransactions` client.
+- Produces transaction history drawer/dialog from inventory rows.
 
-- [ ] **Step 1: Write failing alert/history UI tests**
+- [ ] **Step 1: Write failing transaction-history UI test**
 
 ```typescript
-it('shows materialized alert severity and recommended reorder quantity', async () => {
-  branchApi.getBranchInventory.mockResolvedValue(inventoryResponse)
-  inventoryIntelligenceApi.getStockAlerts.mockResolvedValue({ data: [highAlert], totalCount: 1 })
-
-  renderAdminInventory()
-
-  expect(await screen.findByText('Nguy cơ hết hàng')).toBeInTheDocument()
-  expect(screen.getByText('Đề xuất nhập 15')).toBeInTheDocument()
-})
-
 it('opens immutable transaction history for one inventory row', async () => {
   renderAdminInventory()
   await user.click(await screen.findByRole('button', { name: 'Lịch sử kho Sản phẩm A' }))
@@ -613,7 +582,7 @@ it('opens immutable transaction history for one inventory row', async () => {
 
 - [ ] **Step 2: Implement API and UI states**
 
-Keep existing computed low-stock badge but label materialized forecast alerts separately. Add severity filter, loading/empty/error/retry states, and accessible dialog focus return.
+Keep the existing computed low-stock badge unchanged. Add ledger loading/empty/error/retry states and accessible dialog focus return.
 
 - [ ] **Step 3: Test/build and commit**
 
@@ -621,7 +590,7 @@ Keep existing computed low-stock badge but label materialized forecast alerts se
 npm --prefix frontend test -- --run src/api/inventoryIntelligenceApi.test.ts src/features/admin/AdminInventoryPage.test.tsx src/features/admin/AdminInventoryTransactions.test.tsx
 npm --prefix frontend run build
 git add frontend/src/api/inventoryIntelligenceApi.ts frontend/src/api/inventoryIntelligenceApi.test.ts frontend/src/api/branchApi.ts frontend/src/api/branchApi.test.ts frontend/src/features/admin/AdminInventoryTransactions.tsx frontend/src/features/admin/AdminInventoryTransactions.test.tsx frontend/src/features/admin/AdminInventoryPage.tsx frontend/src/features/admin/AdminInventoryPage.test.tsx frontend/src/features/admin/AdminInventoryPage.css
-git commit -m "feat(frontend): show stock alerts and inventory ledger"
+git commit -m "feat(frontend): show inventory transaction ledger"
 ```
 
 ---

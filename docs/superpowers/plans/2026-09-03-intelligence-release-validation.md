@@ -14,7 +14,7 @@
 
 - Chỉ chạy plan này sau khi background foundation, reviews, inventory intelligence, và recommendations đã hoàn tất.
 - Seed phải idempotent và không ghi materialized results giả.
-- Schema assertion phải đếm đúng 24 physical tables trên MySQL.
+- Schema assertion phải đếm đúng 23 physical tables trên MySQL; `stock_alerts` vẫn deferred.
 - OpenAPI tracked JSON phải DeepEquals runtime Development document.
 - E2E base URLs/artifact directory lấy từ environment, không chứa đường dẫn máy cá nhân.
 - Performance smoke báo số đo và fail khi vượt target trên dataset chuẩn; không chạy trong test suite mặc định.
@@ -27,7 +27,7 @@
 
 - Modify `backend/src/OnlineSupermarket.Infrastructure/Persistence/DataSeeder.cs`: raw sale/view/review demo history.
 - Modify `backend/tests/OnlineSupermarket.Infrastructure.Tests/DataSeederTests.cs`: idempotency and consistency.
-- Extend MySQL schema tests to assert exact 24-table set.
+- Extend MySQL schema tests to assert exact 23-table set.
 - Modify `backend/tests/OnlineSupermarket.Api.Tests/OpenApiContractTests.cs`: new operations/security/status codes.
 - Regenerate `docs/api/openapi.json` from running Development API.
 - Create `frontend/src/test/run-intelligence-gui-tests.mjs`: portable Playwright E2E.
@@ -47,7 +47,7 @@
 - Produces: completed-order review eligibility for `user1@test.com`.
 - Produces: 28 days of deterministic `Sale` ledger rows for selected branch inventories.
 - Produces: deterministic anonymous/authenticated product views across categories/brands.
-- Does not create `demand_forecasts`, `stock_alerts`, `recommendation_results`, or successful job rows directly.
+- Does not create `demand_forecasts`, `recommendation_results`, or successful job rows directly.
 - Produces: `DataSeeder.SeedIntelligenceDemoDataAsync(AppDbContext, IInventoryMutationService)` called only by Development startup after `SeedAllAsync`.
 
 - [ ] **Step 1: Write failing seed consistency tests**
@@ -63,7 +63,6 @@ public async Task SeedAll_CreatesRawIntelligenceHistoryButNoMaterializedResults(
         .Where(x => x.TransactionType == InventoryTransactionType.Sale).ToListAsync());
     Assert.NotEmpty(await _context.ProductViewEvents.ToListAsync());
     Assert.Empty(await _context.DemandForecasts.ToListAsync());
-    Assert.Empty(await _context.StockAlerts.ToListAsync());
     Assert.Empty(await _context.RecommendationResults.ToListAsync());
 }
 
@@ -117,11 +116,11 @@ git commit -m "feat(seed): add review and intelligence demo history"
 - Consumes: shared `MySqlFixture` and every migration.
 - Produces: exact unordered table-set assertion and migration idempotency test.
 
-- [ ] **Step 1: Write exact 24-table assertion**
+- [ ] **Step 1: Write exact 23-table assertion**
 
 ```csharp
 [Fact]
-public async Task LatestMigration_CreatesExactlyTwentyFourTables()
+public async Task LatestMigration_CreatesExactlyTwentyThreeTables()
 {
     var expected = new[]
     {
@@ -129,7 +128,7 @@ public async Task LatestMigration_CreatesExactlyTwentyFourTables()
         "cart_items", "carts", "categories", "demand_forecasts", "inventory_transactions",
         "order_items", "order_status_histories", "orders", "password_reset_tokens",
         "payment_callbacks", "payments", "product_view_events", "products", "promotions",
-        "recommendation_results", "refresh_tokens", "reviews", "stock_alerts", "users",
+        "recommendation_results", "refresh_tokens", "reviews", "users",
     };
 
     var actual = await ReadBaseTablesFromInformationSchemaAsync();
@@ -146,7 +145,7 @@ Create an empty test database, call `Database.MigrateAsync()` twice, and assert 
 ```powershell
 dotnet test backend/tests/OnlineSupermarket.Infrastructure.Tests/OnlineSupermarket.Infrastructure.Tests.csproj --no-restore --filter "FullyQualifiedName~MySqlSchemaTests"
 git add backend/tests/OnlineSupermarket.Infrastructure.Tests/Persistence/MySqlSchemaTests.cs
-git commit -m "test(schema): enforce exact 24 table model"
+git commit -m "test(schema): enforce exact 23 table model"
 ```
 
 ---
@@ -168,7 +167,6 @@ git commit -m "test(schema): enforce exact 24 table model"
 [InlineData("/api/reviews", "CreateReview")]
 [InlineData("/api/products/{productId}/reviews", "GetProductReviews")]
 [InlineData("/api/admin/forecast", "AdminGetForecast")]
-[InlineData("/api/admin/stock-alerts", "AdminGetStockAlerts")]
 [InlineData("/api/recommendations", "GetRecommendations")]
 [InlineData("/api/admin/jobs/recommendations/runs", "AdminRunRecommendations")]
 public async Task OpenApi_ContainsIntelligenceOperation(string path, string operationId)
@@ -241,9 +239,9 @@ await page.getByRole('button', { name: 'Gửi đánh giá' }).click()
 await expect(page.getByText('Đánh giá E2E')).toBeVisible()
 ```
 
-- [ ] **Step 3: Implement inventory -> forecast -> alert flow**
+- [ ] **Step 3: Implement inventory -> forecast flow**
 
-Login as Admin, lower one inventory quantity through existing modal, trigger branch forecast, poll job status until `Succeeded`, open `/admin/forecast`, assert 14-day row, then verify the matching alert and transaction history on `/admin/inventory`.
+Login as Admin, adjust one inventory quantity through the existing modal, verify the immutable transaction history on `/admin/inventory`, trigger the branch forecast, poll job status until `Succeeded`, open `/admin/forecast`, and assert its 14-day row.
 
 - [ ] **Step 4: Implement anonymous -> login -> personalized flow**
 
@@ -321,7 +319,7 @@ git commit -m "test(perf): add intelligence performance smoke checks"
 - Modify: `docs/all-test-flows.html`
 
 **Interfaces:**
-- Produces: consistent 24-table count, endpoint/route inventory, P11/P13/P14 data flows, and implementation evidence.
+- Produces: consistent 23-table active count, deferred stock-alert note, endpoint/route inventory, P11/P13/P14 data flows, and implementation evidence.
 
 - [ ] **Step 1: Update sources of truth from implementation**
 
@@ -331,10 +329,11 @@ In ERD, copy table names/columns/indexes/FKs from the final EF snapshot. In site
 
 ```powershell
 rg -n "22 bảng|25 bảng|UserProductAffinities|user_product_affinities|apiapi|FR-113|FR-208|FR-209" README.md docs
-rg -n "reviews|inventory_transactions|product_view_events|recommendation_results|demand_forecasts|stock_alerts|background_job_runs" README.md docs/architecture docs/requirements
+rg -n "reviews|inventory_transactions|product_view_events|recommendation_results|demand_forecasts|background_job_runs" README.md docs/architecture docs/requirements
+rg -n "stock_alerts.*Deferred|Deferred.*stock_alerts" README.md docs/architecture docs/requirements
 ```
 
-Expected: no stale 22/25-table claim, no affinity table claim, no `/apiapi/`; every new store appears in ERD/DFD/README.
+Expected: no stale 22/24/25-table active claim, no affinity table claim, no `/apiapi/`; all six active stores appear in ERD/DFD/README and `stock_alerts` appears only as deferred.
 
 - [ ] **Step 3: Run doc/API checks and commit**
 
@@ -391,4 +390,4 @@ git diff --check
 git log -10 --oneline
 ```
 
-Expected: every command passes; schema is 24 tables; E2E is 3/3; tracked OpenAPI matches runtime; no unrelated file is staged.
+Expected: every command passes; schema is 23 tables; E2E is 3/3; tracked OpenAPI matches runtime; no unrelated file is staged.

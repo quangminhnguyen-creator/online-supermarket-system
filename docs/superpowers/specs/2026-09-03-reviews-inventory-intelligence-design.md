@@ -8,15 +8,16 @@
 
 ## 1. Goal
 
-Deliver seven new persistent data stores and the end-to-end capabilities that use them:
+Deliver six new persistent data stores and the end-to-end capabilities that use them:
 
 1. `reviews`
 2. `inventory_transactions`
 3. `product_view_events`
 4. `recommendation_results`
 5. `demand_forecasts`
-6. `stock_alerts`
-7. `background_job_runs`
+6. `background_job_runs`
+
+`stock_alerts` remains designed below but is **Deferred — Requires Phase 2B forecast completion**. The active implementation does not create its table, API, UI, background materialization, or tests.
 
 The implementation includes domain behavior, EF Core configuration and migration, APIs, scheduled and manually triggered background work, customer and admin UI, automated tests, seed/demo data, and documentation updates.
 
@@ -42,14 +43,14 @@ The implementation includes domain behavior, EF Core configuration and migration
 16. `refresh_tokens`
 17. `users`
 
-`promotions` is already implemented and is not part of the new migration. Adding the seven stores in this design produces 24 physical tables. There are no separate `roles`, `user_roles`, `promotion_usages`, or `user_product_affinities` tables.
+`promotions` is already implemented and is not part of the new migration. Adding the six active stores produces 23 physical tables. Implementing the deferred `stock_alerts` store later would raise the total to 24. There are no separate `roles`, `user_roles`, `promotion_usages`, or `user_product_affinities` tables.
 
 ## 3. Architectural Approach
 
 The design is split into three independently testable capabilities that share persistence and job infrastructure:
 
 - Verified reviews: synchronous customer APIs backed by completed order items.
-- Inventory intelligence: an append-only inventory ledger, moving-average demand forecasts, and materialized stock alerts.
+- Inventory intelligence: an append-only inventory ledger and moving-average demand forecasts. Materialized stock alerts remain a deferred follow-up.
 - Recommendations: synchronous view-event capture and session merge, followed by scheduled materialization of global, per-user, and similar-product results.
 
 ASP.NET Core `BackgroundService` and an in-process `Channel<JobRequest>` dispatch work. MySQL rows provide cross-instance ownership, lease recovery, and audit history. Forecast and recommendation APIs read materialized results rather than calculating them on demand. No message broker, Redis, ML.NET model, or external AI service is introduced.
@@ -167,6 +168,8 @@ The unique key is `(job_run_id, branch_inventory_id, horizon_days)`. Each run wr
 
 ### 4.6 `stock_alerts`
 
+**Deferred — Requires Phase 2B forecast completion.** This section preserves the approved future data contract only; it is excluded from the active 23-table implementation and has no implementation task.
+
 | Column | Type | Rule |
 |---|---|---|
 | `id` | `char(36)` | Primary key |
@@ -227,9 +230,11 @@ The MVP uses a simple moving average over at most the previous 28 complete UTC c
 - `predicted_quantity = average_daily_sales * horizon_days`.
 - `actual_data_days < 7` is `Insufficient`; 7–13 is `Partial`; 14–28 is `Sufficient`.
 - No history produces a zero forecast with `actual_data_days = 0` and `Insufficient` quality.
-- Both horizon rows are committed together with their branch's alert batch.
+- Both horizon rows are committed together for the branch.
 
 ### 5.2 Stock Alerts
+
+**Deferred.** The algorithm below is retained for the later stock-alert phase and is not part of current implementation or acceptance gates.
 
 Alerts always use the corresponding run's 14-day forecast and a snapshot of current available stock and reorder level. Severity is deterministic:
 
@@ -287,7 +292,7 @@ item and never performs this selection.
 |---|---|---|
 | `GET` | `/api/admin/inventory/{inventoryId}/transactions` | Paginated immutable ledger |
 | `GET` | `/api/admin/forecast?branchId=&horizonDays=7|14` | Latest successful forecasts |
-| `GET` | `/api/admin/stock-alerts?branchId=&severity=` | Latest active alert snapshots |
+| `GET` | `/api/admin/stock-alerts?branchId=&severity=` | **Deferred**; future latest active alert snapshots |
 | `GET` | `/api/admin/recommendations/results?scope=&limit=` | Last run and sample results |
 | `GET` | `/api/admin/jobs/{jobName}/runs` | Paginated audit history |
 | `POST` | `/api/admin/jobs/forecast/runs` | Queue a branch forecast |
@@ -351,12 +356,14 @@ Jobs are safe to retry, not exactly-once distributed executions. Each explicit r
 - Guest identity is a GUID in `localStorage`; `AuthContext` calls session merge once after successful login/session restoration.
 - Empty recommendation results do not hide the normal catalog or product content.
 
-### 8.3 Forecast and Alerts
+### 8.3 Forecast and Deferred Alerts
 
-- `/admin/inventory`: add stock-alert badges/filter and a latest-alert panel without replacing existing inventory editing.
+- `/admin/inventory`: retain existing inventory editing and computed low-stock behavior; no materialized stock-alert UI is added in the active phase.
 - `/admin/forecast`: add 7/14-day forecast table, branch selector, data-quality state, last-run status, run history, and manual refresh.
 - `/admin/recommendations`: add last-run status, run history, sample results, and manual refresh.
 - `AdminLayout` gains Forecast and Recommendations navigation items; existing `AdminRoute` remains the authorization boundary.
+
+The future `stock_alerts` phase may add badges, severity filters, and a latest-alert panel after Phase 2B forecast is complete.
 
 All screens include loading, empty, error, stale-result, and retry states and preserve the project's current responsive/accessibility patterns.
 
@@ -368,7 +375,7 @@ All screens include loading, empty, error, stale-result, and retry states and pr
 - Inventory delta/snapshot invariants, non-negative stock, append-only transaction behavior, and deterministic operation keys.
 - Job state transitions `Queued -> Running -> Succeeded|Failed`, token ownership, lease expiry, and illegal transitions.
 - Moving-average 7/14 calculations with 0, 1, 6, 7, 13, 14, and 28 observation days.
-- Alert threshold/reorder quantity/severity boundary cases.
+- Deferred stock-alert threshold/reorder/severity tests are not part of the active test suite.
 - Recommendation ordering, same-product exclusion, inactive-product exclusion, event daily cap, recency, and fallback.
 
 ### 9.2 API Integration Tests
@@ -384,7 +391,7 @@ The existing `WebApplicationFactory` plus EF Core InMemory database remains appr
 
 EF InMemory does not enforce relational constraints, transaction isolation, or MySQL unique-null semantics. Add a MySQL 8.4 integration fixture using a disposable test database/container:
 
-- Apply the full migration and assert all 24 physical tables.
+- Apply the active migrations and assert all 23 physical tables.
 - Assert FK, review/order-item unique, operation-key unique, and job lock indexes.
 - Execute inventory mutation plus ledger insert under `Serializable`; verify full rollback on ledger failure.
 - Use real concurrent tasks/connections to prove only one lock claim and only one automated inventory operation succeeds.
@@ -423,11 +430,11 @@ Any regression beyond a target requires query-plan/index review before release e
 Implementation must update these sources without claiming features are implemented before tests pass:
 
 - `docs/requirements/functional-requirements.md`: FR-113, FR-208, FR-209 status and acceptance criteria.
-- `docs/architecture/erd.md`: seven tables, fields, indexes, and physical relationships.
+- `docs/architecture/erd.md`: six active tables, fields, indexes, and physical relationships; retain `stock_alerts` only as deferred design documentation.
 - `docs/architecture/dfd.md`: promote P11, P13, and P14 into implemented data flows.
 - `docs/architecture/sitemap.md`: customer/admin routes and placement.
 - `docs/api/openapi.json`: generated contracts for every new endpoint.
-- `README.md`: 24-table inventory, endpoints, worker configuration, and run/test instructions.
+- `README.md`: 23-table active inventory, endpoints, worker configuration, deferred stock-alert note, and run/test instructions.
 - Relevant progress/test-flow documents: implementation evidence and E2E coverage.
 
 ## 11. Delivery Boundaries and Order
@@ -436,7 +443,7 @@ The implementation should be executed as separate reviewable plans while preserv
 
 1. Shared persistence and job-run foundation.
 2. Verified reviews end to end.
-3. Inventory ledger, forecast, alerts, and admin UI.
+3. Inventory ledger, forecast, and admin UI; stock alerts remain deferred.
 4. View events, session merge, recommendations, and customer/admin UI.
 5. Cross-capability E2E, performance smoke checks, OpenAPI, and architecture-document synchronization.
 
@@ -444,11 +451,11 @@ Each capability must remain deployable with empty materialized tables. Customer 
 
 ## 12. Definition of Done
 
-- The EF snapshot and migration contain exactly 24 physical tables: 17 existing plus seven new.
+- The EF snapshot and active migrations contain exactly 23 physical tables: 17 existing plus six new.
 - Reviews enforce completed, owned `OrderItem` verification and one review per order item.
 - Every inventory mutation has an atomic, immutable ledger row; completed orders convert reservations into sales once.
 - Scheduled and manual jobs expose durable status, reject duplicate active locks, recover stale leases, and commit materialized batches atomically.
-- Forecast and alert APIs expose deterministic 7/14-day results and safety-stock-aware alerts.
+- Forecast APIs expose deterministic 7/14-day results; no `stock_alerts` table, endpoint, UI, or active test is created.
 - Recommendations support global, user, and similar-product scopes with server-side fallback and anonymous-session merge.
 - Approved customer/admin UI placement, accessibility states, automated tests, seed/demo data, OpenAPI, ERD, DFD, sitemap, requirements, and README are synchronized.
 - Existing backend and frontend regression suites remain green.
