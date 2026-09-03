@@ -7,6 +7,8 @@ using OnlineSupermarket.Domain.Orders;
 using OnlineSupermarket.Domain.Entities;
 using OnlineSupermarket.Domain.Payments;
 using OnlineSupermarket.Domain.Promotions;
+using OnlineSupermarket.Domain.Recommendations;
+using OnlineSupermarket.Domain.Reviews;
 using OnlineSupermarket.Domain.Shopping;
 
 namespace OnlineSupermarket.Infrastructure.Persistence;
@@ -45,6 +47,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     // Promotions
     public DbSet<Promotion> Promotions => Set<Promotion>();
+
+    // Reviews
+    public DbSet<Review> Reviews => Set<Review>();
+
+    // Recommendations
+    public DbSet<ProductViewEvent> ProductViewEvents => Set<ProductViewEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
