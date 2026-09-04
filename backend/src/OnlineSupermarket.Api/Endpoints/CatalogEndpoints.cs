@@ -1,241 +1,192 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineSupermarket.Api.Contracts.Catalog;
-using OnlineSupermarket.Domain.Catalog;
 using OnlineSupermarket.Infrastructure.Persistence;
 
 namespace OnlineSupermarket.Api.Endpoints;
 
 public static class CatalogEndpoints
 {
-    public static IEndpointRouteBuilder MapCatalogEndpoints(this IEndpointRouteBuilder routes)
+    public static void MapCatalogEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = routes.MapGroup("/api").WithTags("Catalog");
+        var group = app.MapGroup("/api/catalog").WithTags("Catalog");
 
-        group.MapGet("/products", GetProductsAsync)
-            .WithName("GetProducts")
-            .Produces<PaginatedResponse<ProductSummaryDto>>()
-            .ProducesProblem(StatusCodes.Status400BadRequest);
-
-        group.MapGet("/products/{id:guid}", GetProductByIdAsync)
-            .WithName("GetProductById")
-            .Produces<ProductDetailDto>()
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        group.MapGet("/categories", GetCategoriesAsync)
-            .WithName("GetCategories")
-            .Produces<IEnumerable<CategoryDto>>();
-
-        group.MapGet("/brands", GetBrandsAsync)
-            .WithName("GetBrands")
-            .Produces<IEnumerable<BrandDto>>();
-
-        return routes;
-    }
-
-    private static async Task<(List<Category> AllCategories, HashSet<Guid> ValidActiveCategoryIds)> GetValidActiveCategoryHierarchyAsync(AppDbContext dbContext, CancellationToken cancellationToken)
-    {
-        var allCategories = await dbContext.Categories.AsNoTracking().ToListAsync(cancellationToken);
-        var categoryMap = allCategories.ToDictionary(c => c.Id);
-        var validActiveIds = new HashSet<Guid>();
-
-        bool IsChainActive(Category cat)
+        // Lấy danh sách sản phẩm (Lọc, tìm kiếm, phân trang, ghép tồn kho theo chi nhánh)
+        group.MapGet("/products", async (
+            AppDbContext db,
+            Guid? branchId = null,
+            Guid? categoryId = null,
+            Guid? brandId = null,
+            decimal? minPrice = null,
+            decimal? maxPrice = null,
+            string? search = null,
+            string? sortBy = null,
+            int page = 1,
+            int pageSize = 20) =>
         {
-            var current = cat;
-            var visited = new HashSet<Guid>();
-            while (current != null)
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize is < 1 or > 100 ? 20 : pageSize;
+
+            var query = db.Products
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Where(p => p.IsActive);
+
+            if (categoryId.HasValue)
             {
-                if (!current.IsActive) return false;
-                if (!visited.Add(current.Id)) return false;
-                if (!current.ParentCategoryId.HasValue) return true;
-                if (!categoryMap.TryGetValue(current.ParentCategoryId.Value, out var parent)) return false;
-                current = parent;
-            }
-            return true;
-        }
-
-        foreach (var cat in allCategories)
-        {
-            if (IsChainActive(cat))
-            {
-                validActiveIds.Add(cat.Id);
-            }
-        }
-
-        return (allCategories, validActiveIds);
-    }
-
-    private static async Task<IResult> GetProductsAsync(
-        [FromQuery] Guid? categoryId,
-        [FromQuery] Guid? brandId,
-        [FromQuery] decimal? minPrice,
-        [FromQuery] decimal? maxPrice,
-        [FromQuery] Guid? branchId,
-        [FromQuery] string? search,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20,
-        [FromServices] AppDbContext dbContext = null!,
-        CancellationToken cancellationToken = default)
-    {
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 20;
-        if (pageSize > 100) pageSize = 100;
-
-        var (allCategories, validCategoryIds) = await GetValidActiveCategoryHierarchyAsync(dbContext, cancellationToken);
-
-        var query = dbContext.Products
-            .Include(p => p.Category)
-            .Include(p => p.Brand)
-            .Where(p => p.IsActive && p.Brand!.IsActive && validCategoryIds.Contains(p.CategoryId))
-            .AsQueryable();
-
-        if (categoryId.HasValue)
-        {
-            if (!validCategoryIds.Contains(categoryId.Value))
-            {
-                var emptyResponse = new PaginatedResponse<ProductSummaryDto>(
-                    new List<ProductSummaryDto>(),
-                    new PaginationMeta(0, page, pageSize, 0));
-                return Results.Ok(emptyResponse);
+                query = query.Where(p => p.CategoryId == categoryId.Value);
             }
 
-            var targetDescendantIds = new HashSet<Guid> { categoryId.Value };
-            bool added;
-            do
+            if (brandId.HasValue)
             {
-                added = false;
-                foreach (var cat in allCategories)
+                query = query.Where(p => p.BrandId == brandId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim().ToLower();
+                query = query.Where(p => p.Name.ToLower().Contains(term) || p.Sku.ToLower().Contains(term));
+            }
+
+            if (minPrice.HasValue)
+            {
+                query = query.Where(p => p.BasePrice >= minPrice.Value);
+            }
+
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(p => p.BasePrice <= maxPrice.Value);
+            }
+
+            query = sortBy?.ToLower() switch
+            {
+                "price_asc" => query.OrderBy(p => p.BasePrice),
+                "price_desc" => query.OrderByDescending(p => p.BasePrice),
+                "name_asc" => query.OrderBy(p => p.Name),
+                "name_desc" => query.OrderByDescending(p => p.Name),
+                _ => query.OrderByDescending(p => p.CreatedAtUtc)
+            };
+
+            var totalItems = await query.LongCountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            var products = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Lấy giá bán và tồn kho theo chi nhánh nếu có branchId
+            Dictionary<Guid, (decimal SellingPrice, int AvailableQuantity)> inventoryMap = new();
+            if (branchId.HasValue && products.Count > 0)
+            {
+                var productIds = products.Select(p => p.Id).ToList();
+                inventoryMap = await db.BranchInventories
+                    .AsNoTracking()
+                    .Where(bi => bi.BranchId == branchId.Value && productIds.Contains(bi.ProductId))
+                    .ToDictionaryAsync(
+                        bi => bi.ProductId,
+                        bi => (bi.SellingPrice, AvailableQuantity: bi.QuantityOnHand - bi.ReservedQuantity)
+                    );
+            }
+
+            var items = products.Select(p =>
+            {
+                decimal? sellingPrice = inventoryMap.TryGetValue(p.Id, out var inv) ? inv.SellingPrice : null;
+                int? availableQty = inventoryMap.TryGetValue(p.Id, out inv) ? inv.AvailableQuantity : null;
+
+                return new ProductSummaryResponse(
+                    p.Id,
+                    p.Name,
+                    p.Slug,
+                    p.Sku,
+                    p.BasePrice,
+                    sellingPrice ?? p.BasePrice,
+                    availableQty,
+                    p.Unit,
+                    p.ImageUrl,
+                    p.CategoryId,
+                    p.Category?.Name ?? string.Empty,
+                    p.BrandId,
+                    p.Brand?.Name ?? string.Empty
+                );
+            }).ToList();
+
+            return Results.Ok(new PagedResult<ProductSummaryResponse>(items, page, pageSize, totalItems, totalPages));
+        });
+
+        // Lấy chi tiết sản phẩm theo Slug
+        group.MapGet("/products/{slug}", async (AppDbContext db, string slug, Guid? branchId = null) =>
+        {
+            var product = await db.Products
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .FirstOrDefaultAsync(p => p.Slug == slug && p.IsActive);
+
+            if (product is null) return Results.NotFound();
+
+            decimal? sellingPrice = null;
+            int? availableQty = null;
+
+            if (branchId.HasValue)
+            {
+                var inv = await db.BranchInventories
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(bi => bi.BranchId == branchId.Value && bi.ProductId == product.Id);
+
+                if (inv is not null)
                 {
-                    if (cat.ParentCategoryId.HasValue &&
-                        targetDescendantIds.Contains(cat.ParentCategoryId.Value) &&
-                        validCategoryIds.Contains(cat.Id))
-                    {
-                        if (targetDescendantIds.Add(cat.Id))
-                        {
-                            added = true;
-                        }
-                    }
+                    sellingPrice = inv.SellingPrice;
+                    availableQty = inv.QuantityOnHand - inv.ReservedQuantity;
                 }
-            } while (added);
-
-            query = query.Where(p => targetDescendantIds.Contains(p.CategoryId));
-        }
-
-        if (brandId.HasValue)
-            query = query.Where(p => p.BrandId == brandId.Value);
-
-        if (minPrice.HasValue)
-            query = query.Where(p => p.BasePrice >= minPrice.Value);
-
-        if (maxPrice.HasValue)
-            query = query.Where(p => p.BasePrice <= maxPrice.Value);
-
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(p => p.Name.Contains(search) || p.Sku.Contains(search));
-
-        var totalCount = await query.CountAsync(cancellationToken);
-        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-
-        var products = await query
-            .OrderBy(p => p.Name)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(p => new ProductSummaryDto(
-                p.Id,
-                p.Name,
-                p.Slug,
-                p.Sku,
-                p.BasePrice,
-                p.ImageUrl,
-                p.CategoryId,
-                p.Category!.Name,
-                p.Category.Slug,
-                p.Brand!.Name))
-            .ToListAsync(cancellationToken);
-
-        var response = new PaginatedResponse<ProductSummaryDto>(
-            products,
-            new PaginationMeta(totalCount, page, pageSize, totalPages));
-
-        return Results.Ok(response);
-    }
-
-    private static async Task<IResult> GetProductByIdAsync(
-        [FromRoute] Guid id,
-        [FromQuery] Guid? branchId,
-        [FromServices] AppDbContext dbContext,
-        CancellationToken cancellationToken)
-    {
-        var (_, validCategoryIds) = await GetValidActiveCategoryHierarchyAsync(dbContext, cancellationToken);
-
-        var product = await dbContext.Products
-            .Include(p => p.Category)
-            .Include(p => p.Brand)
-            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive && p.Brand!.IsActive && validCategoryIds.Contains(p.CategoryId), cancellationToken);
-
-        if (product == null)
-            return Results.NotFound(new { message = "Product not found." });
-
-        BranchInventoryDto? inventory = null;
-        if (branchId.HasValue)
-        {
-            var inv = await dbContext.BranchInventories
-                .FirstOrDefaultAsync(bi => bi.BranchId == branchId.Value && bi.ProductId == id, cancellationToken);
-
-            if (inv != null)
-            {
-                inventory = new BranchInventoryDto(
-                    inv.BranchId,
-                    inv.SellingPrice,
-                    inv.AvailableQuantity,
-                    inv.QuantityOnHand);
             }
-        }
 
-        var dto = new ProductDetailDto(
-            product.Id,
-            product.Name,
-            product.Slug,
-            product.Sku,
-            product.Description,
-            product.BasePrice,
-            product.Unit,
-            product.ImageUrl,
-            product.CategoryId,
-            product.Category!.Name,
-            product.Category.Slug,
-            product.BrandId,
-            product.Brand!.Name,
-            inventory);
+            var response = new ProductDetailResponse(
+                product.Id,
+                product.Name,
+                product.Slug,
+                product.Sku,
+                product.Description,
+                product.BasePrice,
+                sellingPrice ?? product.BasePrice,
+                availableQty,
+                product.Unit,
+                product.ImageUrl,
+                product.CategoryId,
+                product.Category?.Name ?? string.Empty,
+                product.BrandId,
+                product.Brand?.Name ?? string.Empty,
+                product.IsActive,
+                product.CreatedAtUtc
+            );
 
-        return Results.Ok(dto);
-    }
+            return Results.Ok(response);
+        });
 
-    private static async Task<IResult> GetCategoriesAsync(
-        [FromServices] AppDbContext dbContext,
-        CancellationToken cancellationToken)
-    {
-        var (allCategories, validCategoryIds) = await GetValidActiveCategoryHierarchyAsync(dbContext, cancellationToken);
+        // Lấy danh mục
+        group.MapGet("/categories", async (AppDbContext db) =>
+        {
+            var categories = await db.Categories
+                .AsNoTracking()
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Name)
+                .Select(c => new CategoryResponse(c.Id, c.ParentCategoryId, c.Name, c.Slug, c.IsActive))
+                .ToListAsync();
 
-        var categories = allCategories
-            .Where(c => validCategoryIds.Contains(c.Id))
-            .OrderBy(c => c.Name)
-            .Select(c => new CategoryDto(c.Id, c.Name, c.Slug, c.ParentCategoryId, c.IsActive))
-            .ToList();
+            return Results.Ok(categories);
+        });
 
-        return Results.Ok(categories);
-    }
+        // Lấy thương hiệu
+        group.MapGet("/brands", async (AppDbContext db) =>
+        {
+            var brands = await db.Brands
+                .AsNoTracking()
+                .Where(b => b.IsActive)
+                .OrderBy(b => b.Name)
+                .Select(b => new BrandResponse(b.Id, b.Name, b.Slug, b.IsActive))
+                .ToListAsync();
 
-    private static async Task<IResult> GetBrandsAsync(
-        [FromServices] AppDbContext dbContext,
-        CancellationToken cancellationToken)
-    {
-        var brands = await dbContext.Brands
-            .Where(b => b.IsActive)
-            .OrderBy(b => b.Name)
-            .Select(b => new BrandDto(b.Id, b.Name, b.Slug, b.IsActive))
-            .ToListAsync(cancellationToken);
-
-        return Results.Ok(brands);
+            return Results.Ok(brands);
+        });
     }
 }

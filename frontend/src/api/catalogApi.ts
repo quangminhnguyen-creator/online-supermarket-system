@@ -1,124 +1,89 @@
-import { getJson, type RequestOptions } from './httpClient'
+import { httpClient } from './httpClient';
 
-export interface ProductSummaryDto {
-  id: string
-  name: string
-  slug: string
-  sku: string
-  basePrice: number
-  imageUrl: string | null
-  categoryId: string
-  categoryName: string
-  categorySlug: string
-  brandName: string
+export interface ProductSummary {
+  id: string;
+  name: string;
+  slug: string;
+  sku: string;
+  basePrice: number;
+  sellingPrice: number;
+  availableQuantity: number | null;
+  unit: string;
+  imageUrl: string;
+  categoryId: string;
+  categoryName: string;
+  brandId: string;
+  brandName: string;
 }
 
-export interface BranchInventoryDto {
-  branchId: string
-  sellingPrice: number
-  availableQuantity: number
-  onHand: number
+export interface ProductDetail extends ProductSummary {
+  description: string;
+  isActive: boolean;
+  createdAtUtc: string;
 }
 
-export interface ProductDetailDto {
-  id: string
-  name: string
-  slug: string
-  sku: string
-  description: string | null
-  basePrice: number
-  unit: string
-  imageUrl: string | null
-  categoryId: string
-  categoryName: string
-  categorySlug: string
-  brandId: string
-  brandName: string
-  branchInventory: BranchInventoryDto | null
+export interface Category {
+  id: string;
+  parentCategoryId: string | null;
+  name: string;
+  slug: string;
+  isActive: boolean;
 }
 
-export interface CategoryDto {
-  id: string
-  name: string
-  slug: string
-  parentCategoryId: string | null
-  isActive: boolean
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
 }
 
-export interface BrandDto {
-  id: string
-  name: string
-  slug: string
-  isActive: boolean
+export interface PagedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
 }
 
-export interface PaginationMeta {
-  totalCount: number
-  page: number
-  pageSize: number
-  totalPages: number
-}
-
-export interface PaginatedResponse<T> {
-  items: T[]
-  meta: PaginationMeta
-}
-
-export interface ProductListParams {
-  categoryId?: string
-  brandId?: string
-  minPrice?: number
-  maxPrice?: number
-  branchId?: string
-  search?: string
-  page?: number
-  pageSize?: number
+export interface ProductFilterParams {
+  branchId?: string;
+  categoryId?: string;
+  brandId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  search?: string;
+  sortBy?: 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc';
+  page?: number;
+  pageSize?: number;
 }
 
 export const catalogApi = {
-  async getProducts(
-    params?: ProductListParams,
-    options?: RequestOptions | AbortSignal
-  ): Promise<PaginatedResponse<ProductSummaryDto>> {
-    const query = new URLSearchParams()
+  getProducts: async (params?: ProductFilterParams): Promise<PagedResult<ProductSummary>> => {
+    const query = new URLSearchParams();
+    if (params?.branchId) query.append('branchId', params.branchId);
+    if (params?.categoryId) query.append('categoryId', params.categoryId);
+    if (params?.brandId) query.append('brandId', params.brandId);
+    if (params?.minPrice !== undefined) query.append('minPrice', params.minPrice.toString());
+    if (params?.maxPrice !== undefined) query.append('maxPrice', params.maxPrice.toString());
+    if (params?.search) query.append('search', params.search);
+    if (params?.sortBy) query.append('sortBy', params.sortBy);
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
 
-    if (params?.categoryId) query.set('categoryId', params.categoryId)
-    if (params?.brandId) query.set('brandId', params.brandId)
-    if (params?.minPrice !== undefined && params.minPrice !== null && !isNaN(params.minPrice)) {
-      query.set('minPrice', params.minPrice.toString())
-    }
-    if (params?.maxPrice !== undefined && params.maxPrice !== null && !isNaN(params.maxPrice)) {
-      query.set('maxPrice', params.maxPrice.toString())
-    }
-    if (params?.branchId) query.set('branchId', params.branchId)
-    if (params?.search && params.search.trim()) {
-      query.set('search', params.search.trim())
-    }
-    if (params?.page && params.page > 0) {
-      query.set('page', params.page.toString())
-    }
-    if (params?.pageSize && params.pageSize > 0) {
-      query.set('pageSize', params.pageSize.toString())
-    }
-
-    const queryString = query.toString() ? `?${query.toString()}` : ''
-    return getJson<PaginatedResponse<ProductSummaryDto>>(`/products${queryString}`, options)
+    const url = `/api/catalog/products${query.toString() ? `?${query.toString()}` : ''}`;
+    return httpClient.get<PagedResult<ProductSummary>>(url);
   },
 
-  async getProductById(
-    id: string,
-    branchId?: string,
-    options?: RequestOptions | AbortSignal
-  ): Promise<ProductDetailDto> {
-    const query = branchId ? `?branchId=${encodeURIComponent(branchId)}` : ''
-    return getJson<ProductDetailDto>(`/products/${id}${query}`, options)
+  getProductBySlug: async (slug: string, branchId?: string): Promise<ProductDetail> => {
+    const query = branchId ? `?branchId=${branchId}` : '';
+    return httpClient.get<ProductDetail>(`/api/catalog/products/${slug}${query}`);
   },
 
-  async getCategories(options?: RequestOptions | AbortSignal): Promise<CategoryDto[]> {
-    return getJson<CategoryDto[]>('/categories', options)
+  getCategories: async (): Promise<Category[]> => {
+    return httpClient.get<Category[]>('/api/catalog/categories');
   },
 
-  async getBrands(options?: RequestOptions | AbortSignal): Promise<BrandDto[]> {
-    return getJson<BrandDto[]>('/brands', options)
-  },
-}
+  getBrands: async (): Promise<Brand[]> => {
+    return httpClient.get<Brand[]>('/api/catalog/brands');
+  }
+};
