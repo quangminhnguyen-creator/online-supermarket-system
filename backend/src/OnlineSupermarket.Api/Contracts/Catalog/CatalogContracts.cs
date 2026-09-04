@@ -1,59 +1,91 @@
 namespace OnlineSupermarket.Api.Contracts.Catalog;
 
-public record ProductSummaryResponse(
+public record ProductSummaryDto(
     Guid Id,
     string Name,
     string Slug,
     string Sku,
     decimal BasePrice,
-    decimal? SellingPrice,
-    int? AvailableQuantity,
-    string Unit,
-    string ImageUrl,
-    Guid CategoryId,
+    string? ImageUrl,
     string CategoryName,
-    Guid BrandId,
     string BrandName
 );
 
-public record ProductDetailResponse(
+public record BranchInventoryDto(
+    Guid BranchId,
+    decimal SellingPrice,
+    int AvailableQuantity,
+    int OnHand
+);
+
+public record ProductDetailDto(
     Guid Id,
     string Name,
     string Slug,
     string Sku,
-    string Description,
+    string? Description,
     decimal BasePrice,
-    decimal? SellingPrice,
-    int? AvailableQuantity,
     string Unit,
-    string ImageUrl,
+    string? ImageUrl,
     Guid CategoryId,
     string CategoryName,
     Guid BrandId,
     string BrandName,
-    bool IsActive,
-    DateTime CreatedAtUtc
+    BranchInventoryDto? BranchInventory
 );
 
-public record CategoryResponse(
+public record CategoryDto(
     Guid Id,
+    string Name,
+    string Slug,
     Guid? ParentCategoryId,
-    string Name,
-    string Slug,
     bool IsActive
 );
 
-public record BrandResponse(
+public record BrandDto(
     Guid Id,
     string Name,
     string Slug,
     bool IsActive
 );
 
-public record PagedResult<T>(
-    IReadOnlyList<T> Items,
+public record PaginationMeta(
+    long TotalCount,
     int Page,
     int PageSize,
-    long TotalItems,
     int TotalPages
+);
+
+public record PaginatedResponse<T>(
+    IReadOnlyList<T> Data,
+    PaginationMeta Meta
+);
+
+public record CreateProductRequest(
+    string Name,
+    string Sku,
+    decimal BasePrice,
+    string Unit,
+    Guid CategoryId,
+    Guid BrandId,
+    string? Description,
+    string? ImageUrl
+);
+
+public record UpdateProductRequest(
+    string Name,
+    string Sku,
+    decimal BasePrice,
+    string Unit,
+    Guid CategoryId,
+    Guid BrandId,
+    string? Description,
+    string? ImageUrl,
+    bool IsActive
+);
+
+public record RecordProductViewRequest(
+    Guid ProductId,
+    string? UserId,
+    string? SessionId
 );
